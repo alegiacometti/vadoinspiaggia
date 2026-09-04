@@ -1,0 +1,14 @@
+# file di lavoro, non vanno pubblicati
+.DS_Store
+Thumbs.db
+*.py
+*.xlsx
+AVANZAMENTO.md
+METODO-*.md
+POSIZIONI-*.md
+BANDIERE-*.md
+*-dati.json
+*-schede.json
+bandiere-blu-*.json
+bb-da-segnare-*.json
+diag*.js

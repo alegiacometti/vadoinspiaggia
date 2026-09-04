@@ -1,0 +1,488 @@
+/* =============================================================
+   Carte delle spiagge · foglio di stile condiviso
+   Usato da ogni pagina regionale (Corsica, Puglia, …).
+   Non contiene nulla di specifico di una regione: le uniche
+   misure che cambiano sono due variabili, che ogni pagina
+   ridefinisce nel proprio <style> in testa:
+
+       :root{ --colonna-carta: 450px;            larghezza della colonna carta
+              --telaio-h:      min(70vh,880px) } altezza del riquadro carta
+
+   Regola pratica: --telaio-h ≈ --colonna-carta × (altezza/larghezza
+   della regione). Corsica ≈ 1:2, Puglia ≈ 1:0,9.
+   ============================================================= */
+
+:root{
+  --carta:#ffffff; --nebbia:#f4f9fc; --schiuma:#e6f2f9; --secca:#c9e5f3; --basso:#9ed4ea;
+  --azzurro:#1786bd; --blu:#0c5b87; --profondo:#083c5c; --inchiostro:#0f3550; --grigio:#5f849c;
+  --tratto:#cfe3ee; --terra:#f7f0dd; --terra-b:#cbb98e;
+  --corallo:#dd5b45; --ambra:#cf8a13; --verde:#2f9772; --indaco:#6470c4;
+  --display:"Fraunces",Georgia,serif;
+  --testo:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --dati:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --ombra:0 1px 2px rgba(12,91,135,.06), 0 8px 24px -12px rgba(12,91,135,.22);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:
+    radial-gradient(1200px 600px at 12% -5%, #eaf5fb 0%, transparent 60%),
+    linear-gradient(180deg,#fbfdfe 0%, #f2f8fc 100%);
+  background-attachment:fixed;
+  color:var(--inchiostro); font-family:var(--testo); font-size:15px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--azzurro)}
+.guscio{max-width:1480px;margin:0 auto;padding:26px 20px 56px}
+
+/* onde decorative in testata */
+.testata{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px 34px;padding-bottom:18px;margin-bottom:18px;
+  border-bottom:1px solid var(--tratto);position:relative}
+.occhiello{font-family:var(--dati);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--azzurro);margin:0 0 8px}
+h1{font-family:var(--display);font-variation-settings:"SOFT" 40,"WONK" 1,"opsz" 144;font-weight:400;
+  font-size:clamp(30px,4.4vw,50px);line-height:.98;margin:0;letter-spacing:-.018em;color:var(--profondo)}
+/* La seconda parte del titolo era in corsivo e di un altro colore. Ora è
+   indistinguibile dalla prima: si legge come una frase sola. Il tag <em>
+   resta perché nel testo il senso è quello. */
+h1 em{font-style:normal;font-variation-settings:inherit;color:inherit}
+
+/* ---------- ritorno alla carta d'insieme ---------- */
+/* Presente su ogni pagina regionale, subito sopra il titolo: riporta a index.html,
+   la carta d'Italia e Corsica da cui si scelgono le regioni. */
+.ritorno{display:inline-flex;align-items:center;gap:7px;margin:0 0 10px;text-decoration:none;
+  color:var(--grigio);background:var(--carta);border:1px solid var(--tratto);border-radius:999px;
+  padding:4px 13px 4px 10px;font-family:var(--dati);font-size:10px;letter-spacing:.12em;
+  text-transform:uppercase;transition:.16s}
+.ritorno:hover,.ritorno:focus-visible{color:var(--azzurro);border-color:var(--basso);box-shadow:var(--ombra)}
+
+.strumenti{display:flex;flex-wrap:wrap;gap:16px 26px;align-items:flex-start;margin-bottom:18px}
+.gruppo{display:flex;flex-direction:column;gap:8px}
+.gruppo>span{font-family:var(--dati);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--grigio)}
+.filtri{display:flex;flex-wrap:wrap;gap:6px;max-width:660px}
+button.f{font-family:var(--testo);font-size:12.5px;font-weight:500;background:var(--carta);color:var(--blu);
+  border:1px solid var(--tratto);border-radius:999px;padding:5px 12px;cursor:pointer;transition:.16s;
+  display:inline-flex;align-items:center;gap:7px}
+button.f:hover{border-color:var(--basso);box-shadow:var(--ombra)}
+button.f[aria-pressed="true"]{color:#fff;background:var(--azzurro);border-color:var(--azzurro)}
+button.f .pt{width:8px;height:8px;border-radius:50%;flex:none}
+button.f:focus-visible,.marker:focus-visible,input:focus-visible,li:focus-visible{outline:2px solid var(--ambra);outline-offset:2px}
+.sel{font-family:var(--testo);font-size:12.5px;font-weight:500;color:var(--blu);background:var(--carta);
+  border:1px solid var(--tratto);border-radius:999px;padding:6px 12px;cursor:pointer}
+.sel:hover{border-color:var(--basso)}
+.azzera{background:none;border:0;color:var(--grigio);font-family:var(--dati);font-size:11px;
+  text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:6px 0}
+.azzera:hover{color:var(--corallo)}
+
+/* uniche misure che cambiano da regione a regione: la Corsica è stretta e alta,
+   la Puglia quasi quadrata. Il resto del foglio di stile è condiviso. */
+.impaginato{display:grid;grid-template-columns:minmax(330px,var(--colonna-carta,450px)) 1fr;gap:24px;align-items:start}
+/* senza min-width:0 un elemento di griglia non scende sotto la larghezza minima del suo
+   contenuto: basta una riga lunga nel blocco live per allargare tutta la pagina */
+.impaginato>*,.pannello,.scheda,.live,.andamento,.giorni,.dati,.servizi,.tag{min-width:0;max-width:100%}
+.dati div,.giorni div{min-width:0}
+.dati dd{overflow-wrap:anywhere}
+.azioni a,.azioni button{min-width:0}
+
+/* ---------- collegamento spento ---------- */
+/* Un pulsante che non porta da nessuna parte è peggio di un pulsante assente:
+   qui resta al suo posto ma dichiara perché non si può premere. */
+.azioni .spento,.riquadro h5 .spento{color:var(--secca);cursor:not-allowed;
+  font-family:var(--dati);font-size:10px;letter-spacing:.06em;text-transform:uppercase}
+.azioni .spento{flex:1 1 auto;background:#fff;border:1px dashed var(--tratto);box-shadow:none;
+  padding:9px 12px;text-align:center}
+.azioni .spento::after{content:""}
+.riquadro h5 .spento{font-size:9px;text-transform:none;letter-spacing:0}
+/* la data della panoramica, accanto al titolo del riquadro */
+.riquadro h5 .quando{margin-left:auto;margin-right:8px;font-family:var(--dati);font-size:9px;
+  text-transform:none;letter-spacing:0;color:var(--grigio);font-weight:400}
+
+/* ---------- carta ---------- */
+.carta-cont{background:var(--carta);border:1px solid var(--tratto);border-radius:10px;overflow:hidden;box-shadow:var(--ombra)}
+.zone{display:flex;flex-wrap:wrap;gap:1px;background:var(--tratto);border-bottom:1px solid var(--tratto)}
+.zone button{flex:1 1 auto;background:var(--nebbia);border:0;color:var(--grigio);font-family:var(--dati);
+  font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;padding:8px 7px;cursor:pointer;transition:.16s;white-space:nowrap}
+.zone button:hover{color:var(--azzurro);background:var(--schiuma)}
+.zone button[aria-pressed="true"]{color:#fff;background:var(--blu)}
+.telaio{position:relative;height:var(--telaio-h,min(70vh,880px));min-height:400px;background:linear-gradient(180deg,#f6fbfd,#e9f4fa)}
+.telaio:focus-visible{outline:2px solid var(--ambra);outline-offset:-2px}
+svg.carta{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+svg.carta.trascino{cursor:grabbing}
+.comandi{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:6px;z-index:2}
+.comandi button{width:34px;height:34px;border-radius:9px;border:1px solid var(--tratto);background:rgba(255,255,255,.95);
+  color:var(--blu);font-size:18px;line-height:1;cursor:pointer;box-shadow:var(--ombra);
+  display:flex;align-items:center;justify-content:center;transition:.14s;padding:0}
+.comandi button:hover{background:var(--schiuma);color:var(--azzurro);border-color:var(--basso)}
+.comandi button.fit{font-size:13px}
+.comandi button.qui{font-size:15px}
+
+/* ---------- dove sono ---------- */
+/* L'alone chiaro è il margine d'errore dichiarato dal dispositivo, non un effetto:
+   quando è grande vuol dire che la posizione è incerta davvero. */
+.qui-segno{pointer-events:none}
+.qui-alone{fill:rgba(23,134,189,.13);stroke:rgba(23,134,189,.32);stroke-width:1;vector-effect:non-scaling-stroke}
+.qui-bordo{fill:#fff;stroke:rgba(8,60,92,.12);stroke-width:1;vector-effect:non-scaling-stroke}
+.qui-punto{fill:var(--azzurro)}
+
+/* Il messaggio è una striscia sottile in fondo alla carta, non un riquadro che
+   la copre: compare scivolando da sotto e porta un pallino che richiama il segno. */
+.avviso-qui{position:absolute;left:10px;right:10px;bottom:10px;z-index:3;
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,.97);border:1px solid var(--tratto);
+  border-left:3px solid var(--azzurro);border-radius:10px;
+  padding:9px 13px;font-size:12.5px;line-height:1.45;color:var(--profondo);
+  box-shadow:0 4px 16px rgba(8,60,92,.13);animation:sali .22s ease-out}
+.avviso-qui::before{content:"";flex:none;width:9px;height:9px;border-radius:50%;
+  background:var(--azzurro);box-shadow:0 0 0 4px rgba(23,134,189,.18)}
+.avviso-qui b{font-weight:600}
+.avviso-qui[hidden]{display:none}
+/* quando è un intoppo e non una notizia */
+.avviso-qui.storto{border-left-color:#c2703f}
+.avviso-qui.storto::before{background:#c2703f;box-shadow:0 0 0 4px rgba(194,112,63,.18)}
+@keyframes sali{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.avviso-qui{animation:none}}
+@media (max-width:700px){.avviso-qui{font-size:12px;padding:8px 11px;bottom:8px;left:8px;right:8px}}
+/* ---------- legenda sotto la carta ---------- */
+/* Due righe: in alto la misura del segno, in basso il suo colore. */
+.legenda{margin:9px 0 0;padding:9px 12px;border:1px solid var(--tratto);
+  border-radius:8px;background:var(--carta)}
+.lg-riga{display:flex;flex-wrap:wrap;align-items:center;gap:5px 16px}
+/* le misure stanno su una riga sola, i colori uno sotto l'altro */
+.lg-riga.lg-colonna{flex-direction:column;align-items:flex-start;flex-wrap:nowrap;gap:5px}
+.lg-riga+.lg-riga{margin-top:8px;padding-top:8px;border-top:1px solid var(--tratto)}
+.lg-voce{display:inline-flex;align-items:center;gap:6px;font-family:var(--dati);
+  font-size:10px;letter-spacing:.04em;color:var(--grigio);white-space:nowrap}
+.lg-voce i{font-style:normal}
+.lg-voce svg{flex:none;overflow:visible}
+@media (max-width:700px){.lg-riga{gap:5px 12px}.lg-voce{font-size:9.5px;gap:5px}}
+
+.bussola{position:absolute;left:10px;top:10px;font-family:var(--dati);font-size:9px;letter-spacing:.06em;
+  color:var(--grigio);background:rgba(255,255,255,.85);border:1px solid var(--tratto);border-radius:7px;
+  padding:4px 9px;pointer-events:none;z-index:2}
+.terra{fill:var(--terra);stroke:var(--terra-b);stroke-width:1.2;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+/* Regioni non insulari: il contorno viene disegnato a parte, spezzato in costa vera
+   e confine di terra, quindi il riempimento va lasciato senza bordo. */
+.terra.nudo{stroke:none}
+.costa{fill:none;stroke:var(--terra-b);stroke-width:1.2;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.confine{fill:none;stroke:#c6b79a;stroke-width:1;stroke-dasharray:5 4;opacity:.7;vector-effect:non-scaling-stroke}
+.vicina{fill:#e9e0cb;stroke:none}
+.isolotto{fill:var(--terra);stroke:var(--terra-b);stroke-width:1;vector-effect:non-scaling-stroke}
+.batim{fill:none;stroke:var(--basso);stroke-width:.8;vector-effect:non-scaling-stroke}
+.griglia{stroke:var(--secca);stroke-width:.5;opacity:.65;vector-effect:non-scaling-stroke}
+.cima{fill:none;stroke:#b9a276;stroke-width:1.1;vector-effect:non-scaling-stroke}
+.eti-cima{font-family:var(--dati);fill:#a08a5e}
+.paese-pt{fill:var(--profondo);opacity:.8}
+.eti-paese{font-family:var(--dati);fill:var(--profondo);letter-spacing:.1em;text-transform:uppercase;opacity:.7}
+.marker{cursor:pointer}
+.marker .alone{fill:#fff;stroke-width:1.6}
+.marker:hover .alone,.marker.attivo .alone{stroke-width:3}
+.marker .nome{font-family:var(--testo);font-size:11px;font-weight:600;fill:var(--profondo);opacity:0;
+  paint-order:stroke;stroke:rgba(255,255,255,.95);stroke-width:3.4px;stroke-linejoin:round;pointer-events:none;transition:opacity .15s}
+/* Il nome si vede quando la carta è ingrandita, quando il segno è scelto
+   o quando ci si passa sopra: tre condizioni, sempre le stesse. */
+/* Il filo del callout: parte dal segno e arriva al nome quando il nome ha
+   dovuto spostarsi. Compare e sparisce insieme al nome — un filo senza la sua
+   scritta sarebbe un graffio sulla carta. */
+.marker .guida{stroke:var(--profondo);stroke-width:.9px;opacity:0;
+  vector-effect:non-scaling-stroke;pointer-events:none;transition:opacity .15s}
+.carta.nomi .marker .nome,.marker:hover .nome,.marker.attivo .nome,.marker.eti .nome{opacity:1}
+.carta.nomi .marker .guida,.marker:hover .guida,.marker.attivo .guida,.marker.eti .guida{opacity:.42}
+.carta.nomi .marker.spento .guida{opacity:0}
+.marker:hover .guida,.marker.attivo .guida{opacity:.75}
+.carta.nomi .marker.spento .nome{opacity:0}
+.marker.spento{opacity:.13;pointer-events:none}
+
+.cerca{display:flex;align-items:center;gap:9px;border:1px solid var(--tratto);border-top:0;background:var(--carta);padding:9px 12px;margin-top:-1px}
+.cerca input{flex:1;background:none;border:0;color:var(--inchiostro);
+  font-family:var(--dati);font-size:12.5px;letter-spacing:.01em;outline:none}
+.cerca input::placeholder{color:#9ab7c6}
+.cerca span{font-family:var(--dati);font-size:10px;color:var(--grigio);white-space:nowrap}
+.tendina{display:none;background:none;border:0;color:var(--azzurro);font-size:15px;line-height:1;
+  padding:4px 2px 4px 8px;cursor:pointer}
+.elenco.chiuso{display:none}
+.elenco{max-height:290px;overflow-y:auto;border:1px solid var(--tratto);border-top:0;border-radius:0 0 10px 10px;
+  background:var(--carta);scrollbar-width:thin;scrollbar-color:var(--basso) transparent}
+.elenco::-webkit-scrollbar{width:8px}
+.elenco::-webkit-scrollbar-thumb{background:var(--basso);border-radius:8px}
+.elenco h4{position:sticky;top:0;margin:0;font-family:var(--dati);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--azzurro);background:var(--nebbia);padding:7px 13px;border-bottom:1px solid var(--tratto);z-index:1}
+.elenco ul{list-style:none;margin:0;padding:0}
+.elenco li{display:flex;align-items:center;gap:9px;padding:7px 13px;cursor:pointer;border-bottom:1px solid var(--tratto);font-size:13.5px}
+.elenco li:hover,.elenco li.attivo{background:var(--schiuma);color:var(--blu)}
+/* Il segno dell'elenco e' lo stesso della legenda — stessa taglia, stesso
+   colore, e il quadratino dove la lunghezza non e' nota: chi ha guardato la
+   carta ritrova nell'elenco i segni che ha appena imparato a leggere. */
+.elenco li .pt{width:16px;height:16px;flex:none;overflow:visible}
+.elenco li small{margin-left:auto;font-family:var(--dati);font-size:10px;color:var(--grigio)}
+
+/* ---------- pannello ---------- */
+.pannello{position:sticky;top:20px}
+.scheda[hidden]{display:none}
+.scheda{background:var(--carta);border:1px solid var(--tratto);border-radius:10px;overflow:hidden;box-shadow:var(--ombra)}
+.vetrina{position:relative;aspect-ratio:16/9;overflow:hidden;background:#0d3b52;border-bottom:1px solid var(--tratto)}
+.vetrina>svg{display:block;width:100%;height:auto}
+.tela{position:absolute;inset:0}
+.tela img{position:absolute;width:25%;height:44.4445%;object-fit:cover}
+.mirino{position:absolute;left:50%;top:50%;width:32px;height:32px;margin:-16px 0 0 -16px;border:2px solid #fff;
+  border-radius:50%;box-shadow:0 0 0 2px rgba(8,60,92,.5),0 0 16px rgba(0,0,0,.4);pointer-events:none}
+.mirino::after{content:"";position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2.5px;background:#fff;border-radius:50%}
+.lucchetto{position:absolute;right:9px;top:9px;z-index:2;font-family:var(--dati);font-size:9.5px;letter-spacing:.07em;
+  text-transform:uppercase;border:1px solid rgba(255,255,255,.5);background:rgba(8,60,92,.5);color:#fff;
+  padding:5px 11px;border-radius:999px;cursor:pointer;transition:.15s}
+.lucchetto:hover{background:rgba(8,60,92,.78)}
+.lucchetto.on{background:#fff;color:var(--profondo);border-color:#fff;font-weight:600}
+.sat-eti{position:absolute;left:10px;bottom:8px;font-family:var(--dati);font-size:9px;letter-spacing:.08em;
+  text-transform:uppercase;color:#fff;background:rgba(8,60,92,.5);padding:3px 8px;border-radius:4px}
+/* La foto porta dove porta «Foto e recensioni». L'etichetta in basso a destra
+   non aspetta il passaggio del mouse: se comparisse solo al passaggio, sul
+   telefono — dove il mouse non c'e' — nessuno saprebbe mai che si puo' premere. */
+.apri-foto{position:absolute;inset:0;z-index:1;display:block;text-decoration:none}
+.apri-foto>span{position:absolute;right:9px;bottom:8px;font-family:var(--dati);font-size:9px;
+  letter-spacing:.08em;text-transform:uppercase;color:#fff;background:rgba(8,60,92,.55);
+  border:1px solid rgba(255,255,255,.45);padding:3px 9px;border-radius:999px;transition:.15s}
+.apri-foto:hover>span,.apri-foto:focus-visible>span{background:var(--azzurro);border-color:#fff}
+.apri-foto:focus-visible{outline:2px solid var(--ambra);outline-offset:-3px}
+.vetrina-veduta{position:relative;display:block;text-decoration:none}
+.vetrina-veduta>svg{display:block;width:100%;height:auto}
+.vetrina-veduta>span{position:absolute;right:9px;bottom:8px;font-family:var(--dati);font-size:9px;
+  letter-spacing:.08em;text-transform:uppercase;color:#fff;background:rgba(8,60,92,.55);
+  border:1px solid rgba(255,255,255,.45);padding:3px 9px;border-radius:999px;transition:.15s}
+.vetrina-veduta:hover>span{background:var(--azzurro);border-color:#fff}
+/* Erano quattro strisce bianche divise da un filo: sembravano righe di una
+   tabella, non cose da premere. Ora hanno la forma che ha un pulsante — bordo,
+   angoli tondi, un po' d'ombra, e stanno su un fondo diverso dal proprio, che
+   e' quel che li stacca dalla scheda. La freccia dice quali portano fuori. */
+.azioni{display:flex;flex-wrap:wrap;gap:7px;background:var(--nebbia);padding:10px 12px;
+  border-bottom:1px solid var(--tratto)}
+.azioni a,.azioni button{flex:1 1 auto;background:#fff;border:1px solid var(--basso);border-radius:999px;
+  color:var(--blu);font-family:var(--dati);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;
+  padding:9px 12px;text-align:center;cursor:pointer;text-decoration:none;box-shadow:var(--ombra);
+  transition:transform .13s,background .15s,border-color .15s,color .15s}
+.azioni a[target="_blank"]::after{content:" ↗";opacity:.65}
+.azioni a:hover,.azioni button:hover{background:var(--schiuma);border-color:var(--azzurro);
+  color:var(--azzurro);transform:translateY(-1px)}
+.azioni a:active,.azioni button:active{transform:translateY(0)}
+.azioni .primaria{background:var(--profondo);border-color:var(--profondo);color:#fff}
+.azioni .primaria:hover{background:var(--azzurro);border-color:var(--azzurro);color:#fff}
+.credito{padding:6px 12px;font-family:var(--dati);font-size:9.5px;color:var(--grigio);background:var(--nebbia);
+  border-top:1px solid var(--tratto);line-height:1.4}
+.credito a{color:var(--azzurro);text-decoration:none;border-bottom:1px dotted}
+
+/* ---- sottopagina ---- */
+.velo{position:fixed;inset:0;background:rgba(8,60,92,.5);backdrop-filter:blur(4px);z-index:60;
+  display:flex;align-items:flex-start;justify-content:center;padding:22px 14px;overflow:auto}
+.foglio{background:#fff;border-radius:12px;max-width:1080px;width:100%;overflow:hidden;
+  box-shadow:0 32px 80px -18px rgba(8,60,92,.55)}
+.foglio-testa{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--tratto);
+  background:linear-gradient(180deg,#fff,#f2f9fc);position:sticky;top:0;z-index:3}
+.foglio-testa h3{font-family:var(--display);font-variation-settings:"SOFT" 30,"WONK" 1;font-weight:400;
+  font-size:25px;margin:0 0 2px;color:var(--profondo);line-height:1.05}
+.chiudi{margin-left:auto;background:#fff;border:1px solid var(--tratto);border-radius:8px;width:34px;height:34px;
+  font-size:18px;line-height:1;cursor:pointer;color:var(--grigio);flex:none}
+.chiudi:hover{color:var(--corallo);border-color:var(--corallo)}
+.riquadri{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--tratto);border-bottom:1px solid var(--tratto)}
+.riquadro{background:#fff;display:flex;flex-direction:column}
+.riquadro h5{margin:0;font-family:var(--dati);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--azzurro);padding:9px 14px;border-bottom:1px solid var(--tratto);display:flex;gap:8px;align-items:center}
+.riquadro h5 a{margin-left:auto;text-transform:none;letter-spacing:0;font-size:10px;text-decoration:none}
+.riquadro iframe{display:block;width:100%;height:330px;border:0;background:var(--schiuma)}
+.foglio-corpo{padding:18px}
+.avviso{padding:9px 14px;font-family:var(--dati);font-size:10px;color:var(--grigio);background:var(--nebbia);
+  border-top:1px solid var(--tratto);line-height:1.6}
+@media(max-width:820px){.riquadri{grid-template-columns:1fr}.riquadro iframe{height:280px}}
+
+.corpo{padding:19px 21px 21px}
+.riga-titolo{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:13px}
+.corpo h2{font-family:var(--display);font-variation-settings:"SOFT" 30,"WONK" 1,"opsz" 100;font-weight:400;
+  font-size:30px;line-height:1.02;margin:0 0 5px;color:var(--profondo);letter-spacing:-.012em}
+.sotto{font-family:var(--dati);font-size:11px;color:var(--grigio)}
+.zona{font-family:var(--dati);font-size:10px;color:var(--azzurro);letter-spacing:.12em;text-transform:uppercase;
+  flex:none;padding-top:5px;text-align:right;max-width:130px;line-height:1.4}
+.badge-accesso{display:inline-flex;align-items:center;gap:9px;border-radius:6px;padding:9px 13px;margin-bottom:16px;
+  font-size:13.5px;font-weight:500;line-height:1.3}
+.badge-accesso .glifo{font-family:var(--dati);font-size:10.5px;letter-spacing:.1em;opacity:.8}
+
+/* ---------- blocco live ---------- */
+.live{border:1px solid var(--tratto);border-radius:8px;overflow:hidden;margin-bottom:17px;background:linear-gradient(180deg,#f8fcfe,#eef7fc)}
+.live-testa{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;
+  background:var(--blu);color:#fff}
+.live-testa span{font-family:var(--dati);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase}
+.pulse{display:inline-block;width:7px;height:7px;border-radius:50%;background:#6ff0c0;margin-right:7px;
+  box-shadow:0 0 0 0 rgba(111,240,192,.7);animation:battito 2.2s infinite}
+@keyframes battito{0%{box-shadow:0 0 0 0 rgba(111,240,192,.6)}70%{box-shadow:0 0 0 7px rgba(111,240,192,0)}100%{box-shadow:0 0 0 0 rgba(111,240,192,0)}}
+/* ---------- l'andamento della giornata ---------- */
+/* Il disegno ha una larghezza sua: sul telefono si scorre invece di schiacciarsi,
+   altrimenti le diciassette ore diventerebbero illeggibili. */
+.andamento{background:#fff;padding:10px 6px 4px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+svg.grafico{display:block;width:100%;min-width:520px;height:auto}
+.g-temp{fill:none;stroke:#dd7a45;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.g-punto{fill:#dd7a45}
+.g-onda{fill:rgba(23,134,189,.22);stroke:#1786bd;stroke-width:1.4;stroke-linejoin:round}
+.g-pioggia{fill:rgba(110,170,210,.16)}
+.g-freccia{fill:#5f849c}
+.g-riga{stroke:var(--tratto);stroke-width:1}
+.g-valore{font-family:var(--dati);font-size:10px;fill:var(--profondo)}
+.g-mini{font-family:var(--dati);font-size:8.5px;fill:var(--grigio)}
+.g-ora{font-family:var(--dati);font-size:9px;fill:var(--grigio)}
+.g-corsia{font-family:var(--dati);font-size:8.5px;letter-spacing:.1em;
+  text-transform:uppercase;fill:var(--secca)}
+/* la riga verticale dell'ora corrente */
+.g-adesso{stroke:#dd7a45;stroke-width:1;stroke-dasharray:3 3;opacity:.55}
+.sintesi{padding:9px 12px;font-size:13px;border-top:1px solid var(--tratto);display:flex;align-items:center;gap:9px}
+.sintesi b{font-weight:600}
+/* lo stato del mare accanto alla sintesi, separato da un punto mediano */
+.mare-stato{color:var(--grigio)}
+.mare-stato i{font-style:normal;font-family:var(--dati);font-size:9.5px;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--secca);margin-left:5px}
+.mare-stato::before{content:'·';margin:0 6px;color:var(--secca)}
+.pallino{width:10px;height:10px;border-radius:50%;flex:none}
+.giorni{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--tratto);border-top:1px solid var(--tratto)}
+/* Ogni giorno ha sempre cinque celle — sigla, cielo, temperature, onda, vento — anche
+   quando manca la probabilità di pioggia. Prima la percentuale era una cella in più e
+   mandava a capo la griglia del telefono: temperature e pioggia finivano sovrapposte. */
+.giorni div{background:#fff;padding:9px 4px;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:3px}
+.giorni b{font-family:var(--dati);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--grigio)}
+.giorni .ic{display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1}
+/* flex:none o la percentuale di pioggia accanto schiaccia l'icona fino a farla sparire */
+.giorni .ic svg{width:22px;height:22px;display:block;margin:0;flex:none}
+.giorni .pio{font-family:var(--dati);font-style:normal;font-size:9px;color:#4f9bd0}
+.giorni .t{font-size:13px;font-weight:600;color:var(--profondo);white-space:nowrap}
+.giorni .t i{font-style:normal;font-weight:400;color:var(--grigio)}
+.giorni .o{font-family:var(--dati);font-size:9.5px;color:var(--azzurro);white-space:nowrap}
+/* velocità e unità sulla prima riga, direzione sulla seconda: nelle sette colonne
+   strette del desktop tutto su una riga si accavallava */
+.giorni .vento{font-family:var(--dati);font-size:9.5px;color:#5f849c;line-height:1.3;
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:1px 4px}
+.giorni .vento svg{width:10px;height:10px;flex:none;margin:0}
+.giorni .vento b{color:var(--profondo);font-weight:600;font-size:10.5px;letter-spacing:0}
+.giorni .vento u{text-decoration:none;font-size:8.5px;opacity:.7}
+.giorni .vento .dir{flex:0 0 100%;font-size:8.5px;letter-spacing:.08em;opacity:.85}
+.cam{display:flex;align-items:center;gap:9px;padding:9px 12px;border-top:1px solid var(--tratto);background:#fff;font-size:12.5px}
+.cam a{font-weight:600;text-decoration:none}
+.cam .dist{font-family:var(--dati);font-size:10px;color:var(--grigio);margin-left:auto;white-space:nowrap}
+.live-nota{padding:7px 12px;font-family:var(--dati);font-size:9.5px;color:var(--grigio);border-top:1px solid var(--tratto);background:var(--nebbia)}
+.live-nota a{color:var(--azzurro);text-decoration:none;border-bottom:1px dotted}
+
+.dati{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:1px;background:var(--tratto);
+  border:1px solid var(--tratto);border-radius:8px;overflow:hidden;margin-bottom:17px}
+.dati div{background:#fff;padding:9px 11px}
+.dati dt{font-family:var(--dati);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--grigio);margin:0 0 3px}
+.dati dd{margin:0;font-size:13px;color:var(--inchiostro)}
+.titoletto{font-family:var(--dati);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--azzurro);
+  margin:0 0 9px;display:flex;align-items:center;gap:10px}
+.titoletto::after{content:"";flex:1;height:1px;background:var(--tratto)}
+.servizi{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:17px}
+.sv{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--tratto);border-radius:6px;padding:5px 10px 5px 8px;font-size:12.5px;line-height:1;background:#fff}
+.sv svg{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}
+.sv.si{color:var(--verde);border-color:#b6e0cd;background:#f0faf6}
+.sv.forse{color:var(--ambra);border-color:#f0dcb0;background:#fdf8ee}
+.sv.no{color:#9fb6c3;border-color:#e2ecf2}
+.sv.no .lab{text-decoration:line-through}
+.sv .st{font-family:var(--dati);font-size:9px;opacity:.85}
+.nota{border-left:3px solid var(--basso);padding:2px 0 2px 14px;margin:0 0 17px;font-size:14px;color:#20536e}
+.tag{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:17px}
+.tag span{font-family:var(--dati);font-size:10.5px;border:1px dashed var(--basso);color:var(--blu);border-radius:4px;padding:4px 9px;background:var(--nebbia)}
+.vai{display:inline-flex;align-items:center;gap:9px;font-family:var(--dati);font-size:11.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:#fff;background:var(--profondo);text-decoration:none;padding:10px 16px;border-radius:6px;transition:.16s}
+.vai:hover{background:var(--azzurro)}
+
+.avvertenza{margin-top:18px;padding:12px 15px;border:1px solid var(--tratto);border-left:3px solid var(--ambra);
+  border-radius:8px;background:var(--nebbia);font-family:var(--dati);font-size:10.5px;
+  line-height:1.75;color:var(--grigio)}
+.avvertenza b{display:block;margin-bottom:4px;color:var(--profondo);font-family:var(--dati);font-size:10px;
+  letter-spacing:.13em;text-transform:uppercase;font-weight:500}
+/* Crediti e licenze: presenti nella pagina ma resi del colore dello sfondo.
+   Restano leggibili al passaggio del mouse, selezionabili e letti dagli screen reader. */
+.piede{margin-top:20px;font-family:var(--dati);font-size:11px;line-height:1.75;
+  color:transparent;transition:color .25s}
+.piede a{color:inherit;border-bottom:0;text-decoration:none}
+.piede:hover,.piede:focus-within{color:var(--grigio)}
+.piede:hover a,.piede:focus-within a{color:var(--azzurro)}
+
+@media (max-width:960px){
+  html,body{overflow-x:hidden}
+  .guscio{padding:18px 13px 40px}
+  .impaginato{grid-template-columns:1fr;gap:16px}
+  /* la colonna sparisce come contenitore: carta, scheda ed elenco diventano riordinabili */
+  .colonna-carta{display:contents}
+  .carta-cont{order:1}
+  .cerca{order:2}
+  .elenco{order:3;max-height:44vh}
+  .pannello{order:4;position:static}
+  .elenco.chiuso+*{margin-top:0}
+  .cerca:has(+.elenco.chiuso){border-radius:10px}
+  .tendina{display:block}
+  .telaio{height:48vh;min-height:300px}
+  /* una passata verticale del dito scorre la pagina; due dita zoomano la carta */
+  svg.carta{touch-action:pan-y}
+  .filtri{max-width:none}
+  .azioni a,.azioni button{flex:1 1 45%}
+}
+@media (max-width:700px){
+  h1{font-size:31px}
+  /* le previsioni diventano righe: si leggono senza tagli e si scorrono con la pagina */
+  .giorni{display:flex;flex-direction:column}
+  /* Cinque colonne sempre, così le celle non scivolano da una riga all'altra.
+     Le larghezze hanno un minimo e poi cedono: su uno schermo da 320 px la riga sta
+     dentro lo stesso, e se qualcosa non ci sta va a capo dentro la propria cella. */
+  .giorni div{display:grid;align-items:center;gap:0 8px;text-align:left;padding:10px 12px;
+    grid-template-columns:38px 28px minmax(44px,1fr) minmax(38px,auto) minmax(56px,auto)}
+  /* Sul telefono la colonna dell'icona è stretta: cielo e pioggia restano incolonnati,
+     mai affiancati, altrimenti l'icona si riduce a pochi pixel. */
+  .giorni .ic{flex-direction:column;align-items:center;justify-content:center;gap:0}
+  .giorni .pio{font-size:8px}
+  .giorni .t{font-size:12.5px;white-space:normal}
+  .giorni .o{text-align:right}
+  .giorni .vento{justify-content:flex-end;text-align:right}
+  .giorni .vento .dir{flex:none}
+  .sintesi{flex-wrap:wrap;gap:6px}
+  .cam{flex-wrap:wrap}
+  .cam a{overflow-wrap:anywhere}
+  .cam .dist{margin-left:0;flex:0 0 100%;white-space:normal}
+  .corpo{padding:16px 15px 18px}
+  .corpo h2{font-size:25px}
+  .riga-titolo{flex-direction:column;gap:6px}
+  .zona{text-align:left;max-width:none;padding-top:0}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* --- bandierine di stato e regione --- */
+.bandiere{display:inline-flex;align-items:center;gap:5px;vertical-align:middle;flex:0 0 auto}
+.bandiera{display:block;height:15px;width:auto;max-width:24px;border-radius:2px;background:#fff;
+  box-shadow:0 0 0 .5px rgba(8,60,92,.30), 0 1px 2px rgba(8,60,92,.14)}
+h1 .bandiere{gap:7px;margin-left:.36em;vertical-align:middle;position:relative;top:-.04em}
+h1 .bandiera{height:.46em;max-width:none;border-radius:.05em;
+  box-shadow:0 0 0 .022em rgba(8,60,92,.30), 0 .03em .06em rgba(8,60,92,.14)}
+@media (max-width:520px){ h1 .bandiera{height:.5em} }
+
+/* --- Bandiera Blu --- */
+/* La targhetta della Bandiera Blu si stacca dalle altre: bordo pieno e fondo azzurro,
+   perché è un riconoscimento ufficiale, non una caratteristica come "dune" o "surf". */
+.tag span.bb{border-style:solid;border-color:var(--azzurro);background:var(--azzurro);
+  color:#fff;font-weight:500;letter-spacing:.02em}
+/* Sulla carta: una bandierina sotto il segno, non un anello — così non litiga
+   col colore dell'accesso né con la forma che dice la lunghezza. */
+.marker .bandierina{fill:var(--azzurro);stroke:#fff;stroke-width:.55;paint-order:stroke;
+  stroke-linejoin:round}
+.marker.spento .bandierina{opacity:.25}
+button.f[data-s="bb"]{border-color:var(--basso);color:var(--azzurro)}
+button.f[data-s="bb"][aria-pressed="true"]{background:var(--azzurro);border-color:var(--azzurro);color:#fff}
+
+/* --- dati che non abbiamo --- */
+/* Quadratino al posto del cerchio: il raggio dei marker misura la lunghezza della
+   spiaggia, quindi quando non la sappiamo non possiamo disegnare un cerchio senza
+   mentire. Il quadratino ha una taglia sola e dichiara di non saperlo. */
+.marker .alone-q{fill:#fff;stroke-width:1.6}
+.marker:hover .alone-q,.marker.attivo .alone-q{stroke-width:3}
+/* Servizio non rilevato: non è un "no". Tratteggio, nessuna barratura. */
+.sv.nc{color:#93a6b3;border-color:#e4ecf1;border-style:dashed}
+.sv.nc .lab{text-decoration:none}
+.sv.nc svg{opacity:.55}
+.sv .st{font-family:var(--dati);font-size:9px;letter-spacing:.04em;opacity:.8;margin-left:5px}
+
+/* Quando due spiagge finiscono nello stesso punto della carta, la scheda lo
+   dice: senza questa riga il clic che passa da una all'altra sembra un
+   difetto invece che una scelta. */
+.corpo .grappolo{margin:.35rem 0 0;padding:6px 9px;border-left:3px solid var(--azzurro);
+  background:#f2f9fc;font-size:.78rem;line-height:1.45;color:var(--profondo)}
+.corpo .grappolo b{font-weight:700}

@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="description" content="Le spiagge di Madeira: 60 spiagge in 5 zone costiere, con carta navigabile, meteo, stato del mare, accessi, servizi e parcheggi.">
+<meta name="theme-color" content="#083c5c">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="it_IT">
+<meta property="og:site_name" content="Vado in spiaggia">
+<meta property="og:title" content="Le spiagge di Madeira">
+<meta property="og:description" content="Le spiagge di Madeira: 60 spiagge in 5 zone costiere, con carta navigabile, meteo, stato del mare, accessi, servizi e parcheggi.">
+<title>Le spiagge di Madeira · carta, meteo e mare in tempo reale</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="carte-spiagge.css">
+<script src="configurazione.js"></script>
+<style>/* misure di questa regione — vedi carte-spiagge.css */
+:root{--colonna-carta:640px;--telaio-h:min(52vh,500px)}</style>
+</head>
+<body>
+<div class="guscio">
+
+  <header class="testata">
+    <div>
+      <a class="ritorno" href="index.html#pt">← Tutte le regioni: Portogallo</a>
+      <h1>Le spiagge <em>di Madeira</em> <span class="bandiere"><img class="bandiera" src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag%20of%20Portugal.svg?width=96" width="96" alt="Bandiera: Portogallo" title="Portogallo" loading="lazy" decoding="async" onerror="this.dataset.b?(this.src=this.dataset.b,this.removeAttribute('data-b')):this.remove()"><img class="bandiera" src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag%20of%20Madeira.svg?width=96" width="96" alt="Bandiera: Madeira" title="Madeira" loading="lazy" decoding="async" onerror="this.dataset.b?(this.src=this.dataset.b,this.removeAttribute('data-b')):this.remove()"></span></h1>
+    </div>
+  </header>
+
+  <div class="strumenti">
+    <div class="gruppo"><span>Filtra per accesso</span><div class="filtri" id="filtriAccesso"></div></div>
+    <div class="gruppo"><span>Filtra per servizi</span><div class="filtri" id="filtriServizi"></div></div>
+    <div class="gruppo"><span>&nbsp;</span><button class="azzera" id="azzera">Azzera i filtri</button></div>
+  </div>
+
+  <div class="impaginato">
+    <div class="colonna-carta">
+      <div class="carta-cont">
+        <div class="zone" id="zone"></div>
+        <div class="telaio" id="telaio" tabindex="0" aria-label="Carta navigabile: due dita per spostare e ingrandire, rotella per zoomare, trascina per spostarti, frecce per muoverti">
+          <svg class="carta" id="carta" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"
+               role="img" aria-label="Carta di Madeira con le spiagge">
+            <g id="gGriglia"></g><g id="gBatim"></g><g id="gVicine"></g><g id="gTerra"></g>
+            <g id="gCime"></g><g id="gPaesi"></g><g id="gMarker"></g><g id="gQui"></g>
+          </svg>
+          <div class="comandi">
+            <button type="button" id="zPiu" aria-label="Ingrandisci" title="Ingrandisci">+</button>
+            <button type="button" id="zMeno" aria-label="Riduci" title="Riduci">−</button>
+            <button type="button" class="fit" id="zFit" aria-label="Tutta la regione" title="Tutta la regione">⤢</button>
+            <button type="button" class="qui" id="zQui" aria-label="La mia posizione" title="La mia posizione">◎</button>
+          </div>
+          <div class="bussola" id="bussola">scala —</div>
+          <div class="avviso-qui" id="avvisoQui" hidden></div>
+        </div>
+        <div class="legenda">
+          <div class="lg-riga" id="lgMisure"></div>
+          <div class="lg-riga lg-colonna" id="lgColori"></div>
+        </div>
+      </div>
+      <div class="cerca">
+        <input id="cerca" type="search" placeholder="Cerca una spiaggia o un comune…" aria-label="Cerca">
+        <span id="conta"></span>
+        <button type="button" class="tendina" id="apriElenco" aria-expanded="true" aria-label="Mostra o nascondi l'elenco">▾</button>
+      </div>
+      <div class="elenco" id="elenco"></div>
+    </div>
+
+    <div class="pannello">
+      <div class="scheda" id="scheda"></div>
+      <p class="avvertenza"><b>Avvertenza</b>
+        Le informazioni riportate — accessi, servizi, parcheggi, condizioni meteo e stato del mare — provengono da fonti pubbliche
+        e da modelli previsionali, sono fornite a puro titolo indicativo e possono essere incomplete, imprecise o non aggiornate.
+        Non si assume alcuna responsabilità per errori, omissioni o per le decisioni prese sulla base di questi dati.
+        Il mare è un ambiente potenzialmente pericoloso: verifica sempre le condizioni sul posto, rispetta le bandiere e le
+        indicazioni dei bagnini e valuta con prudenza le spiagge non sorvegliate e gli accessi fuori strada.
+      </p>
+      <p class="piede">
+        Meteo, vento e onda da <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0), aggiornati al momento dell'apertura della scheda.
+        Sono previsioni da modello, non misure di boa: sotto costa, e soprattutto nelle baie chiuse, l'onda reale può essere molto più bassa di quella indicata.
+L'immagine di apertura è la vista aerea reale del punto (Esri World Imagery — Maxar, Earthstar Geographics), centrata sulle coordinate della spiaggia.
+        Foto, recensioni, mappa e Street View arrivano da Google Maps: le foto non sono scaricabili senza una chiave API a pagamento, quindi i pulsanti aprono direttamente la scheda del luogo,
+        mentre mappa satellitare e Street View sono incorporati nella “scheda completa”.
+        La webcam appare soltanto quando ne esiste una puntata su quella spiaggia o sulla sua baia. Servizi e parcheggi da fonti pubbliche recenti: cambiano ogni stagione.
+        Contorno della regione e confini con Abruzzo, Campania, Lazio e Puglia da dati ISTAT/openpolis (limiti amministrativi); batimetriche calcolate come linee equidistanti dalla costa.
+        Le regioni confinanti sono sfumate per distinguere la costa vera dal confine di terra, disegnato tratteggiato.
+        Le linee azzurre al largo sono equidistanti dalla costa, a scopo grafico: non sono isobate e non indicano la profondità.
+        La voce “cani ammessi” dipende da ordinanze comunali che cambiano ogni stagione: dove non risulta un divieto o un permesso
+        esplicito è segnata come parziale, cioè da verificare sul posto.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ======================= PROIEZIONE ======================= */
+const LON0=-17.402, LAT0=33.21, KX=1011.7, KY=1204.4;
+const px=lo=>(lo-LON0)*KX, py=la=>(LAT0-la)*KY;
+const PIENO={"x": -23.0, "y": 13.0, "w": 1265.0, "h": 835.0};
+
+const ACCESSI={
+  auto:    {et:"Auto fino alla spiaggia",     col:"#1786bd", glifo:"AUTO"},
+  sterrato:{et:"Auto + strada sterrata",      col:"#cf8a13", glifo:"STERRATO"},
+  breve:   {et:"Auto + breve tratto a piedi", col:"#2f9772", glifo:"5–15 MIN"},
+  lungo:   {et:"Solo a piedi",                col:"#dd5b45", glifo:"20–60 MIN"},
+  barca:   {et:"Solo in barca",               col:"#6470c4", glifo:"BARCA"},
+  nc:      {et:"Accesso non documentato",    col:"#93a6b3", glifo:"N/C"}
+};
+const ZONE={"funchal": "Funchal e Câmara de Lobos", "santacruz": "Santa Cruz e Machico", "norte": "La costa nord", "oeste": "Calheta e Ponta do Sol", "portosanto": "Porto Santo"};
+const SERVIZI=[["parcheggio","Parcheggio"],["ristorante","Ristorante"],["bar","Bar"],
+  ["lettini","Lettini e ombrelloni"],["docce","Docce"],["wc","WC"],["sorveglianza","Sorveglianza"],
+  ["sport","Sport acquatici"],["cani","Cani ammessi"],["ombra","Ombra naturale"]];
+const ICONE={
+  parcheggio:'<rect x="2.6" y="2.6" width="14.8" height="14.8" rx="3.4"/><path d="M7.6 14.6V5.6h2.9a2.6 2.6 0 010 5.2H7.6"/>',
+  ristorante:'<path d="M5.2 2.6v5.2a1.9 1.9 0 001.9 1.9v7.7"/><path d="M5.2 2.6v3.9M9 2.6v3.9M9 2.6v5.2a1.9 1.9 0 01-1.9 1.9"/><path d="M15.4 2.6c-1.5 1.2-2.1 2.9-2.1 4.7 0 1.3.7 2.1 2.1 2.3v7.8"/>',
+  bar:'<path d="M3.4 3.6h13.2L10 10.4z"/><path d="M10 10.4v5.2M6.6 16.4h6.8"/>',
+  lettini:'<path d="M2.4 9.6a7.6 7.6 0 0115.2 0z"/><path d="M10 9.6v6.6"/><path d="M7.9 16.6a2.1 2.1 0 004.2 0"/>',
+  docce:'<path d="M4.2 3.4h5.4a4 4 0 014 4v1.1"/><path d="M10.6 8.5h6.8"/><path d="M12.4 11.6v1.2M14 14.3v1.2M15.6 11.6v1.2M11 15v1.2M17.2 15v1.2"/>',
+  wc:'<rect x="2.6" y="2.6" width="14.8" height="14.8" rx="3.4"/><path d="M5.2 6.8l1.3 6.4 1.4-4 1.4 4 1.3-6.4"/><path d="M12.6 13.2V6.8h1.9a1.7 1.7 0 010 3.4h-1.9"/>',
+  sorveglianza:'<circle cx="10" cy="10" r="7.5"/><circle cx="10" cy="10" r="3.1"/><path d="M4.7 4.7l3 3M15.3 4.7l-3 3M4.7 15.3l3-3M15.3 15.3l-3-3"/>',
+  sport:'<path d="M1.8 15.2c1.7 0 1.7-1.7 3.4-1.7s1.7 1.7 3.4 1.7 1.7-1.7 3.4-1.7 1.7 1.7 3.4 1.7 1.7-1.7 2.8-1.7"/><path d="M10 11.4V2.8l5.2 8.6z"/>',
+  cani:'<ellipse cx="10" cy="13.4" rx="4.1" ry="3.4"/><circle cx="4.7" cy="9.3" r="1.85"/><circle cx="7.9" cy="5.7" r="1.85"/><circle cx="12.1" cy="5.7" r="1.85"/><circle cx="15.3" cy="9.3" r="1.85"/>',
+  ombra:'<path d="M10 2.4l3.9 5.8h-2.3l3 4.6H5.4l3-4.6H6.1z"/><path d="M10 12.8v4.8"/>'
+};
+
+const SPIAGGE=[{"sid": "madeira-001", "n": "Fajã dos Asnos", "com": "Câmara De Lobos", "z": "funchal", "lat": 32.65368, "lon": -17.0029, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 0, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 0, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMN3L"}, {"sid": "madeira-002", "n": "Fajã das Bebras", "com": "Câmara De Lobos", "z": "funchal", "lat": 32.65094, "lon": -16.99325, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 0, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 0, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMH2E"}, {"sid": "madeira-003", "n": "Vigário", "com": "Câmara De Lobos", "z": "funchal", "lat": 32.6483, "lon": -16.9789, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMQ9C"}, {"sid": "madeira-004", "n": "Santiago", "com": "Funchal", "z": "funchal", "lat": 32.64651, "lon": -16.89919, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 0, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata. C'è uno stabilimento con servizio di ristoro. Ci sono docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTME3H"}, {"sid": "madeira-005", "n": "Barreirinha", "com": "Funchal", "z": "funchal", "lat": 32.64649, "lon": -16.89767, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMT7L"}, {"sid": "madeira-006", "n": "Complexo Balnear das Salinas", "com": "Câmara De Lobos", "z": "funchal", "lat": 32.64588, "lon": -16.97321, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMP2K"}, {"sid": "madeira-007", "n": "Areeiro", "com": "Funchal", "z": "funchal", "lat": 32.64257, "lon": -16.95947, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMT2U"}, {"sid": "madeira-008", "n": "Formosa", "com": "Funchal", "z": "funchal", "lat": 32.64167, "lon": -16.95528, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio. Rientra nel programma Praia Acessível.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMH3U"}, {"sid": "madeira-009", "n": "Praia Nova", "com": "Funchal", "z": "funchal", "lat": 32.64159, "lon": -16.9574, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 0, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata. Ci sono parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMJ3C"}, {"sid": "madeira-010", "n": "Cliff Bay", "com": "Funchal", "z": "funchal", "lat": 32.637367, "lon": -16.926404, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMV9X"}, {"sid": "madeira-011", "n": "Gorgulho", "com": "Funchal", "z": "funchal", "lat": 32.6364, "lon": -16.9347, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 1, "wc": 0, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata. Ci sono docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMH9T"}, {"sid": "madeira-012", "n": "Clube Turismo", "com": "Funchal", "z": "funchal", "lat": 32.636314, "lon": -16.929125, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTME3L"}, {"sid": "madeira-013", "n": "Lido - Poente", "com": "Funchal", "z": "funchal", "lat": 32.635703, "lon": -16.93406, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 1, "wc": 0, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata. Ci sono docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMU3Q"}, {"sid": "madeira-014", "n": "Poças do Gomes - Doca do Cavacas", "com": "Funchal", "z": "funchal", "lat": 32.63561, "lon": -16.94797, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMU8Q"}, {"sid": "madeira-015", "n": "Lido - Complexo Balnear", "com": "Funchal", "z": "funchal", "lat": 32.63556, "lon": -16.93194, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio. Rientra nel programma Praia Acessível.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMD3J"}, {"sid": "madeira-016", "n": "Clube Naval do Funchal", "com": "Funchal", "z": "funchal", "lat": 32.63472, "lon": -16.93889, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTML8V"}, {"sid": "madeira-017", "n": "Complexo Balnear Ponta Gorda - Poças do Governador", "com": "Funchal", "z": "funchal", "lat": 32.63397, "lon": -16.94086, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio. Rientra nel programma Praia Acessível.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMF2C"}, {"sid": "madeira-018", "n": "Alagoa", "com": "Machico", "z": "santacruz", "lat": 32.77483, "lon": -16.82855, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 1, "wc": 0, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Surf"], "nota": "Spiaggia non sorvegliata. Ci sono docce, parcheggio. Onde di valore riconosciuto per il surf.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMU7X"}, {"sid": "madeira-019", "n": "Maiata", "com": "Machico", "z": "santacruz", "lat": 32.76771, "lon": -16.82109, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 0, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Surf"], "nota": "Spiaggia non sorvegliata. Ci sono parcheggio. Onde di valore riconosciuto per il surf.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMT8M"}, {"sid": "madeira-020", "n": "Prainha", "com": "Machico", "z": "santacruz", "lat": 32.7425, "lon": -16.71556, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMU8H"}, {"sid": "madeira-021", "n": "Quinta do Lorde", "com": "Machico", "z": "santacruz", "lat": 32.74164, "lon": -16.70942, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMW3X"}, {"sid": "madeira-022", "n": "Ribeira do Natal", "com": "Machico", "z": "santacruz", "lat": 32.735, "lon": -16.745, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMD2C"}, {"sid": "madeira-023", "n": "Banda d'Além", "com": "Machico", "z": "santacruz", "lat": 32.7184, "lon": -16.7619, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio. Rientra nel programma Praia Acessível.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMK9E"}, {"sid": "madeira-024", "n": "S. Roque", "com": "Machico", "z": "santacruz", "lat": 32.71625, "lon": -16.7642, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 1, "wc": 0, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMU2P"}, {"sid": "madeira-025", "n": "Palmeiras", "com": "Santa Cruz", "z": "santacruz", "lat": 32.68806, "lon": -16.78917, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio. Rientra nel programma Praia Acessível.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMJ3M"}, {"sid": "madeira-026", "n": "São Fernando", "com": "Santa Cruz", "z": "santacruz", "lat": 32.68596, "lon": -16.79235, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 0, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata. Ci sono parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMJ7X"}, {"sid": "madeira-027", "n": "Calhau das Gordas", "com": "Santa Cruz", "z": "santacruz", "lat": 32.68452, "lon": -16.79361, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 1, "wc": 0, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata. Ci sono docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMW7X"}, {"sid": "madeira-028", "n": "Boaventura", "com": "Santa Cruz", "z": "santacruz", "lat": 32.68328, "lon": -16.79456, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 0, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata. Ci sono parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMP3T"}, {"sid": "madeira-029", "n": "Reis Magos", "com": "Santa Cruz", "z": "santacruz", "lat": 32.64722, "lon": -16.82361, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMH7X"}, {"sid": "madeira-030", "n": "Roca Mar", "com": "Santa Cruz", "z": "santacruz", "lat": 32.64194, "lon": -16.82972, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMK7F"}, {"sid": "madeira-031", "n": "Galo Mar", "com": "Santa Cruz", "z": "santacruz", "lat": 32.64083, "lon": -16.83278, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTME9J"}, {"sid": "madeira-032", "n": "Garajau", "com": "Santa Cruz", "z": "santacruz", "lat": 32.63826, "lon": -16.8528, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMT7N"}, {"sid": "madeira-033", "n": "Porto Moniz", "com": "Porto Moniz", "z": "norte", "lat": 32.8679, "lon": -17.16993, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio. Onde di valore riconosciuto per il surf.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMV3Q"}, {"sid": "madeira-034", "n": "Ponta Delgada", "com": "São Vicente", "z": "norte", "lat": 32.82807, "lon": -16.98467, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMU3L"}, {"sid": "madeira-035", "n": "Laje", "com": "Porto Moniz", "z": "norte", "lat": 32.82667, "lon": -17.11417, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 1, "wc": 0, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Surf"], "nota": "Spiaggia non sorvegliata. Ci sono docce, parcheggio. Onde di valore riconosciuto per il surf.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMH9W"}, {"sid": "madeira-036", "n": "Clube Naval do Seixal", "com": "Porto Moniz", "z": "norte", "lat": 32.82313, "lon": -17.10252, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMX3H"}, {"sid": "madeira-037", "n": "Porto do Seixal", "com": "Porto Moniz", "z": "norte", "lat": 32.82216, "lon": -17.1028, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 1, "wc": 0, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMH9N"}, {"sid": "madeira-038", "n": "Clube Naval de São Vicente", "com": "São Vicente", "z": "norte", "lat": 32.81315, "lon": -17.03299, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Surf"], "nota": "Spiaggia non sorvegliata. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio. Onde di valore riconosciuto per il surf.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMH8L"}, {"sid": "madeira-039", "n": "Ribeira do Faial", "com": "Santana", "z": "norte", "lat": 32.793, "lon": -16.84842, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio. Rientra nel programma Praia Acessível.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMK7D"}, {"sid": "madeira-040", "n": "Ribeira das Galinhas", "com": "Calheta", "z": "oeste", "lat": 32.76441, "lon": -17.23506, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 0, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Surf"], "nota": "Spiaggia non sorvegliata. C'è uno stabilimento con servizio di ristoro. Ci sono docce, parcheggio. Onde di valore riconosciuto per il surf.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTME9L"}, {"sid": "madeira-041", "n": "Porto", "com": "Calheta", "z": "oeste", "lat": 32.7523, "lon": -17.2248, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 0, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata. Ci sono parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMK9W"}, {"sid": "madeira-042", "n": "Portinho", "com": "Calheta", "z": "oeste", "lat": 32.73479, "lon": -17.20872, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 0, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Surf"], "nota": "Spiaggia non sorvegliata. C'è uno stabilimento con servizio di ristoro. Ci sono docce, parcheggio. Onde di valore riconosciuto per il surf.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMH8F"}, {"sid": "madeira-043", "n": "Calheta", "com": "Calheta", "z": "oeste", "lat": 32.71911, "lon": -17.17498, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMW8M"}, {"sid": "madeira-044", "n": "Serra de Água", "com": "Calheta", "z": "oeste", "lat": 32.71643, "lon": -17.16879, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMK3V"}, {"sid": "madeira-045", "n": "Madalena do Mar", "com": "Ponta Do Sol", "z": "oeste", "lat": 32.70306, "lon": -17.13861, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMJ9X"}, {"sid": "madeira-046", "n": "Anjos - Ponta do Sol", "com": "Ponta Do Sol", "z": "oeste", "lat": 32.69057, "lon": -17.12048, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 0, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 0, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata. C'è uno stabilimento con servizio di ristoro. Ci sono docce.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMQ2F"}, {"sid": "madeira-047", "n": "Lugar de Baixo", "com": "Ponta Do Sol", "z": "oeste", "lat": 32.67931, "lon": -17.08683, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMU9L"}, {"sid": "madeira-048", "n": "Ponta do Sol", "com": "Ponta Do Sol", "z": "oeste", "lat": 32.67917, "lon": -17.10528, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMQ3E"}, {"sid": "madeira-049", "n": "Ribeira Brava", "com": "Ribeira Brava", "z": "oeste", "lat": 32.67083, "lon": -17.06722, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMT3M"}, {"sid": "madeira-050", "n": "Calhau da Lapa", "com": "Ribeira Brava", "z": "oeste", "lat": 32.66167, "lon": -17.03732, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 0, "ristorante": 0, "bar": 0, "lettini": null, "docce": 1, "wc": 0, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata. Ci sono docce.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTML7V"}, {"sid": "madeira-051", "n": "Fajã dos Padres", "com": "Ribeira Brava", "z": "oeste", "lat": 32.65428, "lon": -17.0224, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 0, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 0, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata. C'è uno stabilimento con servizio di ristoro. Ci sono docce.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMN2J"}, {"sid": "madeira-052", "n": "Porto Santo - Porto das Salemas", "com": "Porto Santo", "z": "portosanto", "lat": 33.0932, "lon": -16.34911, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 0, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata. Ci sono parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMV2J"}, {"sid": "madeira-053", "n": "Porto Santo - Penedo", "com": "Porto Santo", "z": "portosanto", "lat": 33.06222, "lon": -16.31833, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 0, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata. C'è uno stabilimento con servizio di ristoro. Ci sono parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMX9V"}, {"sid": "madeira-054", "n": "Porto Santo - Fontinha", "com": "Porto Santo", "z": "portosanto", "lat": 33.05528, "lon": -16.33694, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMJ9M"}, {"sid": "madeira-055", "n": "Porto Santo - Pedras Pretas", "com": "Porto Santo", "z": "portosanto", "lat": 33.05308, "lon": -16.340333, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 0, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata. C'è uno stabilimento con servizio di ristoro. Ci sono parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMP2D"}, {"sid": "madeira-056", "n": "Porto Santo - Ribeiro Cochino", "com": "Porto Santo", "z": "portosanto", "lat": 33.04917, "lon": -16.34472, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMQ9D"}, {"sid": "madeira-057", "n": "Porto Santo - Ribeiro Salgado", "com": "Porto Santo", "z": "portosanto", "lat": 33.045, "lon": -16.34917, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTME8L"}, {"sid": "madeira-058", "n": "Porto Santo - Cabeço da Ponta", "com": "Porto Santo", "z": "portosanto", "lat": 33.03528, "lon": -16.36028, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMQ7P"}, {"sid": "madeira-059", "n": "Porto Santo - Lagoa", "com": "Porto Santo", "z": "portosanto", "lat": 33.0302, "lon": -16.36675, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 0, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata. Ci sono parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTML2U"}, {"sid": "madeira-060", "n": "Porto Santo - Calheta", "com": "Porto Santo", "z": "portosanto", "lat": 33.02444, "lon": -16.37667, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 0, "sorveglianza": 0, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": [], "nota": "Spiaggia non sorvegliata. Ci sono parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTMV3W"}];
+const WEBCAM=[];
+const camDella=b=>WEBCAM.find(c=>c.sp.includes(b.n))||null;
+
+/* ======================= GEOMETRIA ======================= */
+const TERRA="M875.5,771.3L881.7,773.8L917.2,837.1L928.2,872.2L926.0,887.8L922.2,885.3L922.2,877.2L913.8,865.2L911.3,850.2L898.6,825.0L878.4,811.0L878.4,786.9L874.2,780.8L874.2,777.9L875.5,771.3ZM427.8,464.2L434.5,462.2L448.0,465.2L470.8,461.2L475.8,465.2L480.0,460.2L495.3,460.2L507.9,452.2L516.3,462.2L526.5,466.2L538.2,484.3L544.9,488.3L555.9,488.3L553.0,499.8L558.4,506.3L566.0,506.4L570.3,512.4L577.8,515.4L588.8,536.5L598.1,535.5L612.4,542.5L625.0,537.5L631.7,547.5L645.3,546.5L652.0,551.5L668.0,551.6L677.3,558.5L685.8,557.6L695.0,561.5L702.6,557.6L714.4,559.6L724.5,555.6L727.9,562.6L732.5,563.1L733.4,572.1L717.8,563.6L711.0,573.6L705.1,568.6L689.1,568.6L679.8,575.7L666.4,579.6L658.3,595.2L649.9,600.2L652.4,608.3L644.8,616.3L639.8,629.3L621.7,634.8L610.3,652.4L610.3,663.5L598.1,678.0L592.2,679.0L581.2,690.0L555.1,694.1L541.6,686.0L499.5,684.0L482.6,695.1L475.0,695.0L465.7,700.1L458.9,692.1L438.7,687.0L410.1,672.0L397.4,676.0L389.0,675.0L372.1,664.0L343.4,656.9L336.7,648.9L324.9,643.9L303.9,644.9L278.6,621.8L196.7,576.6L194.6,570.1L161.0,530.0L163.5,515.9L158.4,500.9L139.9,479.8L154.6,473.2L163.1,457.2L174.9,451.1L180.7,442.1L186.6,442.1L211.1,413.0L228.0,417.1L243.1,416.1L244.8,422.1L257.1,432.6L258.7,441.6L266.7,446.1L273.4,456.2L286.1,464.2L303.8,464.2L308.0,473.2L319.0,478.3L360.3,487.3L367.9,482.3L375.5,484.3L392.4,478.3L405.9,469.2L406.7,469.2L423.5,460.2L427.8,464.2ZM1034.4,190.7L1038.6,189.7L1036.9,185.7L1041.1,182.7L1042.8,171.7L1038.6,165.6L1046.6,163.1L1047.4,156.1L1060.1,152.1L1065.9,143.0L1088.7,134.0L1096.3,126.0L1098.0,130.0L1107.3,131.0L1112.3,139.0L1126.3,137.5L1127.1,145.5L1122.0,154.6L1131.3,165.6L1125.9,168.1L1123.7,173.7L1130.0,185.2L1121.6,186.1L1106.5,180.2L1088.8,185.2L1076.9,193.2L1050.8,221.3L1039.8,227.4L1032.2,220.3L1025.5,219.3L1019.2,207.8L1022.1,204.3L1028.1,205.3L1034.4,190.7Z";
+const COSTA=["M875.5,771.3L881.7,773.8L917.2,837.1L928.2,872.2L926.0,887.8L922.2,885.3L922.2,877.2L913.8,865.2L911.3,850.2L898.6,825.0L878.4,811.0L878.4,786.9L874.2,780.8L874.2,777.9L875.5,771.3Z", "M427.8,464.2L434.5,462.2L448.0,465.2L470.8,461.2L475.8,465.2L480.0,460.2L495.3,460.2L507.9,452.2L516.3,462.2L526.5,466.2L538.2,484.3L544.9,488.3L555.9,488.3L553.0,499.8L558.4,506.3L566.0,506.4L570.3,512.4L577.8,515.4L588.8,536.5L598.1,535.5L612.4,542.5L625.0,537.5L631.7,547.5L645.3,546.5L652.0,551.5L668.0,551.6L677.3,558.5L685.8,557.6L695.0,561.5L702.6,557.6L714.4,559.6L724.5,555.6L727.9,562.6L732.5,563.1L733.4,572.1L717.8,563.6L711.0,573.6L705.1,568.6L689.1,568.6L679.8,575.7L666.4,579.6L658.3,595.2L649.9,600.2L652.4,608.3L644.8,616.3L639.8,629.3L621.7,634.8L610.3,652.4L610.3,663.5L598.1,678.0L592.2,679.0L581.2,690.0L555.1,694.1L541.6,686.0L499.5,684.0L482.6,695.1L475.0,695.0L465.7,700.1L458.9,692.1L438.7,687.0L410.1,672.0L397.4,676.0L389.0,675.0L372.1,664.0L343.4,656.9L336.7,648.9L324.9,643.9L303.9,644.9L278.6,621.8L196.7,576.6L194.6,570.1L161.0,530.0L163.5,515.9L158.4,500.9L139.9,479.8L154.6,473.2L163.1,457.2L174.9,451.1L180.7,442.1L186.6,442.1L211.1,413.0L228.0,417.1L243.1,416.1L244.8,422.1L257.1,432.6L258.7,441.6L266.7,446.1L273.4,456.2L286.1,464.2L303.8,464.2L308.0,473.2L319.0,478.3L360.3,487.3L367.9,482.3L375.5,484.3L392.4,478.3L405.9,469.2L406.7,469.2L423.5,460.2L427.8,464.2Z", "M1034.4,190.7L1038.6,189.7L1036.9,185.7L1041.1,182.7L1042.8,171.7L1038.6,165.6L1046.6,163.1L1047.4,156.1L1060.1,152.1L1065.9,143.0L1088.7,134.0L1096.3,126.0L1098.0,130.0L1107.3,131.0L1112.3,139.0L1126.3,137.5L1127.1,145.5L1122.0,154.6L1131.3,165.6L1125.9,168.1L1123.7,173.7L1130.0,185.2L1121.6,186.1L1106.5,180.2L1088.8,185.2L1076.9,193.2L1050.8,221.3L1039.8,227.4L1032.2,220.3L1025.5,219.3L1019.2,207.8L1022.1,204.3L1028.1,205.3L1034.4,190.7Z"];
+const CONFINE=["M1133.7,190.1L1126.4,184.4L1127.9,182.8L1131.3,186.1L1134.2,184.4L1137.1,186.0L1137.6,189.2L1133.7,190.1Z", "M1131.1,101.1L1128.9,103.2L1128.2,101.4L1129.9,98.7L1131.1,101.1Z", "M1123.6,129.9L1126.7,127.9L1127.1,130.4L1123.6,129.9Z", "M1105.8,133.1L1105.7,135.9L1106.9,134.8L1114.1,136.8L1117.1,135.8L1118.0,132.6L1120.5,133.0L1121.7,139.5L1119.7,141.4L1121.0,143.3L1117.8,144.1L1115.4,151.4L1116.3,153.1L1120.7,153.2L1123.0,157.7L1122.4,159.8L1125.7,161.4L1121.0,161.8L1118.1,166.7L1119.1,168.0L1116.8,168.9L1121.9,180.9L1119.0,179.5L1114.6,180.8L1112.2,178.3L1107.5,177.2L1104.6,178.0L1104.7,180.8L1104.0,182.3L1100.4,183.2L1100.2,182.6L1104.1,181.6L1103.9,177.8L1097.5,177.1L1099.4,178.6L1099.5,181.2L1097.0,177.6L1087.6,179.8L1074.7,188.3L1048.4,215.3L1036.5,223.9L1031.9,223.2L1031.3,219.1L1029.5,217.8L1030.1,215.9L1027.5,216.7L1026.3,213.4L1022.4,215.5L1022.6,214.1L1020.6,213.9L1021.7,212.6L1018.5,204.8L1016.3,205.3L1015.9,203.9L1020.8,200.8L1021.5,202.3L1025.5,203.0L1024.3,198.8L1027.8,193.0L1030.3,192.5L1032.2,187.2L1033.7,188.6L1035.5,186.9L1033.6,185.2L1038.3,180.5L1036.7,176.5L1038.3,174.3L1037.5,171.6L1040.5,168.3L1038.6,164.9L1036.6,164.8L1036.8,162.8L1038.7,163.3L1037.4,161.4L1044.2,159.8L1041.9,156.3L1043.9,153.5L1045.7,154.5L1052.7,151.8L1054.0,152.9L1057.1,148.6L1056.4,146.7L1058.0,147.2L1058.9,143.9L1061.3,143.5L1060.3,141.1L1064.8,141.9L1067.2,138.7L1070.2,138.7L1072.0,135.3L1075.7,136.4L1075.0,133.5L1079.7,135.2L1079.0,132.5L1080.1,133.8L1081.7,132.7L1079.8,131.4L1085.1,131.4L1086.8,128.6L1090.7,127.8L1091.1,124.5L1093.3,123.5L1092.7,126.0L1095.5,126.7L1096.0,129.0L1102.7,129.3L1105.8,133.1Z", "M1034.0,255.2L1032.0,257.6L1031.6,254.7L1027.4,255.9L1028.9,250.0L1027.9,248.4L1024.1,247.5L1021.4,250.1L1021.9,248.1L1019.4,245.7L1021.3,244.8L1021.4,240.6L1025.5,239.8L1030.9,230.6L1030.6,227.6L1032.7,240.0L1030.3,246.4L1033.2,249.3L1034.0,255.2Z", "M1011.5,205.7L1004.7,211.3L1003.3,202.4L1004.2,203.6L1011.5,205.7Z", "M924.0,902.1L923.3,916.0L927.5,931.7L927.4,941.3L932.2,950.9L938.9,955.7L949.9,971.0L942.0,968.3L933.5,962.7L920.1,931.1L919.4,919.9L918.4,913.7L920.4,910.6L921.9,898.2L924.0,902.1Z", "M900.4,830.1L898.1,828.3L895.5,821.0L888.4,813.5L878.8,809.7L878.1,807.2L875.0,805.3L877.1,802.6L875.1,794.8L877.1,793.1L876.8,789.9L875.2,789.2L876.1,786.5L871.4,776.6L873.2,769.9L872.1,767.3L876.7,769.5L880.7,780.3L891.0,790.0L891.3,795.2L896.1,806.0L903.0,814.6L905.6,822.6L912.6,831.1L914.4,842.5L919.4,852.0L920.5,861.1L923.5,868.3L921.4,883.9L918.9,880.6L918.9,872.7L909.6,858.9L908.5,846.8L902.9,839.8L900.4,830.1Z", "M868.2,745.9L871.2,761.9L866.8,756.5L864.0,748.7L864.5,746.6L868.2,745.9Z", "M753.1,577.3L755.2,577.0L752.9,581.2L748.6,580.3L750.3,578.3L751.3,580.2L753.1,577.3Z", "M740.4,573.6L744.5,572.8L748.5,577.6L743.9,578.6L743.7,576.9L739.8,577.0L739.5,575.3L734.7,574.0L731.2,568.1L733.5,565.9L732.8,568.1L733.9,567.3L735.2,571.6L741.0,571.5L740.4,573.6Z", "M239.0,412.4L240.9,414.7L238.0,414.5L240.7,418.8L253.5,427.7L255.4,436.7L264.2,442.6L268.3,450.9L280.1,460.6L288.9,462.8L291.8,460.5L291.7,462.4L293.5,462.6L294.1,459.9L296.7,462.8L299.5,461.5L302.5,466.3L303.4,464.5L304.2,467.4L302.6,466.6L302.1,468.0L303.4,470.0L307.3,472.4L308.8,470.5L308.8,473.1L312.1,475.2L323.3,474.3L354.6,483.6L362.4,479.3L366.7,480.3L378.9,475.6L390.5,475.1L399.3,468.5L407.4,466.1L417.0,457.3L420.9,458.2L424.6,461.8L430.1,459.8L443.8,461.7L446.2,461.0L446.7,458.7L447.7,459.8L458.4,457.0L485.6,454.0L495.4,450.0L502.6,450.5L504.1,448.5L503.6,450.2L507.4,451.9L510.3,457.6L524.6,461.9L532.4,473.8L544.1,483.6L545.3,483.0L544.8,485.1L547.7,486.3L553.9,484.4L548.9,489.3L549.5,495.6L554.0,501.0L559.7,500.2L559.4,503.6L561.9,504.5L563.4,507.9L572.7,509.3L577.9,517.9L577.9,522.3L580.3,524.4L581.0,522.4L582.8,522.2L581.3,526.6L586.4,532.2L588.7,533.0L592.7,531.0L602.3,536.0L607.7,535.6L610.9,539.0L613.7,536.6L619.2,535.7L617.8,534.3L619.9,534.5L626.3,542.7L629.0,542.6L631.2,544.7L636.8,542.8L640.7,545.4L643.6,542.9L650.6,546.3L655.3,544.8L661.9,547.7L664.8,547.2L669.3,552.4L672.4,551.9L671.1,553.7L673.6,556.4L675.0,554.7L677.4,555.8L682.3,552.1L684.9,557.0L687.8,555.4L694.4,557.1L696.1,554.8L699.9,554.9L700.1,551.9L701.7,551.6L704.4,554.7L711.2,556.1L713.9,551.6L719.0,553.3L719.5,551.0L718.2,550.2L719.3,550.2L721.5,551.6L719.9,553.1L720.2,557.5L728.8,558.1L730.3,561.4L728.7,562.4L730.1,562.9L729.7,565.8L731.3,567.4L727.3,569.6L728.5,567.9L724.1,563.7L723.4,560.1L714.9,556.8L711.8,561.3L713.1,564.8L709.7,564.4L706.7,567.5L702.8,563.7L695.9,565.5L699.5,564.3L695.8,564.6L694.2,562.7L690.9,564.1L684.6,563.2L683.7,565.2L679.3,567.1L679.8,569.9L674.5,574.6L679.5,568.7L675.4,570.8L674.1,569.6L675.4,572.4L672.2,570.0L669.2,572.5L667.4,571.3L663.7,572.4L662.6,576.2L660.4,576.7L661.0,580.2L657.5,581.2L653.4,590.5L649.8,593.6L650.2,592.5L647.9,591.6L645.3,593.8L644.5,595.7L647.8,599.8L648.2,605.4L639.7,613.8L641.3,613.4L639.4,614.7L635.9,625.2L624.6,629.3L619.8,628.7L616.8,631.0L607.4,645.6L605.6,658.9L603.8,658.2L601.5,660.2L600.9,661.9L602.3,662.2L596.5,667.8L595.0,672.0L586.7,674.6L584.6,679.6L580.6,681.5L577.5,686.1L571.8,685.0L566.2,687.0L561.4,686.4L558.8,687.7L558.6,690.9L550.4,686.7L529.6,680.1L512.1,678.0L501.7,678.5L497.0,680.9L498.3,679.0L496.7,680.5L495.9,679.2L490.6,684.6L500.8,684.6L486.6,684.6L484.2,687.2L482.6,686.6L481.6,690.0L474.9,692.3L470.3,691.0L468.3,691.8L468.1,694.0L461.0,694.8L459.5,690.6L452.0,684.2L450.2,685.1L447.1,682.6L435.5,681.1L432.2,677.0L431.4,680.0L431.4,678.3L426.6,675.1L420.8,673.0L412.2,673.5L403.0,669.7L389.9,671.6L384.4,669.9L371.6,660.6L356.4,656.6L345.0,651.3L342.1,651.8L342.5,653.1L334.0,644.1L320.1,638.9L316.1,640.2L309.7,637.1L308.6,638.3L310.5,639.5L307.3,638.2L301.1,640.4L266.5,610.2L261.1,609.9L252.7,602.1L245.7,600.2L236.3,594.5L233.8,594.7L232.6,593.3L234.0,592.8L231.3,591.7L233.0,594.4L228.3,591.3L229.7,591.8L229.4,590.4L226.8,589.3L226.4,590.4L221.8,587.0L212.9,584.7L206.4,577.7L191.6,569.7L188.3,559.0L183.8,556.9L181.1,551.7L180.0,551.1L179.9,552.8L175.7,548.5L169.1,536.6L163.6,532.6L158.7,526.1L160.7,515.8L152.5,491.5L140.9,482.9L137.7,476.5L144.8,472.6L155.1,463.2L160.1,454.0L174.4,444.7L184.2,435.2L189.8,426.2L196.9,422.5L203.9,411.7L209.7,408.8L226.5,413.6L233.6,410.7L234.9,412.4L239.8,411.2L239.0,412.4Z"];
+const ISOLE=[];
+const BATIM=[["M1017.7,180.5L1022.2,154.8L1034.7,139.7L1090.0,105.0L1133.4,116.9L1144.1,130.7L1150.1,165.9L1143.2,201.0L1123.4,208.3L1095.7,206.1L1046.0,248.4L1016.3,238.7L1002.6,218.0L1002.7,197.3L1017.7,180.5Z", "M857.4,765.7L874.3,749.1L897.3,761.5L933.8,826.9L945.7,864.4L944.0,893.7L936.5,906.2L922.1,909.6L908.8,900.8L885.0,841.4L862.6,822.9L857.4,765.7Z", "M127.2,463.3L211.1,390.8L249.4,395.1L285.7,438.7L357.1,463.9L385.5,457.4L420.8,438.1L448.3,442.6L513.3,430.9L538.7,449.3L550.0,466.0L567.8,471.1L598.7,513.2L628.4,515.6L681.9,535.6L732.8,535.6L748.9,552.3L751.4,578.1L737.9,593.7L694.6,590.9L678.3,599.1L653.7,644.2L632.6,654.5L623.5,679.2L588.7,710.4L553.8,716.3L536.9,708.1L503.9,706.5L460.6,721.5L408.5,695.5L385.2,696.8L322.0,666.3L297.4,665.8L268.8,641.0L183.1,591.8L145.4,542.3L142.5,513.6L124.6,492.6L121.2,478.4L127.2,463.3Z"], ["M978.1,192.8L1003.3,136.3L1024.9,112.4L1081.8,77.7L1102.3,75.2L1146.5,92.2L1161.9,108.6L1173.6,156.1L1172.2,195.5L1165.7,213.9L1150.2,230.5L1125.8,237.2L1104.6,233.4L1068.8,267.9L1032.8,277.9L997.5,258.3L979.2,226.8L978.1,192.8Z", "M833.8,758.3L846.5,733.4L868.6,720.7L895.3,725.2L915.1,741.5L955.5,813.7L969.9,859.4L967.5,901.3L953.7,927.0L921.4,938.8L888.6,917.3L867.3,862.7L850.0,849.5L838.3,829.8L831.1,782.3L833.8,758.3Z", "M118.1,525.9L96.8,481.6L105.3,449.2L187.2,370.4L215.3,362.0L261.6,369.8L299.5,412.9L354.1,433.8L376.6,430.4L417.3,409.5L448.8,413.3L520.4,403.1L583.3,448.8L614.1,487.9L632.9,487.1L688.4,506.5L727.5,504.4L747.3,512.1L770.3,538.4L776.3,576.2L769.8,599.3L751.5,618.6L693.8,624.1L668.9,667.1L651.4,678.6L625.6,717.4L598.5,736.9L556.4,745.3L509.7,735.8L462.5,751.2L406.4,726.0L380.4,725.2L315.3,695.6L288.9,692.9L256.1,665.9L175.0,620.8L127.6,562.4L118.1,525.9Z"], ["M953.2,191.8L983.3,119.7L1012.2,87.7L1073.6,50.4L1112.1,48.0L1157.9,66.6L1182.0,92.2L1197.6,150.7L1196.1,201.4L1181.9,236.4L1161.6,256.1L1143.1,263.9L1110.5,265.2L1068.1,300.2L1028.9,306.5L981.7,280.3L956.6,237.5L953.2,191.8Z", "M810.3,750.9L825.6,717.4L858.4,693.7L896.7,695.2L929.7,717.5L977.2,800.5L993.4,852.2L991.0,908.9L974.3,943.7L952.1,961.8L925.6,968.0L899.2,961.4L873.9,941.2L848.1,882.9L829.4,866.0L815.7,840.5L806.8,783.1L810.3,750.9Z", "M108.8,580.8L73.1,490.4L74.6,459.7L85.7,432.0L173.7,346.3L211.1,332.8L272.1,343.6L310.9,384.4L353.0,404.1L413.7,380.8L449.3,383.9L501.3,372.3L527.5,375.4L593.5,421.7L624.1,457.3L694.7,478.0L735.7,476.5L760.2,487.5L791.6,524.4L800.6,578.5L793.6,608.0L777.9,632.3L749.5,650.0L707.9,653.7L645.7,734.7L614.1,760.1L557.2,774.3L515.5,765.1L460.6,780.1L403.0,755.9L375.6,753.6L307.9,725.0L280.4,720.1L243.5,690.9L162.6,645.8L108.8,580.8Z"]];
+const VICINE=[[0.5, "M1009.9,200.4L1030.4,174.8L1028.3,160.3L1039.8,146.2L1092.5,113.4L1136.6,132.2L1142.6,165.8L1138.0,194.7L1092.9,197.7L1043.5,240.0L1019.1,230.3L1008.8,212.7L1009.9,200.4Z"], [0.5, "M864.6,767.9L873.7,758.1L888.9,763.6L926.5,829.6L939.4,871.6L931.4,899.5L914.1,894.6L890.4,834.9L868.9,818.1L864.6,767.9Z"], [0.5, "M420.8,447.2L492.4,446.8L511.1,439.4L533.8,456.1L545.5,473.7L563.1,478.0L566.5,493.0L585.2,505.4L594.7,522.4L612.8,528.2L627.1,524.3L636.9,533.7L694.6,547.2L727.5,542.7L742.4,556.6L743.9,576.9L735.0,585.3L692.4,582.0L673.5,591.3L648.1,638.2L628.2,646.7L618.2,672.9L585.7,702.3L554.4,707.4L538.8,699.3L502.1,697.5L463.7,713.3L409.2,686.1L386.7,688.1L323.2,657.3L300.0,657.4L272.7,633.3L191.1,588.1L151.6,537.4L148.9,508.5L128.7,481.5L132.3,469.9L147.1,462.3L155.7,447.0L210.0,399.7L247.9,404.0L280.8,445.7L308.0,451.8L322.0,465.4L358.4,473.3L388.3,465.8L420.8,447.2Z"], [0.34, "M1012.7,177.5L1017.3,151.5L1032.8,133.0L1095.0,97.1L1143.4,116.8L1155.6,163.1L1153.3,193.8L1143.5,209.3L1097.8,212.4L1063.1,246.3L1040.7,256.3L1011.6,243.1L996.6,218.5L996.8,196.7L1012.7,177.5Z"], [0.34, "M851.9,764.0L860.9,748.1L873.9,742.4L902.0,757.7L938.8,823.9L951.7,865.0L949.5,895.4L939.7,911.7L921.0,916.1L901.8,901.1L880.9,846.3L855.7,821.6L851.9,764.0Z"], [0.34, "M117.0,469.9L208.7,384.2L251.3,388.8L289.4,433.4L356.1,456.9L383.5,451.2L420.0,431.5L448.5,435.9L515.0,424.5L552.8,459.3L571.4,466.0L602.0,506.9L629.4,509.0L683.3,528.8L735.3,529.6L753.8,549.1L756.8,579.9L739.2,600.2L696.2,597.6L681.9,604.9L656.2,650.6L635.9,660.4L630.5,679.6L615.3,698.5L586.6,718.3L553.5,723.0L535.4,714.7L505.3,713.3L463.9,729.0L408.1,702.6L381.8,702.6L321.2,673.0L293.2,670.9L265.9,646.7L184.4,601.6L140.7,546.0L137.8,517.5L116.8,489.0L117.0,469.9Z"], [0.21, "M979.0,193.1L1004.0,136.9L1025.4,113.3L1082.1,78.8L1102.2,76.3L1142.3,91.1L1161.1,109.2L1172.7,156.3L1171.3,195.3L1162.5,217.2L1149.8,229.5L1125.7,236.1L1104.4,232.3L1068.4,266.9L1033.0,276.8L998.1,257.5L980.1,226.3L979.0,193.1Z"], [0.21, "M834.7,758.6L847.2,734.2L868.7,721.8L895.0,726.2L914.4,742.2L954.7,814.2L969.0,859.7L966.6,901.0L953.1,926.1L921.5,937.6L889.3,916.6L868.0,861.9L850.6,848.7L839.2,829.4L832.1,782.2L834.7,758.6Z"], [0.21, "M119.1,525.4L98.1,486.4L106.0,449.9L187.7,371.3L215.2,363.1L261.2,370.8L299.1,414.0L354.1,435.0L377.0,431.4L417.4,410.6L448.8,414.4L520.1,404.2L582.7,449.6L613.5,488.8L632.7,488.2L688.2,507.6L727.4,505.5L746.8,513.0L769.4,538.9L775.4,576.1L766.7,602.7L751.1,617.6L693.2,623.1L668.2,666.2L650.6,677.7L625.0,716.6L598.2,735.9L556.4,744.2L509.5,734.7L462.5,750.1L406.5,724.9L380.6,724.1L315.6,694.5L289.2,691.9L256.6,665.0L175.4,619.9L128.4,561.7L119.1,525.4Z"], [0.12, "M955.0,192.2L984.8,121.0L1013.1,89.6L1074.3,52.5L1111.6,50.2L1157.0,68.6L1180.4,93.5L1195.7,151.1L1194.2,200.9L1180.5,234.9L1160.7,254.1L1136.4,262.8L1109.9,262.8L1067.3,298.2L1029.2,304.3L982.9,278.6L958.4,236.7L955.0,192.2Z"], [0.12, "M812.1,751.5L831.4,713.6L858.8,695.9L896.1,697.3L928.4,719.1L975.5,801.6L991.6,852.8L989.2,908.3L973.0,942.1L951.3,959.7L925.6,965.8L900.0,959.4L875.2,939.6L849.7,881.4L830.7,864.5L817.4,839.7L808.7,783.0L812.1,751.5Z"], [0.12, "M110.3,579.4L80.1,511.7L74.4,482.6L87.2,433.3L174.7,348.2L198.3,336.5L217.6,335.4L271.3,345.6L309.9,386.5L353.1,406.4L414.0,383.0L449.3,386.2L501.5,374.6L526.9,377.5L592.4,423.5L623.3,459.5L694.3,480.2L735.4,478.6L759.2,489.4L789.9,525.5L798.7,578.3L792.0,607.0L776.7,630.6L749.1,647.8L706.9,651.4L644.4,733.2L607.6,761.4L557.1,772.0L515.1,762.8L460.8,777.9L403.2,753.6L375.9,751.4L308.4,722.7L281.0,718.0L244.4,688.9L163.6,643.9L110.3,579.4Z"], [0.055, "M927.5,185.6L974.0,85.0L1019.6,46.2L1073.5,17.9L1118.2,17.7L1170.2,39.0L1203.6,74.6L1223.3,144.9L1221.7,207.7L1202.1,256.3L1173.9,283.6L1119.6,297.5L1098.4,317.3L1061.6,335.7L1015.5,335.0L964.7,304.0L932.3,249.0L926.0,217.7L927.5,185.6Z"], [0.055, "M784.9,743.0L806.2,696.4L827.0,676.0L851.7,663.6L896.2,662.7L941.9,688.5L995.0,775.2L1018.8,844.4L1018.3,906.2L999.4,957.0L970.7,985.7L934.9,998.7L897.6,994.0L861.7,970.3L791.3,852.0L780.6,784.0L784.9,743.0Z"], [0.055, "M88.5,600.5L51.2,515.5L46.3,483.9L49.2,452.0L64.6,413.4L159.1,320.3L184.0,306.4L211.2,301.6L274.7,311.2L299.3,327.0L324.7,355.7L356.1,371.9L409.9,349.9L449.4,352.3L507.9,340.7L543.7,349.2L608.1,395.8L634.2,426.6L698.3,446.3L740.1,445.7L774.1,461.1L814.5,509.4L827.0,570.3L817.1,622.0L795.3,655.7L764.4,677.2L721.1,684.3L664.2,756.8L626.9,787.3L567.2,804.6L519.9,797.2L468.1,811.5L440.1,807.3L397.9,787.3L370.4,784.2L271.3,749.3L229.8,717.7L149.4,672.7L88.5,600.5Z"]];
+const CIME=[];
+const PAESI=[];
+const svg=document.getElementById("carta"), telaio=document.getElementById("telaio");
+/* questa regione non è un'isola: le regioni confinanti fanno da fondo,
+   e il tratto di costa vera è disegnato in modo diverso dal confine di terra */
+document.getElementById("gVicine").innerHTML=VICINE.map(([op,d])=>
+  '<path class="vicina" d="'+d+'" opacity="'+Math.min(.78,op*1.45).toFixed(3)+'"/>').join("");
+document.getElementById("gTerra").innerHTML=
+  '<path class="terra nudo" d="'+TERRA+'"/>'+
+  ISOLE.map(d=>'<path class="isolotto" d="'+d+'"/>').join("")+
+  CONFINE.map(d=>'<path class="confine" d="'+d+'"/>').join("")+
+  COSTA.map(d=>'<path class="costa" d="'+d+'"/>').join("");
+/* linee equidistanti dalla costa: calcolate solo al largo, mai oltre il confine di terra */
+document.getElementById("gBatim").innerHTML=BATIM.map((liv,i)=>
+  liv.map(d=>'<path class="batim" d="'+d+'" opacity="'+(0.5-i*0.1).toFixed(2)+'"/>').join("")).join("");
+(function(){
+  let g="";
+  for(let la=33.0;la>=32.6;la-=0.2){const y=py(la).toFixed(1),gr=Math.floor(la+1e-9),pr=Math.round((la-gr)*60);
+    g+='<line class="griglia" x1="'+(PIENO.x-10)+'" y1="'+y+'" x2="'+(PIENO.x+PIENO.w)+'" y2="'+y+'"/>';
+    g+='<text x="'+(PIENO.x+PIENO.w-16)+'" y="'+(+y-4)+'" text-anchor="end" class="grado-lat" font-family="IBM Plex Mono,monospace" font-size="9" fill="#7ea9be" opacity=".8">'+gr+"°"+String(pr).padStart(2,"0")+"′N</text>";}
+  for(let lo=-17.2;lo<=-16.4;lo+=0.2) g+='<line class="griglia" x1="'+px(lo).toFixed(1)+'" y1="'+(PIENO.y-10)+'" x2="'+px(lo).toFixed(1)+'" y2="'+(PIENO.y+PIENO.h)+'"/>';
+  document.getElementById("gGriglia").innerHTML=g;
+})();
+document.getElementById("gCime").innerHTML=CIME.map(c=>{const x=px(c.lon),y=py(c.lat);
+  return '<g class="segno" data-x="'+x.toFixed(1)+'" data-y="'+y.toFixed(1)+'" transform="translate('+x.toFixed(1)+','+y.toFixed(1)+')">'+
+   '<path class="cima" d="M-8,6 L0,-7 L8,6"/>'+
+   '<text class="eti-cima" y="17" text-anchor="middle" font-size="8">'+c.h+'</text></g>';}).join("");
+document.getElementById("gPaesi").innerHTML=PAESI.map(p=>{const x=px(p.lon),y=py(p.lat);
+  return '<g class="segno" data-x="'+x.toFixed(1)+'" data-y="'+y.toFixed(1)+'" transform="translate('+x.toFixed(1)+','+y.toFixed(1)+')">'+
+   '<rect class="paese-pt" x="-2" y="-2" width="4" height="4"/>'+
+   '<text class="eti-paese" y="-6" text-anchor="middle" font-size="8.5">'+p.n+'</text></g>';}).join("");
+
+const raggio=b=>{const v=parseFloat(String(b.lung).replace(/[^0-9,\.]/g,"").replace(",",".")||"1");
+  const k=/km/.test(b.lung)?v:v/1000; return Math.max(3,Math.min(6.4,3+Math.sqrt(k||.3)*1.6));};
+/* Bandiera Blu: una bandierina che sventola sull'asta, sotto il segno della
+   spiaggia. Il disegno è fermo: con centosessanta segni per pagina, farla
+   sventolare davvero costerebbe più di quel che vale. */
+const BANDIERA='M-0.42,0.9L-0.42,-9.2L0.42,-9.2L0.42,0.9Z'
+  +'M0.42,-8.85C2.15,-9.9 3.6,-7.8 5.35,-8.75L5.35,-5.75C3.6,-4.8 2.15,-6.9 0.42,-5.85Z';
+/* Dodici posizioni: le prime quattro accostate al segno, le altre otto
+   piu’ lontane — e quelle vogliono il filo che le lega al segno. */
+const posEti={W:[-10,3.5,"end"],E:[10,3.5,"start"],N:[0,-11,"middle"],S:[0,17,"middle"]};
+const SCALE=[["E",10,3.5,"start",0],["W",-10,3.5,"end",0],["N",0,-11,"middle",0],["S",0,17,"middle",0],["NE",17,-10,"start",1],["NW",-17,-10,"end",1],["SE",17,17,"start",1],["SW",-17,17,"end",1],["E2",30,3.5,"start",1],["W2",-30,3.5,"end",1],["N2",0,-25,"middle",1],["S2",0,31,"middle",1]];
+document.getElementById("gMarker").innerHTML=SPIAGGE.map((b,i)=>{
+  const A=ACCESSI[b.acc]||ACCESSI.nc,c=A.col,p=posEti[b.lato]||posEti.E;
+  /* La forma dice quel che sappiamo: cerchio dimensionato se la lunghezza è nota,
+     quadratino fisso se non lo è. Il colore dice l'accesso, grigio se ignoto. */
+  const noto=!!b.lung,r=noto?raggio(b):2.9;
+  return '<g class="marker" data-i="'+i+'" tabindex="0" role="button" aria-label="'+b.n+', '+b.com+'" '+
+   'transform="translate('+px(b.lon).toFixed(1)+','+py(b.lat).toFixed(1)+')">'+
+   '<circle r="9" fill="transparent"/>'+
+   (noto ? '<circle class="alone" r="'+(r+3).toFixed(1)+'" stroke="'+c+'"/>'
+         + '<circle class="cuore" r="'+r.toFixed(1)+'" fill="'+c+'"/>'
+         : '<rect class="alone-q" x="'+(-r-2.2).toFixed(1)+'" y="'+(-r-2.2).toFixed(1)+'" width="'+((r+2.2)*2).toFixed(1)+'" height="'+((r+2.2)*2).toFixed(1)+'" rx="1" stroke="'+c+'"/>'
+         + '<rect class="cuore-q" x="'+(-r).toFixed(1)+'" y="'+(-r).toFixed(1)+'" width="'+(r*2).toFixed(1)+'" height="'+(r*2).toFixed(1)+'" rx=".6" fill="'+c+'"/>')+
+   (b.sv.bb?'<g class="banda"><path class="bandierina" d="'+BANDIERA+'"/></g>':'')+
+   '<g class="etim"><line class="guida" x1="0" y1="0" x2="0" y2="0"/><text class="nome" x="'+p[0]+'" y="'+p[1]+'" text-anchor="'+p[2]+'">'+b.n+'</text></g></g>';}).join("");
+const MARKER=[...document.querySelectorAll(".marker")];
+
+/* Le due legende nascono dagli stessi dati della carta: le misure passano per
+   raggio(), i colori vengono da ACCESSI. Se domani si cambia la formula o si
+   aggiunge un modo d'accesso, la legenda si aggiorna da sola. */
+(function legende(){
+  const cerchio=(r,riemp,bordo)=>'<svg viewBox="-8 -8 16 16" width="16" height="16" aria-hidden="true">'
+    +'<circle r="'+r.toFixed(1)+'" fill="'+riemp+'" stroke="'+bordo+'" stroke-width="1.4"/></svg>';
+  const voce=(dis,et)=>'<span class="lg-voce">'+dis+'<i>'+et+'</i></span>';
+
+  document.getElementById("lgMisure").innerHTML =
+    [["≈100 m","100 m"],["≈500 m","500 m"],["≈1 km","1 km"],["≈2 km","2 km"],["≈4 km","4 km"]]
+      .map(([lung,et])=>voce(cerchio(raggio({lung}),"#fff","#5f849c"),et)).join("")
+    + (SPIAGGE.some(b=>!b.lung)?voce('<svg viewBox="-8 -8 16 16" width="16" height="16" aria-hidden="true">'
+        +'<rect x="-2.9" y="-2.9" width="5.8" height="5.8" rx=".6" fill="#fff" stroke="#5f849c" stroke-width="1.4"/></svg>',"lunghezza non nota"):"");
+
+  document.getElementById("lgColori").innerHTML =
+    Object.values(ACCESSI).map(a=>voce(cerchio(4.6,a.col,"#fff"),a.et)).join("")+(SPIAGGE.some(b=>b.sv.bb)?voce('<svg viewBox="-8 -8 16 16" width="16" height="16" aria-hidden="true">'
+      +'<circle r="3.4" cy="-2.2" fill="#9ed4ea" stroke="#fff" stroke-width="1.1"/>'
+      +'<path transform="translate(0,-1.4) scale(.62)" fill="#1786bd" d="'+BANDIERA+'"/></svg>',"Bandiera Blu 2026"):"");
+})();
+
+
+/* ---------------- scritte a dimensione costante ----------------
+   Le etichette vivono nel sistema della carta, quindi crescono con
+   l'ingrandimento. Qui vengono rimpicciolite della stessa quantità, così a
+   video restano sempre della stessa taglia; e quando due si toccano si
+   nasconde la meno importante (l'ordine è quello in cui sono elencate). */
+const SEGNI=[...document.querySelectorAll("#gPaesi .segno, #gCime .segno")];
+const GRADI=[...document.querySelectorAll("#gGriglia .grado-lat")];
+const ETIM=MARKER.map(m=>m.querySelector(".etim"));
+const BANDE=MARKER.map(m=>m.querySelector(".banda"));
+let ultimoF="";
+const urtano=(r,m)=>!(r.x+r.w<m.x||m.x+m.w<r.x||r.y+r.h<m.y||m.y+m.h<r.y);
+
+/* quanti pixel deve misurare a video ciascuna scritta */
+/* quanti pixel deve misurare a video: le scritte in altezza,
+   il segno della spiaggia in raggio */
+const TAGLIA={nome:15, citta:12, quota:11, grado:12, segno:6.6, bandiera:17};
+/* il raggio tipico che raggio() restituisce, in unità di carta:
+   serve a convertire la misura a video in un fattore di scala */
+const SEGNO_BASE=4.4;
+/* l'altezza del disegno della bandierina in unità di carta */
+const BANDIERA_ALTA=10.1;
+/* Quanto spazio c'è, in media, fra una spiaggia e la sua vicina: si misura
+   una volta sola perché non dipende dall'ingrandimento. Primo quartile, così
+   tre spiagge su quattro stanno più comode di così. */
+const PASSO=(function(){
+  if(SPIAGGE.length<2) return 60;
+  const X=SPIAGGE.map(b=>px(b.lon)), Y=SPIAGGE.map(b=>py(b.lat)), d=[];
+  for(let i=0;i<X.length;i++){
+    let m=Infinity;
+    for(let j=0;j<X.length;j++){ if(i===j) continue;
+      const q=(X[i]-X[j])*(X[i]-X[j])+(Y[i]-Y[j])*(Y[i]-Y[j]);
+      if(q<m) m=q; }
+    d.push(Math.sqrt(m));
+  }
+  d.sort((a,b)=>a-b);
+  return d[Math.floor(d.length*0.25)]||60;
+})();
+function adattaTesti(v,s){
+  const r=telaio.getBoundingClientRect();
+  const perUnita=Math.min((r.width||600)/v.w,(r.height||600)/v.h) || 1;
+  /* fattore che porta un carattere da N unità di carta a TAGLIA pixel */
+  const q=x=>Math.max(.02,Math.min(24,x/perUnita));
+  const fCitta=q(TAGLIA.citta)/8.5, fGrado=q(TAGLIA.grado)/9;
+  SEGNI.forEach(g=>g.setAttribute("transform",
+    "translate("+g.dataset.x+","+g.dataset.y+") scale("+fCitta.toFixed(3)+")"));
+  GRADI.forEach(t=>{t.setAttribute("x",(v.x+v.w-16*fGrado).toFixed(1));
+    t.setAttribute("font-size",q(TAGLIA.grado).toFixed(2));});
+  /* il segno della spiaggia ha una sua scala: l'etichetta la annulla e
+     riparte dalla misura a video */
+  const fNome=q(TAGLIA.nome)/11;
+  const k=fNome/(s||1);
+  ETIM.forEach(g=>{ if(g) g.setAttribute("transform","scale("+k.toFixed(3)+")"); });
+  /* la bandierina non segue il segno: ha la sua misura a video, e resta
+     piantata con la base dell'asta al centro del cerchietto */
+  const kb=((TAGLIA.bandiera/perUnita)/BANDIERA_ALTA)/(s||1);
+  BANDE.forEach(g=>{ if(g) g.setAttribute("transform","scale("+kb.toFixed(3)+")"); });
+  const f=fCitta;
+
+  /* la sovrapposizione dipende anche da dove si guarda, non solo da quanto:
+     spostandosi alla stessa distanza le etichette restavano quelle di prima */
+  const firma=f.toFixed(3)+"|"+v.x.toFixed(0)+"|"+v.y.toFixed(0);
+  if(firma===ultimoF) return;
+  ultimoF=firma;
+  const messi=[];
+  /* dentro davvero: prima bastava che l'etichetta sfiorasse l'inquadratura, e
+     i nomi sul bordo restavano scritti a metà, tagliati dalla cornice */
+  const dentro=r=>r.x>=v.x && r.y>=v.y && r.x+r.w<=v.x+v.w && r.y+r.h<=v.y+v.h;
+
+  /* I segni occupano il posto per primi: una scritta sotto un pallino non si
+     legge, e il pallino non si può spostare. Ogni nome però può sfiorare il
+     proprio segno — è a quello che si riferisce. */
+  const ing=(s||1)*3.4;
+  const bolle=MARKER.map((m,i)=>{
+    if(m.classList.contains("spento")||m.style.display==="none") return null;
+    const b=SPIAGGE[i];
+    return {x:px(b.lon)-ing, y:py(b.lat)-ing, w:ing*2, h:ing*2};
+  });
+  const liberoDa=(r,mio)=>!bolle.some((q,j)=>q&&j!==mio&&urtano(r,q));
+
+  /* Prima le città: sono poche e danno l'ossatura alla carta. Se cedessero il
+     posto ai nomi delle spiagge — che sono cento volte tanti — resterebbe un
+     pulviscolo di nomi senza un riferimento per orientarsi. */
+  SEGNI.forEach(g=>{
+    g.style.display="";
+    const t=g.querySelector("text"); if(!t) return;
+    const b=t.getBBox(), x=+g.dataset.x, y=+g.dataset.y;
+    const r={x:x+b.x*f-1, y:y+b.y*f-1, w:b.width*f+2, h:b.height*f+2};
+    if(!dentro(r)||!liberoDa(r,-1)) { g.style.display="none"; return; }
+    if(messi.some(q=>urtano(r,q))) g.style.display="none"; else messi.push(r);
+  });
+
+  /* Poi i nomi delle spiagge, nello spazio rimasto. Il nome sta a destra del
+     segno; se a destra sborda, passa a sinistra. */
+  MARKER.forEach((m,i)=>{
+    const g=ETIM[i]; if(!g) return;
+    g.style.display="";
+    if(m.classList.contains("spento")||m.style.display==="none") return;
+    const t=g.querySelector("text"); if(!t) return;
+    const b=SPIAGGE[i], x=px(b.lon), y=py(b.lat);
+    const gu=g.querySelector(".guida");
+    /* La spiaggia sa da che parte ha il mare: se il nome sta a ponente si
+       prova prima a ponente. Il resto della scaletta e' sempre lo stesso. */
+    const ord=(b.lato==="W")
+      ? SCALE.slice().sort((a,c)=>(a[1]>0)-(c[1]>0))
+      : SCALE;
+    let messo=false;
+    for(const [,dx,dy,anc,filo] of ord){
+      t.setAttribute("x",dx); t.setAttribute("y",dy); t.setAttribute("text-anchor",anc);
+      if(gu) gu.setAttribute("x2","0"), gu.setAttribute("y2","0");
+      let bb; try{ bb=t.getBBox(); }catch(e){ return; }
+      const r={x:x+bb.x*fNome-1,y:y+bb.y*fNome-1,w:bb.width*fNome+2,h:bb.height*fNome+2};
+      if(!dentro(r)||!liberoDa(r,i)) continue;
+      if(messi.some(q=>urtano(r,q))) continue;
+      /* il filo parte dal bordo del segno e si ferma appena prima della
+         scritta: attaccato al pallino sarebbe una macchia, dentro la
+         scritta la sporcherebbe */
+      if(gu){
+        if(filo){
+          const L=Math.hypot(dx,dy), ux=dx/L, uy=dy/L;
+          gu.setAttribute("x1",(ux*7).toFixed(1)); gu.setAttribute("y1",(uy*7).toFixed(1));
+          gu.setAttribute("x2",(dx-ux*4).toFixed(1)); gu.setAttribute("y2",(dy-uy*4-2).toFixed(1));
+        }else{
+          gu.setAttribute("x1","0"); gu.setAttribute("y1","0");
+          gu.setAttribute("x2","0"); gu.setAttribute("y2","0");
+        }
+      }
+      messi.push(r); messo=true; break;
+    }
+    if(!messo) g.style.display="none";
+  });
+}
+
+/* ======================= ZOOM ======================= */
+let vista={...PIENO}, zonaAttiva=null, anim=null;
+function aspetta(bb){const r=telaio.getBoundingClientRect(),ar=(r.width||400)/(r.height||700);
+  let{x,y,w,h}=bb; if(w/h<ar){const nw=h*ar;x-=(nw-w)/2;w=nw;}else{const nh=w/ar;y-=(nh-h)/2;h=nh;} return{x,y,w,h};}
+function applicaVista(v){
+  svg.setAttribute("viewBox",v.x.toFixed(1)+" "+v.y.toFixed(1)+" "+v.w.toFixed(1)+" "+v.h.toFixed(1));
+  /* Il segno cresce appena appena quando ci si avvicina: abbastanza per
+     restare comodo da toccare, non tanto da coprire la spiaggia. */
+  /* Il segno ha la taglia che gli lascia la vicina più prossima: mai così
+     piccolo da non poterlo cliccare, mai così grande da coprire la costa. */
+  const rt=telaio.getBoundingClientRect();
+  const perU=Math.min((rt.width||600)/v.w,(rt.height||600)/v.h)||1;
+  const rPx=Math.max(3.5,Math.min(TAGLIA.segno, 0.58*PASSO*perU));
+  const s=Math.max(.02,Math.min(8,(rPx/perU)/SEGNO_BASE));
+  MARKER.forEach((m,i)=>{const b=SPIAGGE[i];
+    m.setAttribute("transform","translate("+px(b.lon).toFixed(1)+","+py(b.lat).toFixed(1)+") scale("+s.toFixed(3)+")");});
+  /* I nomi compaiono quando la carta è abbastanza vicina da farceli stare: sotto
+     il 55% della larghezza totale. Prima dipendevano dall'aver scelto una zona,
+     e la stessa spiaggia mostrava o nascondeva il nome senza un motivo visibile. */
+  svg.classList.add("nomi");
+  adattaTesti(v,s);
+  if(typeof disegnaQui==="function") disegnaQui();
+}
+function vaiA(bb){
+  const t=aspetta(bb),d={...vista},rid=!!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  if(anim) cancelAnimationFrame(anim);
+  if(rid){vista=t;applicaVista(t);aggiornaScala();return;}
+  const t0=performance.now(),dur=520;
+  (function passo(now){const k=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-k,3);
+    vista={x:d.x+(t.x-d.x)*e,y:d.y+(t.y-d.y)*e,w:d.w+(t.w-d.w)*e,h:d.h+(t.h-d.h)*e};
+    applicaVista(vista); aggiornaScala(); if(k<1) anim=requestAnimationFrame(passo);})(t0);
+}
+function bboxZona(z){const m=SPIAGGE.filter(b=>b.z===z),xs=m.map(b=>px(b.lon)),ys=m.map(b=>py(b.lat)),pad=52;
+  const x=Math.min(...xs)-pad,y=Math.min(...ys)-pad;
+  return{x,y,w:Math.max(...xs)-x+pad,h:Math.max(...ys)-y+pad};}
+function selezionaZona(z){zonaAttiva=z;
+  document.querySelectorAll("#zone button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.z===(z||"")));
+  MARKER.forEach((m,i)=>m.classList.toggle("eti",!!z&&SPIAGGE[i].z===z));
+  vaiA(z?bboxZona(z):PIENO);}
+document.getElementById("zone").innerHTML='<button data-z="" aria-pressed="true">Tutta la regione</button>'+
+  Object.entries(ZONE).map(([k,v])=>'<button data-z="'+k+'" aria-pressed="false">'+v+'</button>').join("");
+document.getElementById("zone").addEventListener("click",e=>{const b=e.target.closest("button");if(b)selezionaZona(b.dataset.z||null);});
+/* --- navigazione: rotella, trascinamento, pizzico, tastiera, pulsanti --- */
+const ZMIN=PIENO.w/70, ZMAX=PIENO.w*1.35;
+const bussola=document.getElementById("bussola");
+function aggiornaScala(){
+  const r=svg.getBoundingClientRect(); if(!r.width) return;
+  const kmPerUnita=1/KY*111;                      // 1 unità SVG ≈ km
+  const largKm=vista.w*kmPerUnita;
+  bussola.textContent=largKm>=100? Math.round(largKm)+" km" : largKm.toFixed(largKm<10?1:0)+" km";
+}
+/* Il centro dell'inquadratura non esce dal rettangolo della regione: si può
+   arrivare a mettere il bordo della carta in mezzo allo schermo, non a
+   perderla del tutto. Senza questo, un trascinamento lungo lasciava sullo
+   schermo mare vuoto e nessun indizio su come tornare. */
+function dentroLaCarta(v){
+  const cx=Math.max(PIENO.x, Math.min(PIENO.x+PIENO.w, v.x+v.w/2)),
+        cy=Math.max(PIENO.y, Math.min(PIENO.y+PIENO.h, v.y+v.h/2));
+  return {x:cx-v.w/2, y:cy-v.h/2, w:v.w, h:v.h};
+}
+function fissa(v){
+  vista=dentroLaCarta(v);
+  applicaVista(vista); aggiornaScala();
+}
+function zoomA(f,fx,fy){
+  if(anim) cancelAnimationFrame(anim);
+  const nw=Math.max(ZMIN,Math.min(ZMAX,vista.w*f)), k=nw/vista.w;
+  fissa({x:fx-(fx-vista.x)*k, y:fy-(fy-vista.y)*k, w:nw, h:vista.h*k});
+}
+function centroVista(){ return [vista.x+vista.w/2, vista.y+vista.h/2]; }
+function puntoUtente(cx,cy){
+  const r=svg.getBoundingClientRect();
+  return [vista.x+(cx-r.left)/r.width*vista.w, vista.y+(cy-r.top)/r.height*vista.h];
+}
+svg.addEventListener("wheel",e=>{
+  e.preventDefault();
+  const d=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?400:1);
+  const [fx,fy]=puntoUtente(e.clientX,e.clientY);
+  zoomA(Math.pow(1.0018,d),fx,fy);
+},{passive:false});
+
+let trascino=null, mosso=0, pizzico=null;
+svg.addEventListener("pointerdown",e=>{
+  if(e.pointerType==="mouse"&&e.button!==0) return;
+  if(anim) cancelAnimationFrame(anim);
+  trascino={cx:e.clientX,cy:e.clientY,vx:vista.x,vy:vista.y}; mosso=0;
+});
+/* niente setPointerCapture: catturerebbe il mouseup e il click non arriverebbe più al marker.
+   Gli ascoltatori stanno sulla finestra, così il trascinamento continua anche fuori dalla carta. */
+addEventListener("pointermove",e=>{
+  if(!trascino) return;
+  const r=svg.getBoundingClientRect();
+  const dx=(e.clientX-trascino.cx)/r.width*vista.w, dy=(e.clientY-trascino.cy)/r.height*vista.h;
+  mosso=Math.max(mosso,Math.abs(e.clientX-trascino.cx)+Math.abs(e.clientY-trascino.cy));
+  if(mosso<4) return;                       // sotto soglia resta un clic, non un trascinamento
+  svg.classList.add("trascino");
+  fissa({x:trascino.vx-dx, y:trascino.vy-dy, w:vista.w, h:vista.h});
+});
+["pointerup","pointercancel"].forEach(t=>addEventListener(t,()=>{
+  trascino=null; svg.classList.remove("trascino");
+}));
+const distanza=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+const medio=t=>[(t[0].clientX+t[1].clientX)/2,(t[0].clientY+t[1].clientY)/2];
+svg.addEventListener("touchstart",e=>{ if(e.touches.length===2){ trascino=null;
+  const [cx,cy]=medio(e.touches); pizzico={d:distanza(e.touches),cx,cy}; } },{passive:true});
+/* Due dita fanno due cose insieme: il punto di mezzo che si sposta trascina la carta,
+   le dita che si allontanano la ingrandiscono. Prima si poteva solo ingrandire, e per
+   spostarsi bisognava uscire e rientrare dallo zoom. */
+svg.addEventListener("touchmove",e=>{
+  if(!pizzico||e.touches.length!==2) return;
+  e.preventDefault();
+  const d=distanza(e.touches), [cx,cy]=medio(e.touches);
+  const r=svg.getBoundingClientRect();
+  if(r.width){                                   // prima lo spostamento, alla vista corrente
+    const dx=(cx-pizzico.cx)/r.width*vista.w, dy=(cy-pizzico.cy)/r.height*vista.h;
+    if(dx||dy) fissa({x:vista.x-dx, y:vista.y-dy, w:vista.w, h:vista.h});
+  }
+  if(d>4){                                       // poi l'ingrandimento, centrato fra le dita
+    const [fx,fy]=puntoUtente(cx,cy);
+    zoomA(pizzico.d/d,fx,fy);
+  }
+  pizzico={d,cx,cy};
+},{passive:false});
+svg.addEventListener("touchend",()=>{pizzico=null;});
+
+document.getElementById("zPiu").onclick=()=>{const[c,d]=centroVista();zoomA(1/1.6,c,d);};
+document.getElementById("zMeno").onclick=()=>{const[c,d]=centroVista();zoomA(1.6,c,d);};
+document.getElementById("zFit").onclick=()=>selezionaZona(null);
+telaio.addEventListener("keydown",e=>{
+  const passo=vista.w*0.16;
+  const mosse={ArrowLeft:[-passo,0],ArrowRight:[passo,0],ArrowUp:[0,-passo*(vista.h/vista.w)],ArrowDown:[0,passo*(vista.h/vista.w)]};
+  if(mosse[e.key]){ e.preventDefault(); if(anim)cancelAnimationFrame(anim);
+    fissa({x:vista.x+mosse[e.key][0], y:vista.y+mosse[e.key][1], w:vista.w, h:vista.h}); return; }
+  const[c,d]=centroVista();
+  if(e.key==="+"||e.key==="="){e.preventDefault();zoomA(1/1.6,c,d);}
+  if(e.key==="-"||e.key==="_"){e.preventDefault();zoomA(1.6,c,d);}
+  if(e.key==="0"){e.preventDefault();selezionaZona(null);}
+});
+
+/* ---- dove sono ------------------------------------------------------------
+   La posizione non viene chiesta all'apertura: solo quando si preme il pulsante.
+   Il cerchio chiaro attorno al punto è il margine d'errore dichiarato dal
+   dispositivo, che nelle città può essere di poche decine di metri e in campagna
+   di qualche chilometro: disegnarlo evita di far credere a una precisione
+   che non c'è. */
+let posizione=null;
+const gQui=document.getElementById("gQui");
+const avvisoQui=document.getElementById("avvisoQui");
+let timerAvviso=null;
+
+function avvisa(t,ms,storto){
+  if(!avvisoQui) return;
+  avvisoQui.innerHTML=t; avvisoQui.hidden=false;
+  avvisoQui.classList.toggle("storto",!!storto);
+  clearTimeout(timerAvviso);
+  if(ms) timerAvviso=setTimeout(()=>{avvisoQui.hidden=true;},ms);
+}
+const scappa=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+/* «distanza» è già presa dal pizzico a due dita: qui serve un altro nome. */
+const kmScritti=k=>k<1?Math.round(k*1000)+" m":k<10?k.toFixed(1)+" km":Math.round(k)+" km";
+function kmFra(la1,lo1,la2,lo2){          // formula dell'emisenoverso
+  const R=6371, r=Math.PI/180;
+  const dla=(la2-la1)*r, dlo=(lo2-lo1)*r;
+  const s=Math.sin(dla/2)**2+Math.cos(la1*r)*Math.cos(la2*r)*Math.sin(dlo/2)**2;
+  return 2*R*Math.asin(Math.min(1,Math.sqrt(s)));
+}
+function piuVicina(la,lo){
+  let b=null,d=Infinity;
+  SPIAGGE.forEach(s=>{const k=kmFra(la,lo,s.lat,s.lon); if(k<d){d=k;b=s;}});
+  return b?{spiaggia:b,km:d}:null;
+}
+function disegnaQui(){
+  if(!posizione){ gQui.innerHTML=""; return; }
+  const {lat,lon,acc}=posizione;
+  const s=Math.max(.26,Math.min(1,vista.w/PIENO.w));
+  /* il raggio d'errore è in metri e va convertito nelle unità della carta,
+     dove un'unità vale 111/KY chilometri */
+  const rAcc=Math.max(4,(acc/1000)/(111/KY));
+  gQui.innerHTML='<g class="qui-segno" transform="translate('+px(lon).toFixed(1)+','+py(lat).toFixed(1)+')">'+
+    '<circle class="qui-alone" r="'+rAcc.toFixed(1)+'"/>'+
+    '<g transform="scale('+s.toFixed(3)+')">'+
+      '<circle class="qui-bordo" r="7"/><circle class="qui-punto" r="4"/></g></g>';
+}
+function vaiAllaPosizione(){
+  if(!navigator.geolocation){ avvisa("Questo browser non sa dire dove sei.",6000,true); return; }
+  if(!window.isSecureContext){
+    avvisa("La posizione funziona solo su un indirizzo <b>https</b>, non aprendo il file dal telefono.",8000,true);
+    return;
+  }
+  avvisa("Cerco la posizione…");
+  navigator.geolocation.getCurrentPosition(p=>{
+    const lat=p.coords.latitude, lon=p.coords.longitude, acc=p.coords.accuracy||0;
+    posizione={lat,lon,acc};
+    disegnaQui();
+    const vic=piuVicina(lat,lon);
+    const x=px(lon), y=py(lat);
+    const dentro = x>=PIENO.x && x<=PIENO.x+PIENO.w && y>=PIENO.y && y<=PIENO.y+PIENO.h;
+    if(dentro){
+      const l=Math.max(ZMIN,PIENO.w*0.16);
+      vaiA({x:x-l/2, y:y-l*0.5*(PIENO.h/PIENO.w), w:l, h:l*(PIENO.h/PIENO.w)});
+      avvisa(vic ? "Sei qui. La spiaggia più vicina è <b>"+scappa(vic.spiaggia.n)+"</b>, a "+kmScritti(vic.km)
+           : "Sei qui.", 9000);
+    } else {
+      avvisa(vic ? "Sei fuori da questa carta. La più vicina fra le spiagge segnate è <b>"+
+             scappa(vic.spiaggia.n)+"</b>, a "+kmScritti(vic.km)
+           : "Sei fuori da questa carta.", 10000, true);
+    }
+  }, e=>{
+    const m = e.code===1 ? "Permesso negato: la posizione si concede dalle impostazioni del browser."
+            : e.code===2 ? "Posizione non disponibile in questo momento."
+            : "La ricerca della posizione è durata troppo.";
+    avvisa(m,8000,true);
+  }, {enableHighAccuracy:true, timeout:12000, maximumAge:60000});
+}
+document.getElementById("zQui").addEventListener("click",vaiAllaPosizione);
+addEventListener("resize",()=>{applicaVista(vista=aspetta(zonaAttiva?bboxZona(zonaAttiva):PIENO));aggiornaScala();});
+applicaVista(vista=aspetta(PIENO)); aggiornaScala();
+
+/* ======================= METEO E MARE ======================= */
+const WMO={0:["Sereno","sole"],1:["Poco nuvoloso","sole"],2:["Parz. nuvoloso","nuvole"],3:["Coperto","coperto"],
+ 45:["Nebbia","nebbia"],48:["Nebbia gelata","nebbia"],51:["Pioviggine","pioggia"],53:["Pioviggine","pioggia"],
+ 55:["Pioviggine forte","pioggia"],56:["Pioviggine gelata","pioggia"],57:["Pioviggine gelata","pioggia"],
+ 61:["Pioggia debole","pioggia"],63:["Pioggia","pioggia"],65:["Pioggia forte","pioggia"],
+ 66:["Pioggia gelata","pioggia"],67:["Pioggia gelata","pioggia"],71:["Neve","neve"],73:["Neve","neve"],
+ 75:["Neve forte","neve"],77:["Nevischio","neve"],80:["Rovesci","pioggia"],81:["Rovesci","pioggia"],
+ 82:["Rovesci forti","pioggia"],85:["Rovesci di neve","neve"],86:["Rovesci di neve","neve"],
+ 95:["Temporale","temporale"],96:["Temporale e grandine","temporale"],99:["Temporale e grandine","temporale"]};
+const GLIFI={
+ sole:'<circle cx="12" cy="12" r="4.6" fill="#f0b429"/><g stroke="#f0b429" stroke-width="1.7" stroke-linecap="round"><path d="M12 2.4v2.4M12 19.2v2.4M2.4 12h2.4M19.2 12h2.4M5.2 5.2l1.7 1.7M17.1 17.1l1.7 1.7M18.8 5.2l-1.7 1.7M6.9 17.1l-1.7 1.7"/></g>',
+ nuvole:'<circle cx="9" cy="9.5" r="3.6" fill="#f0b429"/><path d="M7.4 18.4a4.1 4.1 0 01-.3-8.2 5.6 5.6 0 0110.7 1.3 3.5 3.5 0 01-.6 6.9z" fill="#cfe3ee"/>',
+ coperto:'<path d="M6.6 19a4.4 4.4 0 01-.3-8.8 6 6 0 0111.5 1.4A3.8 3.8 0 0117.3 19z" fill="#b9cfdd"/>',
+ nebbia:'<path d="M6.8 13.6a4 4 0 01-.3-8 5.5 5.5 0 0110.5 1.3 3.4 3.4 0 01-.5 6.7z" fill="#cfe3ee"/><g stroke="#9fb6c3" stroke-width="1.6" stroke-linecap="round"><path d="M4.6 17h14.8M7 20h10"/></g>',
+ pioggia:'<path d="M6.8 14.6a4 4 0 01-.3-8 5.5 5.5 0 0110.5 1.3 3.4 3.4 0 01-.5 6.7z" fill="#b9cfdd"/><g stroke="#1786bd" stroke-width="1.8" stroke-linecap="round"><path d="M8.6 17.4l-1 3M12.4 17.4l-1 3M16.2 17.4l-1 3"/></g>',
+ neve:'<path d="M6.8 14.6a4 4 0 01-.3-8 5.5 5.5 0 0110.5 1.3 3.4 3.4 0 01-.5 6.7z" fill="#cfe3ee"/><g stroke="#7ea9be" stroke-width="1.6" stroke-linecap="round"><path d="M8.4 18.4v2.6M7.2 19.7h2.4M14.4 18.4v2.6M13.2 19.7h2.4"/></g>',
+ temporale:'<path d="M6.8 14.2a4 4 0 01-.3-8 5.5 5.5 0 0110.5 1.3 3.4 3.4 0 01-.5 6.7z" fill="#9db4c2"/><path d="M12.6 15.4l-3.4 4.6h2.6l-1.2 3.4 4.2-5.2h-2.6z" fill="#f0b429"/>'};
+function icona(code,cls){const g=GLIFI[(WMO[code]||["","coperto"])[1]];
+  return '<svg viewBox="0 0 24 24" '+(cls?'class="'+cls+'"':'')+' aria-hidden="true">'+g+'</svg>';}
+const ROSA=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSO","SO","OSO","O","ONO","NO","NNO"];
+function freccia(d,px){ if(d==null) return "";
+  const s=px||14;
+  return '<svg viewBox="0 0 24 24" style="width:'+s+'px;height:'+s+'px;transform:rotate('+(((d+180)%360)).toFixed(0)+'deg)" aria-hidden="true">'+
+    '<path d="M12 2.6l5.4 9.6h-3.6v8.8h-3.6v-8.8H6.6z" fill="currentColor"/></svg>';}
+const dirTxt=d=>(d==null?"—":ROSA[Math.round(((d%360)+360)%360/22.5)%16]);
+/* Scala Douglas, quella dei bollettini nautici. Le soglie di prima erano a
+   occhio e sbagliate di parecchio — «mosso» comincia a mezzo metro, non a un
+   metro — e sopra i quattro metri la Douglas ha altri cinque gradini che
+   finivano tutti dentro «agitato». Il grado si legge accanto alla parola:
+   e' il numero con cui il mare viene dato per radio. */
+const DOUGLAS=[[0.005,"calmo","#2f9772"],   [0.10,"quasi calmo","#3f9f6a"],
+               [0.50,"poco mosso","#7bb03a"],[1.25,"mosso","#cf8a13"],
+               [2.50,"molto mosso","#e07a2c"],[4,"agitato","#dd5b45"],
+               [6,"molto agitato","#c8402c"], [9,"grosso","#a92d1f"],
+               [14,"molto grosso","#8a1f16"], [Infinity,"tempestoso","#6b140e"]];
+function statoMare(h){
+  if(h==null) return ["—","#9fb6c3",null];
+  const g=DOUGLAS.findIndex(s=>h<s[0]);
+  return [DOUGLAS[g][1],DOUGLAS[g][2],g];
+}
+/* ICON-EU del servizio meteorologico tedesco: maglia di 7 km su tutta l'Europa
+   mediterranea e atlantica, dal Portogallo alla Grecia. Un modello solo per ogni
+   paese, così le previsioni di due spiagge in due stati diversi restano
+   confrontabili; con «automatico» ognuna verrebbe da un modello nazionale. */
+const MODELLO="icon_seamless";
+const LIV_FOLLA=["Molto basso","Basso","Medio","Alto","Molto alto"];
+const AFFOLLAMENTO=v=>LIV_FOLLA[v-1]||"n/c";
+const cacheMeteo=new Map();
+
+/* Il campo daily.weather_code di Open-Meteo è il codice PIÙ SEVERO delle 24 ore:
+   un'ora di foschia all'alba o dieci minuti di pioviggine notturna marchiano tutta la
+   giornata. Qui il codice viene ricalcolato sulle sole ore diurne (8–20) e, se non c'è
+   pioggia vera, dedotto dalla nuvolosità media: è così che lo mostrano gli altri servizi. */
+function codiceDiurno(hr,giorno){
+  if(!hr||!hr.time) return null;
+  const idx=[];
+  for(let i=0;i<hr.time.length;i++){
+    if(hr.time[i].slice(0,10)!==giorno) continue;
+    const ora=+hr.time[i].slice(11,13);
+    if(ora>=8&&ora<=20) idx.push(i);
+  }
+  if(!idx.length) return null;
+  const piove=idx.filter(i=>{
+    const mm=(hr.precipitation&&hr.precipitation[i])||0;
+    const pr=(hr.precipitation_probability&&hr.precipitation_probability[i])||0;
+    const cw=(hr.weather_code&&hr.weather_code[i])||0;
+    return mm>=0.2 || (cw>=51 && pr>=45);
+  });
+  if(piove.length>=2){
+    const conta={};
+    piove.forEach(i=>{const c=hr.weather_code[i]; conta[c]=(conta[c]||0)+1;});
+    return +Object.entries(conta).sort((a,c)=>c[1]-a[1])[0][0];
+  }
+  if(!hr.cloud_cover) return null;
+  const nub=idx.reduce((s,i)=>s+(hr.cloud_cover[i]||0),0)/idx.length;
+  return nub<20?0:nub<50?1:nub<82?2:3;
+}
+function pioggiaDiurna(hr,giorno){
+  if(!hr||!hr.precipitation_probability) return 0;
+  let mx=0;
+  for(let i=0;i<hr.time.length;i++){
+    if(hr.time[i].slice(0,10)!==giorno) continue;
+    const ora=+hr.time[i].slice(11,13);
+    if(ora>=8&&ora<=20) mx=Math.max(mx,hr.precipitation_probability[i]||0);
+  }
+  return mx;
+}
+/* ---- l'andamento della giornata, ora per ora ------------------------------ */
+const ORA_DA=6, ORA_A=22;
+
+function serieGiorno(hr,giorno,campo){
+  const v=[];
+  if(!hr||!hr.time) return v;
+  for(let o=ORA_DA;o<=ORA_A;o++){
+    const t=giorno+"T"+String(o).padStart(2,"0")+":00";
+    const i=hr.time.indexOf(t);
+    v.push(i<0?null:(hr[campo]?hr[campo][i]:null));
+  }
+  return v;
+}
+function estremi(v,minimo){
+  const b=v.filter(x=>x!=null&&!isNaN(x));
+  if(!b.length) return null;
+  let lo=Math.min(...b), hi=Math.max(...b);
+  if(hi-lo<(minimo||1)){ const c=(hi+lo)/2, s=(minimo||1)/2; lo=c-s; hi=c+s; }
+  return [lo,hi];
+}
+
+function andamento(a,m,giorno,oggi){
+  const hrA=a.hourly, hrM=m?m.hourly:null;
+  const T =serieGiorno(hrA,giorno,"temperature_2m");
+  if(!T.some(x=>x!=null)) return "";
+  const CW=serieGiorno(hrA,giorno,"weather_code");
+  const PP=serieGiorno(hrA,giorno,"precipitation_probability");
+  const VV=serieGiorno(hrA,giorno,"wind_speed_10m");
+  const VD=serieGiorno(hrA,giorno,"wind_direction_10m");
+  const OH=hrM?serieGiorno(hrM,giorno,"wave_height"):[];
+  const OD=hrM?serieGiorno(hrM,giorno,"wave_direction"):[];
+  const conOnda=OH.some(x=>x!=null);
+
+  const N=ORA_A-ORA_DA+1, W=700, X0=54, X1=W-16, passo=(X1-X0)/(N-1);
+  const H=conOnda?242:176;
+  const x=i=>X0+i*passo;
+  const ogniDue=i=>(ORA_DA+i)%2===0;
+  const ogniQuattro=i=>(ORA_DA+i)%4===0;
+  const corsia=(y,nome,unita)=>'<text class="g-corsia" x="6" y="'+y+'">'+nome+'</text>'+
+    (unita?'<text class="g-mini" x="6" y="'+(y+11)+'">'+unita+'</text>':'');
+  const frecciaG=(cx,cy,dir,s)=>dir==null?"":
+    '<g transform="translate('+cx.toFixed(1)+','+cy+') rotate('+(((dir+180)%360)).toFixed(0)+
+    ') scale('+s+') translate(-12,-12)"><path class="g-freccia" d="M12 2.6l5.4 9.6h-3.6v8.8h-3.6v-8.8H6.6z"/></g>';
+
+  let o='<svg class="grafico" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" '+
+        'aria-label="Andamento della giornata dalle '+ORA_DA+' alle '+ORA_A+'">';
+
+  /* --- l'ora corrente, se la giornata è quella di oggi --- */
+  if(oggi){
+    const h=new Date().getHours();
+    if(h>=ORA_DA&&h<=ORA_A)
+      o+='<line class="g-adesso" x1="'+x(h-ORA_DA).toFixed(1)+'" y1="26" x2="'+x(h-ORA_DA).toFixed(1)+'" y2="'+(H-16)+'"/>';
+  }
+
+  /* --- pioggia: barre chiare in fondo alla corsia dell'aria --- */
+  const yPio=112, altaPio=40;
+  PP.forEach((p,i)=>{ if(p==null||p<15) return;
+    const h=Math.min(altaPio,p/100*altaPio);
+    o+='<rect class="g-pioggia" x="'+(x(i)-10).toFixed(1)+'" y="'+(yPio-h).toFixed(1)+
+       '" width="20" height="'+h.toFixed(1)+'" rx="2"/>';
+    if(ogniQuattro(i)) o+='<text class="g-mini" x="'+x(i).toFixed(1)+'" y="'+(yPio-h-3).toFixed(1)+
+       '" text-anchor="middle">'+p+'%</text>';
+  });
+
+  /* --- cielo: un glifo ogni due ore --- */
+  CW.forEach((c,i)=>{ if(c==null||!ogniDue(i)) return;
+    o+='<g transform="translate('+(x(i)-9).toFixed(1)+',2) scale(0.75)">'+
+       GLIFI[(WMO[c]||["","coperto"])[1]]+'</g>';
+  });
+
+  /* --- temperatura dell'aria --- */
+  const eT=estremi(T,4), yT0=36, yT1=106;
+  const yT=v=>yT1-(v-eT[0])/(eT[1]-eT[0])*(yT1-yT0);
+  let d="", aperto=false;
+  T.forEach((v,i)=>{ if(v==null){aperto=false;return;}
+    d+=(aperto?"L":"M")+x(i).toFixed(1)+","+yT(v).toFixed(1); aperto=true; });
+  o+='<path class="g-temp" d="'+d+'"/>';
+  T.forEach((v,i)=>{ if(v==null) return;
+    o+='<circle class="g-punto" cx="'+x(i).toFixed(1)+'" cy="'+yT(v).toFixed(1)+'" r="2.4"/>';
+    if(ogniDue(i)) o+='<text class="g-valore" x="'+x(i).toFixed(1)+'" y="'+(yT(v)-8).toFixed(1)+
+      '" text-anchor="middle">'+Math.round(v)+'°</text>';
+  });
+  o+=corsia(70,"aria","°C");
+
+  /* --- vento --- */
+  const yV=140;
+  o+='<line class="g-riga" x1="'+X0+'" y1="122" x2="'+X1+'" y2="122"/>';
+  VV.forEach((v,i)=>{ if(v==null||!ogniDue(i)) return;
+    o+=frecciaG(x(i),yV,VD[i],0.46)+
+       '<text class="g-valore" x="'+x(i).toFixed(1)+'" y="'+(yV+22)+'" text-anchor="middle">'+Math.round(v)+'</text>';
+  });
+  o+=corsia(yV-2,"vento","km/h");
+
+  /* --- onda --- */
+  if(conOnda){
+    const eO=estremi(OH,0.4), yO0=186, yO1=218;
+    const base=Math.min(0,eO[0]);
+    const yO=v=>yO1-(v-base)/(eO[1]-base)*(yO1-yO0);
+    o+='<line class="g-riga" x1="'+X0+'" y1="172" x2="'+X1+'" y2="172"/>';
+    let area="", primo=null, ultimo=null;
+    OH.forEach((v,i)=>{ if(v==null) return;
+      area+=(primo===null?"M":"L")+x(i).toFixed(1)+","+yO(v).toFixed(1);
+      if(primo===null) primo=i; ultimo=i; });
+    if(primo!==null){
+      o+='<path class="g-onda" d="'+area+"L"+x(ultimo).toFixed(1)+","+yO1+"L"+x(primo).toFixed(1)+","+yO1+'Z"/>';
+    }
+    OH.forEach((v,i)=>{ if(v==null||!ogniQuattro(i)) return;
+      o+='<text class="g-valore" x="'+x(i).toFixed(1)+'" y="'+(yO(v)-7).toFixed(1)+
+        '" text-anchor="middle">'+v.toFixed(1)+'</text>'+
+        frecciaG(x(i),yO1-9,OD[i],0.34);
+    });
+    o+=corsia(yO1-14,"onda","m");
+  }
+
+  /* --- le ore --- */
+  for(let i=0;i<N;i++){ if(!ogniDue(i)) continue;
+    o+='<text class="g-ora" x="'+x(i).toFixed(1)+'" y="'+(H-4)+'" text-anchor="middle">'+(ORA_DA+i)+'</text>';
+  }
+  return o+'</svg>';
+}
+function media(v,idx){
+  const b=idx.map(i=>v&&v[i]).filter(x=>x!=null&&!isNaN(x));
+  return b.length? b.reduce((s,x)=>s+x,0)/b.length : null;
+}
+/* Quale giornata mostrare: oggi finché il pomeriggio non è passato, poi domani. */
+function giornoDaMostrare(a){
+  const g=a&&a.daily&&a.daily.time?a.daily.time:null;
+  if(!g||!g.length) return null;
+  const adesso=new Date();
+  const oggi=adesso.getFullYear()+"-"+String(adesso.getMonth()+1).padStart(2,"0")+"-"+String(adesso.getDate()).padStart(2,"0");
+  const i=g.indexOf(oggi);
+  if(i<0) return {giorno:g[0], domani:false};
+  if(adesso.getHours()>=ORA_A && g[i+1]) return {giorno:g[i+1], domani:true};
+  return {giorno:g[i], domani:false};
+}
+
+async function json(u,ms){
+  const ac=new AbortController(),t=setTimeout(()=>ac.abort(),ms||10000);
+  try{const r=await fetch(u,{signal:ac.signal});clearTimeout(t);return r.ok?await r.json():null;}
+  catch(_){clearTimeout(t);return null;}
+}
+function largo(b,kmOff){ // sposta il punto verso il largo dell'Adriatico
+  const EST=0.31, NORD=0.95;          // versore NNE, perpendicolare alla costa molisana
+  return [ (b.lat+NORD*(kmOff/111)).toFixed(4), (b.lon+EST*(kmOff/83)).toFixed(4) ];
+}
+async function condizioni(b){
+  const key=b.n+"|"+b.com;   // il comune evita che due spiagge omonime condividano il meteo
+  if(cacheMeteo.has(key)) return cacheMeteo.get(key);
+  const aria=json("https://api.open-meteo.com/v1/forecast?latitude="+b.lat.toFixed(4)+"&longitude="+b.lon.toFixed(4)+
+    "&current=temperature_2m,apparent_temperature,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m"+
+    "&hourly=weather_code,cloud_cover,precipitation,precipitation_probability,temperature_2m,apparent_temperature,wind_speed_10m,wind_direction_10m"+
+    "&daily=weather_code,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,wind_direction_10m_dominant,precipitation_probability_max,uv_index_max"+
+    "&timezone=auto&forecast_days=7&models="+MODELLO);
+  const mare=(async()=>{
+    for(const off of [0,4,9,16]){
+      const [la,lo]=largo(b,off);
+      const d=await json("https://marine-api.open-meteo.com/v1/marine?latitude="+la+"&longitude="+lo+
+        "&hourly=wave_height,wave_direction,wave_period,sea_surface_temperature&timezone=auto&forecast_days=7",9000);
+      if(d&&d.hourly&&d.hourly.wave_height&&d.hourly.wave_height.some(v=>v!=null)) return d;
+    }
+    return null;
+  })();
+  const r={aria:await aria, mare:await mare};
+  cacheMeteo.set(key,r); return r;
+}
+function indice(a,m){
+  if(!a||!a.current) return null;
+  const c=a.current, on=m&&m.hourly?valOra(m,"wave_height"):null;
+  let p=0;
+  if(c.temperature_2m>=24) p+=2; else if(c.temperature_2m>=20) p+=1;
+  if(c.wind_speed_10m<12) p+=2; else if(c.wind_speed_10m<22) p+=1; else p-=1;
+  if(on!=null){ if(on<0.4) p+=2; else if(on<0.8) p+=1; else if(on>1.5) p-=2; else p-=1; }
+  const w=(WMO[c.weather_code]||["",""])[1];
+  if(w==="sole") p+=2; else if(w==="nuvole") p+=1; else if(w==="pioggia"||w==="temporale") p-=3;
+  if(p>=7) return ["Giornata da spiaggia ideale","#2f9772"];
+  if(p>=5) return ["Buone condizioni per il bagno","#7bb03a"];
+  if(p>=3) return ["Condizioni discrete","#cf8a13"];
+  return ["Condizioni poco favorevoli","#dd5b45"];
+}
+function valOra(m,campo){
+  const h=m.hourly, t=h.time, ora=new Date();
+  const iso=ora.getFullYear()+"-"+String(ora.getMonth()+1).padStart(2,"0")+"-"+String(ora.getDate()).padStart(2,"0")+"T"+String(ora.getHours()).padStart(2,"0")+":00";
+  let i=t.indexOf(iso); if(i<0) i=0;
+  const v=h[campo]; if(!v) return null;
+  for(let k=0;k<6;k++){ if(v[i+k]!=null) return v[i+k]; }
+  return v.find(x=>x!=null) ?? null;
+}
+function maxGiorno(m,campo,giorno){
+  if(!m||!m.hourly) return null;
+  const t=m.hourly.time, v=m.hourly[campo]; if(!v) return null;
+  let mx=null;
+  for(let i=0;i<t.length;i++) if(t[i].slice(0,10)===giorno && v[i]!=null) mx=(mx==null?v[i]:Math.max(mx,v[i]));
+  return mx;
+}
+const num=(v,d)=> v==null?"—":(d?v.toFixed(d):Math.round(v));
+
+function bloccoLive(b,dati){
+  const a=dati&&dati.aria, m=dati&&dati.mare;
+  const cam=camDella(b);
+  const rigaCam = cam
+    ? '<div class="cam">📹 <a href="'+cam.u+'" target="_blank" rel="noopener">Webcam live · '+cam.n+'</a><span class="dist">'+cam.vista+'</span></div>'
+    : '';
+  if(!a||!a.current){
+    return '<div class="live"><div class="live-testa"><span><i class="pulse"></i>Condizioni</span></div>'+
+      '<div class="live-nota">Dati meteo non disponibili: serve la connessione a internet.</div>'+rigaCam+'</div>';
+  }
+  const c=a.current, d=a.daily||{};
+  const onda=m?valOra(m,"wave_height"):null, tMare=m?valOra(m,"sea_surface_temperature"):null;
+  const [stato,,grado]=statoMare(onda);  // «calmo», «poco mosso»…, col grado Douglas
+  const ind=indice(a,m);
+
+  const quando=giornoDaMostrare(a);
+  const grafico=quando?andamento(a,m,quando.giorno,!quando.domani):"";
+
+  let giorni="";
+  if(d.time){
+    const G=["dom","lun","mar","mer","gio","ven","sab"];
+    d.time.forEach((g,i)=>{
+      const dt=new Date(g+"T12:00:00");
+      const om=maxGiorno(m,"wave_height",g);
+      const dv=d.wind_direction_10m_dominant?d.wind_direction_10m_dominant[i]:null;
+      const cd=codiceDiurno(a.hourly,g);
+      const pp=pioggiaDiurna(a.hourly,g);
+      /* sempre cinque celle: la pioggia sta dentro quella del cielo, non ne aggiunge una */
+      giorni+='<div><b>'+(i===0?"oggi":G[dt.getDay()])+'</b>'+
+        '<span class="ic">'+icona(cd!=null?cd:d.weather_code[i])+(pp>=25?'<i class="pio">'+pp+'%</i>':'')+'</span>'+
+        '<span class="t">'+num(d.temperature_2m_max[i])+'°<i> / '+num(d.temperature_2m_min[i])+'°</i></span>'+
+        '<span class="o">'+(om==null?'—':num(om,1)+' m')+'</span>'+
+        '<span class="vento">'+freccia(dv,10)+'<b>'+num(d.wind_speed_10m_max[i])+'</b><u>km/h</u>'+
+        '<span class="dir">'+dirTxt(dv)+'</span></span></div>';
+    });
+  }
+  return '<div class="live">'+
+    '<div class="live-testa"><span><i class="pulse"></i>'+(quando&&quando.domani?'Domani in spiaggia':'Oggi in spiaggia')+'</span>'+
+      '<span>acqua '+(tMare==null?'—':num(tMare)+'°')+'</span></div>'+
+    '<div class="andamento">'+grafico+'</div>'+
+    (ind?'<div class="sintesi"><span class="pallino" style="background:'+ind[1]+'"></span><b>'+ind[0]+'</b>'+
+      (grado!=null?'<span class="mare-stato">mare '+stato+'<i>Douglas '+grado+'</i></span>':'')+
+      (d.uv_index_max?'<span style="margin-left:auto;font-family:var(--dati);font-size:10px;color:var(--grigio)">UV max '+num(d.uv_index_max[0])+'</span>':'')+'</div>':'')+
+    '<div class="giorni">'+giorni+'</div>'+
+    rigaCam+
+    '<div class="live-nota">Open-Meteo · modello ICON-EU (DWD), maglia 7 km · ogni casella è la media delle sue ore; le direzioni sono mediate come versori · '+
+      'l\'onda è quella del largo: nelle baie chiuse è spesso molto più bassa · lo stato del mare segue la scala Douglas</div>'+
+  '</div>';
+}
+
+/* ======================= VISTA SATELLITARE + GOOGLE ======================= */
+/* Immagine aerea reale della spiaggia da Esri World Imagery (senza chiave),
+   ritagliata e centrata sulle coordinate. Nessuna foto "generica" fuori luogo. */
+const TILE="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/";
+function tessere(b,z){
+  const n=Math.pow(2,z), la=b.lat*Math.PI/180;
+  const cx=((b.lon+180)/360*n)*256;
+  const cy=((1-Math.log(Math.tan(la)+1/Math.cos(la))/Math.PI)/2*n)*256;
+  const W=1024,H=576, x0=cx-W/2, y0=cy-H/2;
+  let out="",k=0;
+  for(let ty=Math.floor(y0/256); ty<=Math.floor((y0+H)/256); ty++)
+    for(let tx=Math.floor(x0/256); tx<=Math.floor((x0+W)/256); tx++){
+      out+='<img data-t="'+(k++)+'" src="'+TILE+z+'/'+ty+'/'+tx+'" alt="" loading="lazy" '+
+        'style="left:'+((tx*256-x0)/W*100).toFixed(4)+'%;top:'+((ty*256-y0)/H*100).toFixed(4)+'%">';
+    }
+  return out;
+}
+/* La ricerca va ancorata al punto della spiaggia: senza, comanda il testo,
+   e il testo portava dentro il comune nella forma italiana — Cattaro, non
+   Kotor — così «Morinj Cattaro Montenegro» apriva il capoluogo. Ora il
+   comune non entra nella ricerca (lo fa il punto) e il nome perde la
+   parentesi, che è la traduzione per noi, non per Google. */
+const qLuogo=b=>encodeURIComponent(b.n.replace(/\s*\([^)]*\)/g,"").trim()+" Portugal");
+/* Una forma sola, per tutti: la ricerca parte dal punto della spiaggia.
+   Il place_id resta nei dati ma non guida piu’ il collegamento — e’ una
+   promessa che non possiamo verificare per mille spiagge, e dove e’ falsa
+   porta altrove senza che si veda. La coordinata invece e’ controllata. */
+const gMaps=b=>"https://www.google.com/maps/search/"+qLuogo(b)+"/@"+b.lat+","+b.lon+",16z";
+/* /maps/place/?q=place_id: è il vecchio formato, ora non risolve più: si usa l'API "Maps URLs".
+   Per il panorama, cbll è più tollerante di map_action=pano, che fallisce se non c'è
+   una vista entro 50 m dal punto. */
+const gFoto=b=>gMaps(b);
+/* source=outdoor tiene fuori le panoramiche scattate dentro i locali: senza,
+   Google agganciava la più vicina e capitava di finire dentro un ristorante. */
+/* ---- disponibilità di Street View ----------------------------------------
+   La chiave sta in configurazione.js, una sola per tutte le pagine. */
+const CHIAVE_GOOGLE = window.CHIAVE_GOOGLE || "";
+
+const panoNoti=new Map();
+function chiavePano(b){ return b.lat+","+b.lon; }
+async function panoDisponibile(b){
+  if(!CHIAVE_GOOGLE) return null;                       // senza chiave non si sa
+  const k=chiavePano(b);
+  if(panoNoti.has(k)) return panoNoti.get(k);
+  try{
+    const r=await fetch("https://maps.googleapis.com/maps/api/streetview/metadata?location="
+      +k+"&radius=150&source=outdoor&key="+CHIAVE_GOOGLE);
+    const d=await r.json();
+    /* Oltre al sì o no, la risposta dice quale panoramica e di che mese. Tenerne
+       l'identificativo permette di aprire esattamente quella invece della più
+       vicina, che è il modo sicuro di non finire dentro un locale. */
+    const e = d.status==="OK" ? {c:true, pano:d.pano_id||null, data:d.date||null} : {c:false};
+    panoNoti.set(k,e);
+    return e;
+  }catch(_){ return null; }                             // rete assente: non spegnere nulla
+}
+const MESI=["gennaio","febbraio","marzo","aprile","maggio","giugno","luglio",
+            "agosto","settembre","ottobre","novembre","dicembre"];
+function quando(t){                                     // «2023-06» → «giugno 2023»
+  const m=/^(\d{4})-(\d{2})/.exec(t||"");
+  return m ? MESI[+m[2]-1]+" "+m[1] : null;
+}
+/* Spegne i collegamenti a Street View di una scheda se la panoramica non esiste.
+   Finché la risposta non arriva non si tocca niente, per non far lampeggiare
+   il pulsante a ogni cambio di spiaggia. */
+async function verificaPano(b, dove){
+  const e=await panoDisponibile(b);
+  if(!e || !dove || !dove.isConnected) return;          // non si sa: si lascia com'è
+  if(!e.c){
+    dove.querySelectorAll("[data-pano]").forEach(a=>{
+      const s=document.createElement("span");
+      s.className="spento";
+      s.textContent="Street View non disponibile";
+      s.title="Google non ha panoramiche all'aperto entro 150 metri da questo punto";
+      a.replaceWith(s);
+    });
+    return;
+  }
+  const d=quando(e.data);
+  dove.querySelectorAll("[data-pano]").forEach(a=>{
+    if(e.pano) a.href="https://www.google.com/maps/@?api=1&map_action=pano&pano="+e.pano;
+    if(d) a.title="Panoramica di "+d;
+  });
+  const h5=dove.querySelector(".riquadro h5");          // nella scheda completa la data si vede
+  if(h5 && d && !h5.querySelector(".quando")){
+    const s=document.createElement("span");
+    s.className="quando"; s.textContent=d;
+    h5.insertBefore(s, h5.querySelector("[data-pano]"));
+  }
+}
+
+const gPano=b=>"https://www.google.com/maps?q&layer=c&cbll="+b.lat+","+b.lon+"&cbp=11,0,0,0,0&source=outdoor";
+const gVia=b=>"https://www.google.com/maps/dir/?api=1&destination="+b.lat+","+b.lon+"";
+const embMappa=b=>"https://maps.google.com/maps?q="+b.lat+","+b.lon+"&hl=it&z=16&t=k&output=embed";
+const embPano=b=>"https://maps.google.com/maps?q=&layer=c&cbll="+b.lat+","+b.lon+"&cbp=11,0,0,0,0&source=outdoor&hl=it&output=svembed";
+
+/* ======================= VEDUTA DI RISERVA ======================= */
+function rng(s){return()=>(s=(s*1103515245+12345)&0x7fffffff)/0x7fffffff;}
+function scuro(hex,d){const n=parseInt(hex.slice(1),16),c=[n>>16,(n>>8)&255,n&255].map(v=>Math.max(0,Math.min(255,v+d)));
+  return"#"+c.map(v=>v.toString(16).padStart(2,"0")).join("");}
+function pino(x,base,h){return'<line x1="'+x+'" y1="'+base+'" x2="'+x+'" y2="'+(base-h*.62)+'" stroke="#5a4632" stroke-width="3"/>'+
+  '<ellipse cx="'+x+'" cy="'+(base-h*.72)+'" rx="'+(h*.36).toFixed(0)+'" ry="'+(h*.19).toFixed(0)+'" fill="#43663f"/>'+
+  '<ellipse cx="'+(x-h*.12).toFixed(0)+'" cy="'+(base-h*.82)+'" rx="'+(h*.24).toFixed(0)+'" ry="'+(h*.14).toFixed(0)+'" fill="#547a48"/>';}
+function veduta(b){
+  const [sab,acq,sfo,ext]=b.sc,W=560,H=315,oriz=126,riva=214;
+  const r=rng(b.n.length*7919+b.n.charCodeAt(0)*131+b.n.charCodeAt(b.n.length-1)*17);
+  let o='<defs><linearGradient id="ci" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#bfe0f0"/><stop offset="70%" stop-color="#dff0f7"/><stop offset="100%" stop-color="#f2f8e9"/></linearGradient>'+
+   '<linearGradient id="mr" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+scuro(acq,-38)+'"/><stop offset="55%" stop-color="'+acq+'"/><stop offset="100%" stop-color="'+scuro(acq,50)+'"/></linearGradient>'+
+   '<linearGradient id="sb" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+sab+'"/><stop offset="100%" stop-color="'+scuro(sab,-28)+'"/></linearGradient></defs>'+
+   '<rect width="'+W+'" height="'+H+'" fill="url(#ci)"/>';
+  let m="M0,"+oriz; for(let x=0;x<=W;x+=56) m+=" L"+x+","+(oriz-18-r()*34).toFixed(0); m+=" L"+W+","+oriz+" Z";
+  o+='<path d="'+m+'" fill="#8fb0ae" opacity=".75"/><path d="'+m+'" transform="translate(42,12)" fill="#a9c6c2" opacity=".6"/>';
+  if(ext==="isola") o+='<path d="M392,'+oriz+' q32,-28 66,-3 q15,3 24,3 Z" fill="#8fb0ae"/><rect x="424" y="'+(oriz-34)+'" width="9" height="15" fill="#8fb0ae"/>';
+  if(ext==="baia") o+='<path d="M0,'+oriz+' q64,-42 140,-24 Z" fill="#94b5b1"/><path d="M'+W+','+oriz+' q-64,-42 -140,-24 Z" fill="#94b5b1"/>';
+  o+='<rect y="'+oriz+'" width="'+W+'" height="'+(riva-oriz+18)+'" fill="url(#mr)"/>';
+  for(let i=0;i<14;i++){const y=oriz+9+r()*(riva-oriz-12),x=r()*W,w=20+r()*52;
+    o+='<path d="M'+x.toFixed(0)+','+y.toFixed(0)+' q'+(w/2).toFixed(0)+',-3 '+w.toFixed(0)+',0" stroke="rgba(255,255,255,.5)" stroke-width="1.1" fill="none"/>';}
+  if(ext==="laguna") o+='<rect y="'+(riva-34)+'" width="'+W+'" height="34" fill="'+scuro(acq,68)+'" opacity=".7"/>';
+  if(ext==="barche") for(let i=0;i<3;i++){const x=96+i*140+r()*30,y=oriz+16+r()*22;
+    o+='<path d="M'+x+','+y+' l17,0 l-3,5 l-11,0 Z" fill="#3b6b80"/><line x1="'+(x+8)+'" y1="'+y+'" x2="'+(x+8)+'" y2="'+(y-13)+'" stroke="#3b6b80" stroke-width="1.2"/>';}
+  if(ext==="pontile"){o+='<rect x="356" y="'+(oriz+12)+'" width="164" height="4" fill="#5b7f8f"/>';
+    for(let x=368;x<516;x+=26) o+='<rect x="'+x+'" y="'+(oriz+16)+'" width="3" height="15" fill="#5b7f8f"/>';}
+  let sp="M0,"+(riva+12);
+  for(let x=0;x<=W;x+=44) sp+=" Q"+(x+22)+","+(riva+5+r()*16).toFixed(0)+" "+(x+44)+","+(riva+9+r()*11).toFixed(0);
+  sp+=" L"+W+","+H+" L0,"+H+" Z";
+  o+='<path d="'+sp+'" fill="url(#sb)"/><path d="'+sp+'" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.8"/>';
+  if(sfo==="pini") for(let i=0;i<7;i++){const x=(i<4?10+i*44:W-24-(i-4)*50)+r()*14; o+=pino(x,riva+5,56+r()*42);}
+  if(sfo==="granito"||ext==="massi"||ext==="pini-granito") for(let i=0;i<5;i++){
+    const x=(i<3?8+i*50:W-34-(i-3)*62),y=riva-6+r()*24,w=36+r()*48,h=26+r()*28;
+    o+='<ellipse cx="'+x.toFixed(0)+'" cy="'+y.toFixed(0)+'" rx="'+(w/2).toFixed(0)+'" ry="'+(h/2).toFixed(0)+'" fill="#c98d76" opacity=".9"/>'+
+       '<ellipse cx="'+(x-w/8).toFixed(0)+'" cy="'+(y-h/6).toFixed(0)+'" rx="'+(w/3).toFixed(0)+'" ry="'+(h/4).toFixed(0)+'" fill="#e0ac92" opacity=".65"/>';}
+  if(ext==="pini-granito") o+=pino(76,riva,68)+pino(W-70,riva-4,60);
+  if(sfo==="rocce") for(let i=0;i<6;i++){const x=r()*W,y=riva-4+r()*20,w=30+r()*46;
+    o+='<path d="M'+(x-w/2).toFixed(0)+','+(y+16).toFixed(0)+' L'+x.toFixed(0)+','+(y-18-r()*16).toFixed(0)+' L'+(x+w/2).toFixed(0)+','+(y+16).toFixed(0)+' Z" fill="#8b8a80" opacity=".92"/>';}
+  if(sfo==="macchia"||sfo==="dune") for(let i=0;i<10;i++){const x=r()*W,y=riva+12+r()*28,w=24+r()*38;
+    o+='<ellipse cx="'+x.toFixed(0)+'" cy="'+y.toFixed(0)+'" rx="'+(w/2).toFixed(0)+'" ry="'+(7+r()*7).toFixed(0)+'" fill="#8fa96a" opacity=".55"/>';}
+  if(sfo==="paese") for(let i=0;i<5;i++){const x=14+i*44+r()*10,h=28+r()*26,w=24+r()*14,y=riva-h+2;
+    o+='<rect x="'+x.toFixed(0)+'" y="'+y.toFixed(0)+'" width="'+w.toFixed(0)+'" height="'+h.toFixed(0)+'" fill="#f2e6cd"/>'+
+       '<path d="M'+(x-3)+','+y+' l'+(w/2+3)+',-10 l'+(w/2+3)+',10 Z" fill="#c0705c"/>';}
+  if(ext==="arco") o+='<path d="M'+(W-126)+','+(riva+7)+' q11,-68 66,-68 q55,0 66,68 l-24,0 q-8,-47 -42,-47 q-34,0 -42,47 Z" fill="#c98d76"/>';
+  if(ext==="torre") o+='<path d="M44,'+(riva-4)+' q28,-32 70,-15 l0,19 Z" fill="#7e9a72"/><rect x="62" y="'+(riva-70)+'" width="32" height="50" fill="#e0cda6"/><rect x="58" y="'+(riva-77)+'" width="40" height="9" fill="#cbb489"/>';
+  if(ext==="calette") o+='<path d="M0,'+(riva-12)+' q42,-50 102,-17 l0,42 l-102,0 Z" fill="#c98d76" opacity=".9"/><path d="M'+W+','+(riva-16)+' q-46,-52 -110,-15 l0,44 l110,0 Z" fill="#c98d76" opacity=".9"/>';
+  if(ext==="tronchi") for(let i=0;i<4;i++){const x=32+i*128+r()*40,y=riva+30+r()*32;
+    o+='<path d="M'+x+','+y+' l56,-8 l3,6 l-56,8 Z" fill="#a08a63" opacity=".9"/>';}
+  if(b.sv.lettini>=1) for(let i=0;i<4;i++){const x=66+i*126,y=riva+48+(i%2)*18;
+    o+='<path d="M'+(x-16)+','+y+' a16,10 0 0 1 32,0 Z" fill="#dd5b45"/><line x1="'+x+'" y1="'+y+'" x2="'+x+'" y2="'+(y+17)+'" stroke="#3b6b80" stroke-width="1.4"/>';}
+  return '<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Veduta schematica di '+b.n+'">'+o+'</svg>';
+}
+
+/* ======================= PANNELLO ======================= */
+const scheda=document.getElementById("scheda");
+function gradi(v,ns){const g=Math.floor(Math.abs(v)),p=(Math.abs(v)-g)*60;
+  return g+"°"+String(Math.floor(p)).padStart(2,"0")+"′"+String(Math.round((p%1)*60)).padStart(2,"0")+"″"+ns;}
+function linkMappa(b){return gMaps(b);}
+function vuoto(){ scheda.innerHTML=""; scheda.hidden=true; }
+function corpo(b){
+  const a=ACCESSI[b.acc]||ACCESSI.nc;
+  const chips=SERVIZI.map(([k,et])=>{
+    const v=b.sv[k],cls=(v==null)?"nc":(v>=1?"si":(v>0?"forse":"no")),
+      st=(v==null)?'<span class="st">n/c</span>':((v>0&&v<1)?'<span class="st">stag.</span>':"");
+    return '<span class="sv '+cls+'"><svg viewBox="0 0 20 20">'+ICONE[k]+'</svg><span class="lab">'+et+'</span>'+st+'</span>';}).join("");
+  return '<div class="corpo">'+
+   '<div class="riga-titolo"><div><h2>'+b.n+'</h2>'+
+     '<div class="sotto">'+b.com+' · '+gradi(b.lat,b.lat<0?"S":"N")+' '+gradi(b.lon,b.lon<0?"W":"E")+'</div></div>'+
+     '<div class="zona">'+ZONE[b.z]+'</div></div>'+
+   /* se lì sotto ce n'è più d'una, conviene dirlo: altrimenti sembra che il
+      clic non risponda, mentre sta solo scegliendo la prima */
+   (function(){const g=(typeof grappoloDi==="function")?grappoloDi(SPIAGGE.indexOf(b)):[];
+     return g.length>1 ? '<p class="grappolo">In questo punto ci sono <b>'+g.length+
+       '</b> spiagge: clicca ancora sul segno per passare alla successiva'+
+       (g.length>6?', oppure ingrandisci la carta per separarle':'')+'.</p>' : "";})()+
+   '<div class="badge-accesso" style="background:'+a.col+'14;border:1px solid '+a.col+'4d;color:'+a.col+'">'+
+     '<span class="glifo">'+a.glifo+'</span> '+a.et+'</div>'+
+   '<div id="slotLive"></div>'+
+   '<dl class="dati">'+
+     '<div><dt>Lunghezza</dt><dd>'+(b.lung||'n/c')+'</dd></div>'+
+     '<div><dt>Fondo</dt><dd>'+(b.fondo||'n/c')+'</dd></div>'+
+     '<div><dt>Affollamento</dt><dd>'+AFFOLLAMENTO(b.folla)+'</dd></div>'+
+     '<div><dt>Tratto a piedi</dt><dd>'+(b.camm||'n/c')+'</dd></div>'+
+     '<div style="grid-column:1/-1"><dt>Parcheggio</dt><dd>'+(b.park||'n/c')+'</dd></div>'+
+   '</dl>'+
+   '<p class="titoletto">Servizi in spiaggia</p><div class="servizi">'+chips+'</div>'+
+   '<p class="titoletto">Da sapere</p><p class="nota">'+(b.nota||'Descrizione non ancora disponibile.')+'</p>'+
+   '<div class="tag">'+b.id.map(t=>'<span'+(t==="Bandiera Blu"?' class="bb"':'')+'>'+t+'</span>').join("")+'</div>'+'</div>';
+}
+function vetrinaSat(b,i){
+  const bl=bloccato===i;
+  return '<div class="vetrina" id="vetrina">'+
+    '<div class="tela">'+tessere(b,16)+'</div><div class="mirino"></div>'+
+    '<button type="button" class="lucchetto'+(bl?' on':'')+'" id="btnLucchetto" '+
+      'title="'+(bl?'La scheda resta fissa anche passando su altre spiagge':'Fissa questa scheda')+'">'+
+      (bl?'● Scheda fissata':'○ Fissa scheda')+'</button>'+
+    '<span class="sat-eti">Vista aerea · '+b.n+'</span>'+
+    '<a class="apri-foto" href="'+gFoto(b)+'" target="_blank" rel="noopener" '+
+      'aria-label="Foto e recensioni di '+b.n+' su Google"><span>Foto e recensioni ↗</span></a></div>'+
+   '<div class="azioni">'+
+     '<a class="primaria" href="'+gFoto(b)+'" target="_blank" rel="noopener">Foto e recensioni</a>'+
+     '<a data-pano href="'+gPano(b)+'" target="_blank" rel="noopener">Street View</a>'+
+     '<a href="'+gVia(b)+'" target="_blank" rel="noopener">Indicazioni</a>'+
+     '<button type="button" id="btnScheda">Scheda completa</button>'+
+   '</div>';
+}
+let richiesta=0, corrente=null;
+function mostra(i){
+  const b=SPIAGGE[i], mio=++richiesta; corrente=i;
+  scheda.hidden=false;
+  scheda.innerHTML=vetrinaSat(b,i)+corpo(b);
+  const tela=scheda.querySelector(".tela");
+  let rotte=0;
+  tela.querySelectorAll("img").forEach(t=>t.onerror=()=>{ if(++rotte>=2 && scheda.querySelector("#vetrina"))
+    scheda.querySelector("#vetrina").outerHTML='<a class="vetrina-veduta" href="'+gFoto(b)+'" target="_blank" rel="noopener" aria-label="Foto e recensioni di '+b.n+' su Google">'+veduta(b)+'<span>Foto e recensioni ↗</span></a>'+'<div class="credito">Immagine satellitare non raggiungibile: qui sopra una veduta schematica.</div>'; });
+  scheda.querySelector("#btnScheda").onclick=()=>apriScheda(i);
+  verificaPano(b, scheda);
+  scheda.querySelector("#btnLucchetto").onclick=()=>{ bloccato=(bloccato===i?null:i); mostra(i); attiva(i); };
+  const slot=scheda.querySelector("#slotLive");
+  slot.innerHTML='<div class="live"><div class="live-testa"><span><i class="pulse"></i>Adesso in spiaggia</span></div>'+
+    '<div class="live-nota">Interrogo il modello meteo-marino…</div></div>';
+  condizioni(b).then(d=>{ if(mio===richiesta && slot.isConnected) slot.innerHTML=bloccoLive(b,d); })
+               .catch(()=>{ if(mio===richiesta && slot.isConnected) slot.innerHTML=bloccoLive(b,null); });
+}
+
+/* ======================= SOTTOPAGINA GOOGLE ======================= */
+let veloAperto=null;
+function chiudiScheda(){ if(veloAperto){veloAperto.remove(); veloAperto=null; document.body.style.overflow="";} }
+function apriScheda(i){
+  const b=SPIAGGE[i];
+  chiudiScheda();
+  const v=document.createElement("div"); v.className="velo";
+  v.innerHTML='<div class="foglio" role="dialog" aria-label="Scheda di '+b.n+'">'+
+    '<div class="foglio-testa"><div><h3>'+b.n+'</h3>'+
+      '<div class="sotto">'+b.com+' · '+ZONE[b.z]+' · '+gradi(b.lat,b.lat<0?"S":"N")+' '+gradi(b.lon,b.lon<0?"W":"E")+'</div></div>'+
+      '<button class="chiudi" aria-label="Chiudi">✕</button></div>'+
+    '<div class="riquadri">'+
+      '<div class="riquadro"><h5>Posizione · satellite'+
+        '<a href="'+gMaps(b)+'" target="_blank" rel="noopener">apri ↗</a></h5>'+
+        '<iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Mappa di '+b.n+'" src="'+embMappa(b)+'"></iframe></div>'+
+      '<div class="riquadro"><h5>Street View'+
+        '<a data-pano href="'+gPano(b)+'" target="_blank" rel="noopener">apri ↗</a></h5>'+
+        '<iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Street View di '+b.n+'" src="'+embPano(b)+'"></iframe></div>'+
+    '</div>'+
+    '<div class="azioni">'+
+      '<a class="primaria" href="'+gFoto(b)+'" target="_blank" rel="noopener">Foto e recensioni su Google</a>'+
+      '<a href="'+gVia(b)+'" target="_blank" rel="noopener">Indicazioni stradali</a>'+
+      '<a data-pano href="'+gPano(b)+'" target="_blank" rel="noopener">Street View a schermo intero</a>'+
+    '</div>'+
+    '<div class="foglio-corpo"><div id="liveFoglio"></div>'+
+      '<p class="titoletto">Da sapere</p><p class="nota">'+(b.nota||'Descrizione non ancora disponibile.')+'</p>'+
+      '<div class="tag">'+b.id.map(t=>'<span'+(t==="Bandiera Blu"?' class="bb"':'')+'>'+t+'</span>').join("")+'</div></div>'+
+    '<div class="avviso">Mappa e Street View sono incorporati da Google Maps. Se il riquadro resta vuoto, il browser sta bloccando l\'incorporamento: usa i pulsanti “apri ↗”.</div>'+
+  '</div>';
+  v.addEventListener("click",e=>{ if(e.target===v||e.target.closest(".chiudi")) chiudiScheda(); });
+  document.body.appendChild(v); document.body.style.overflow="hidden"; veloAperto=v;
+  verificaPano(b, v);      // anche i due collegamenti della scheda completa
+  const lf=v.querySelector("#liveFoglio");
+  lf.innerHTML='<div class="live"><div class="live-testa"><span><i class="pulse"></i>Adesso in spiaggia</span></div>'+
+    '<div class="live-nota">Interrogo il modello meteo-marino…</div></div>';
+  condizioni(b).then(d=>{ if(lf.isConnected) lf.innerHTML=bloccoLive(b,d); });
+}
+addEventListener("keydown",e=>{ if(e.key==="Escape") chiudiScheda(); });
+
+/* ======================= INTERAZIONE ======================= */
+let bloccato=null;
+function attiva(i){MARKER.forEach(m=>m.classList.toggle("attivo",+m.dataset.i===i));
+  document.querySelectorAll("#elenco li").forEach(l=>l.classList.toggle("attivo",+l.dataset.i===i));}
+/* Due spiagge a pochi pixel l'una dall'altra: il segno disegnato per ultimo
+   sta sopra e si prende tutti i clic, e alle altre non si arriva. Il clic
+   quindi non guarda più quale segno ha intercettato l'evento: guarda il punto
+   in cui si è cliccato, raccoglie le spiagge che stanno lì attorno e a ogni
+   clic passa alla successiva. */
+const GRAPPOLO_PX=14;
+function raggioGrappolo(){
+  const r=telaio.getBoundingClientRect();
+  const perU=Math.min((r.width||600)/vista.w,(r.height||600)/vista.h)||1;
+  return GRAPPOLO_PX/perU;
+}
+function grappoloDi(i){
+  const b=SPIAGGE[i], X=px(b.lon), Y=py(b.lat), R=raggioGrappolo();
+  return SPIAGGE.map((q,j)=>({j,d:Math.hypot(px(q.lon)-X,py(q.lat)-Y)}))
+    .filter(o=>o.d<=R && !ESCLUSE.has(o.j))
+    .sort((a,b2)=>a.d-b2.d || a.j-b2.j).map(o=>o.j);
+}
+let ultimoGrappolo=[], passoGrappolo=0;
+function scegli(i){
+  const g=grappoloDi(i);
+  if(g.length<2) { ultimoGrappolo=g; passoGrappolo=0; return i; }
+  const stesso=g.length===ultimoGrappolo.length && g.every((x,n)=>x===ultimoGrappolo[n]);
+  passoGrappolo = stesso ? (passoGrappolo+1)%g.length : 0;
+  ultimoGrappolo=g;
+  return g[passoGrappolo];
+}
+MARKER.forEach(m=>{
+  const i=+m.dataset.i;
+  m.addEventListener("mouseenter",()=>{if(bloccato===null&&!trascino){mostra(i);attiva(i);}});
+  /* nessun mouseleave: la scheda resta sullo schermo, così si possono usare i suoi pulsanti */
+  m.addEventListener("focus",()=>{if(bloccato===null){mostra(i);attiva(i);}});
+  m.addEventListener("click",()=>{ if(mosso>6) return;
+    const j=scegli(i);
+    const era=bloccato; bloccato=(bloccato===j?null:j); mostra(j); attiva(j);
+    if(bloccato!==null&&era!==j) portaAllaScheda(); });
+  m.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();m.click();}});
+});
+
+/* ======================= ELENCO E FILTRI ======================= */
+let fAcc=new Set(), fSrv=new Set(), ESCLUSE=new Set();
+const elenco=document.getElementById("elenco"), conta=document.getElementById("conta");
+/* Il segno dell'elenco e' quello della legenda, non un pallino qualunque:
+   stessa taglia, stesso colore per l'accesso, e la forma che sulla carta
+   distingue una lunghezza nota da una ignota. */
+function segnoElenco(b){
+  const c=(ACCESSI[b.acc]||ACCESSI.nc).col;
+  return '<svg class="pt" viewBox="-8 -8 16 16" width="16" height="16" aria-hidden="true">'+
+    (b.lung ? '<circle r="4.6" fill="'+c+'" stroke="#fff" stroke-width="1.4"/>'
+            : '<rect x="-2.9" y="-2.9" width="5.8" height="5.8" rx=".6" fill="'+c+'" stroke="#fff" stroke-width="1.4"/>')+
+    '</svg>';
+}
+function disegnaElenco(filtro){
+  const q=(filtro||"").trim().toLowerCase(); let html="",n=0;
+  Object.entries(ZONE).forEach(([z,et])=>{
+    const voci=SPIAGGE.map((b,i)=>({b,i})).filter(({b,i})=>b.z===z && !ESCLUSE.has(i) &&
+      (!q||(b.n+" "+b.com+" "+b.id.join(" ")).toLowerCase().includes(q)));
+    if(!voci.length) return; n+=voci.length;
+    html+='<h4>'+et+' · '+voci.length+'</h4><ul>'+voci.map(({b,i})=>
+      '<li data-i="'+i+'" tabindex="0">'+segnoElenco(b)+
+      b.n+'<small>'+b.com.split(" · ")[0]+'</small></li>').join("")+'</ul>';
+  });
+  elenco.innerHTML=html||'<h4>Nessun risultato</h4>';
+  conta.textContent=n+" / "+SPIAGGE.length;
+}
+const stretto=()=>window.innerWidth<=960;
+function portaAllaScheda(){ if(stretto()) setTimeout(()=>{
+  try{scheda.scrollIntoView({behavior:"smooth",block:"start"});}catch(_){scheda.scrollIntoView();} },80); }
+elenco.addEventListener("mouseover",e=>{const l=e.target.closest("li");if(l&&bloccato===null&&!stretto()){const i=+l.dataset.i;mostra(i);attiva(i);}});
+elenco.addEventListener("click",e=>{const l=e.target.closest("li");if(!l)return;const i=+l.dataset.i;
+  bloccato=i;mostra(i);attiva(i);if(!zonaAttiva)selezionaZona(SPIAGGE[i].z);portaAllaScheda();});
+elenco.addEventListener("keydown",e=>{const l=e.target.closest("li");if(l&&e.key==="Enter"){e.preventDefault();l.click();}});
+
+const btnElenco=document.getElementById("apriElenco");
+function elencoAperto(v){
+  elenco.classList.toggle("chiuso",!v);
+  btnElenco.setAttribute("aria-expanded",String(v));
+  btnElenco.textContent=v?"▴":"▾";
+}
+btnElenco.onclick=()=>elencoAperto(elenco.classList.contains("chiuso"));
+document.getElementById("cerca").addEventListener("input",e=>{
+  disegnaElenco(e.target.value);
+  if(e.target.value) elencoAperto(true);
+});
+
+const contA=document.getElementById("filtriAccesso");
+contA.innerHTML=Object.entries(ACCESSI).map(([k,a])=>
+  '<button class="f" data-a="'+k+'" aria-pressed="false"><span class="pt" style="background:'+a.col+'"></span>'+a.et+'</button>').join("");
+const SRV_F=[["bb","Bandiera Blu"],["ristorante","Ristorante"],["bar","Bar"],["lettini","Lettini"],["wc","WC"],
+  ["sorveglianza","Sorveglianza"],["cani","Cani ammessi"],["ombra","Ombra naturale"],["sport","Sport acquatici"]];
+const contS=document.getElementById("filtriServizi");
+contS.innerHTML=SRV_F.map(([k,et])=>'<button class="f" data-s="'+k+'" aria-pressed="false">'+et+'</button>').join("");
+function applicaFiltri(){
+  ESCLUSE=new Set();
+  SPIAGGE.forEach((b,i)=>{
+    const ok=(fAcc.size===0||fAcc.has(b.acc)) && [...fSrv].every(k=>b.sv[k]>0);
+    if(!ok) ESCLUSE.add(i);
+    MARKER[i].classList.toggle("spento",!ok);
+  });
+  disegnaElenco(document.getElementById("cerca").value);
+}
+contA.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+  const k=b.dataset.a; fAcc.has(k)?fAcc.delete(k):fAcc.add(k); b.setAttribute("aria-pressed",fAcc.has(k)); applicaFiltri();});
+contS.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+  const k=b.dataset.s; fSrv.has(k)?fSrv.delete(k):fSrv.add(k); b.setAttribute("aria-pressed",fSrv.has(k)); applicaFiltri();});
+document.getElementById("azzera").addEventListener("click",()=>{
+  fAcc.clear();fSrv.clear();
+  document.querySelectorAll(".f").forEach(b=>b.setAttribute("aria-pressed","false"));
+  document.getElementById("cerca").value=""; applicaFiltri();});
+
+
+disegnaElenco(""); vuoto();
+if(stretto()) elencoAperto(false);
+</script>
+</body>
+</html>

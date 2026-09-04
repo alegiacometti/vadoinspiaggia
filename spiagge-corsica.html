@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="description" content="Le spiagge della Corsica: 112 spiagge in 10 zone costiere, con carta navigabile, meteo, stato del mare, accessi, servizi e parcheggi.">
+<meta name="theme-color" content="#083c5c">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="it_IT">
+<meta property="og:site_name" content="Vado in spiaggia">
+<meta property="og:title" content="Le spiagge della Corsica">
+<meta property="og:description" content="Le spiagge della Corsica: 112 spiagge in 10 zone costiere, con carta navigabile, meteo, stato del mare, accessi, servizi e parcheggi.">
+<title>Le spiagge della Corsica · carta, meteo e mare in tempo reale</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="carte-spiagge.css">
+<script src="configurazione.js"></script>
+<style>/* misure di questa regione — vedi carte-spiagge.css */
+:root{--colonna-carta:450px;--telaio-h:min(70vh,880px)}</style>
+</head>
+<body>
+<div class="guscio">
+
+  <header class="testata">
+    <div>
+      <a class="ritorno" href="index.html#fr">← Tutte le regioni: Francia</a>
+      <h1>Le spiagge <em>della Corsica</em> <span class="bandiere"><img class="bandiera" src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag%20of%20France.svg?width=96" width="96" alt="Bandiera: Francia" title="Francia" loading="lazy" decoding="async" onerror="this.dataset.b?(this.src=this.dataset.b,this.removeAttribute('data-b')):this.remove()"><img class="bandiera" src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag%20of%20Corsica.svg?width=96" width="96" alt="Bandiera: Corsica" title="Corsica" loading="lazy" decoding="async" onerror="this.dataset.b?(this.src=this.dataset.b,this.removeAttribute('data-b')):this.remove()"></span></h1>
+    </div>
+  </header>
+
+  <div class="strumenti">
+    <div class="gruppo"><span>Filtra per accesso</span><div class="filtri" id="filtriAccesso"></div></div>
+    <div class="gruppo"><span>Filtra per servizi</span><div class="filtri" id="filtriServizi"></div></div>
+    <div class="gruppo"><span>&nbsp;</span><button class="azzera" id="azzera">Azzera i filtri</button></div>
+  </div>
+
+  <div class="impaginato">
+    <div class="colonna-carta">
+      <div class="carta-cont">
+        <div class="zone" id="zone"></div>
+        <div class="telaio" id="telaio" tabindex="0" aria-label="Carta navigabile: due dita per spostare e ingrandire, rotella per zoomare, trascina per spostarti, frecce per muoverti">
+          <svg class="carta" id="carta" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"
+               role="img" aria-label="Carta della Corsica con le spiagge">
+            <g id="gGriglia"></g><g id="gBatim"></g><g id="gTerra"></g>
+            <g id="gCime"></g><g id="gPaesi"></g><g id="gMarker"></g><g id="gQui"></g>
+          </svg>
+          <div class="comandi">
+            <button type="button" id="zPiu" aria-label="Ingrandisci" title="Ingrandisci">+</button>
+            <button type="button" id="zMeno" aria-label="Riduci" title="Riduci">−</button>
+            <button type="button" class="fit" id="zFit" aria-label="Tutta la regione" title="Tutta la regione">⤢</button>
+            <button type="button" class="qui" id="zQui" aria-label="La mia posizione" title="La mia posizione">◎</button>
+          </div>
+          <div class="bussola" id="bussola">scala —</div>
+          <div class="avviso-qui" id="avvisoQui" hidden></div>
+        </div>
+        <div class="legenda">
+          <div class="lg-riga" id="lgMisure"></div>
+          <div class="lg-riga lg-colonna" id="lgColori"></div>
+        </div>
+      </div>
+      <div class="cerca">
+        <input id="cerca" type="search" placeholder="Cerca una spiaggia o un comune…" aria-label="Cerca">
+        <span id="conta"></span>
+        <button type="button" class="tendina" id="apriElenco" aria-expanded="true" aria-label="Mostra o nascondi l'elenco">▾</button>
+      </div>
+      <div class="elenco" id="elenco"></div>
+    </div>
+
+    <div class="pannello">
+      <div class="scheda" id="scheda"></div>
+      <p class="avvertenza"><b>Avvertenza</b>
+        Le informazioni riportate — accessi, servizi, parcheggi, condizioni meteo e stato del mare — provengono da fonti pubbliche
+        e da modelli previsionali, sono fornite a puro titolo indicativo e possono essere incomplete, imprecise o non aggiornate.
+        Non si assume alcuna responsabilità per errori, omissioni o per le decisioni prese sulla base di questi dati.
+        Il mare è un ambiente potenzialmente pericoloso: verifica sempre le condizioni sul posto, rispetta le bandiere e le
+        indicazioni dei bagnini e valuta con prudenza le spiagge non sorvegliate e gli accessi fuori strada.
+      </p>
+      <p class="piede">
+        Meteo, vento e onda da <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0), aggiornati al momento dell'apertura della scheda.
+        Sono previsioni da modello, non misure di boa: sotto costa, e soprattutto nelle baie chiuse, l'onda reale può essere molto più bassa di quella indicata.
+L'immagine di apertura è la vista aerea reale del punto (Esri World Imagery — Maxar, Earthstar Geographics), centrata sulle coordinate della spiaggia.
+        Foto, recensioni, mappa e Street View arrivano da Google Maps: le foto non sono scaricabili senza una chiave API a pagamento, quindi i pulsanti aprono direttamente la scheda del luogo,
+        mentre mappa satellitare e Street View sono incorporati nella “scheda completa”.
+        La webcam appare soltanto quando ne esiste una puntata su quella spiaggia o sulla sua baia. Servizi e parcheggi da fonti pubbliche recenti: cambiano ogni stagione.
+        Contorno dell'isola da dati IGN/OpenData.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ======================= PROIEZIONE ======================= */
+const LON0=8.49, LAT0=43.06, KX=666.7, KY=900;
+const px=lo=>(lo-LON0)*KX, py=la=>(LAT0-la)*KY;
+const PIENO={x:-30,y:-30,w:800,h:1600};
+
+const ACCESSI={
+  auto:    {et:"Auto fino alla spiaggia",     col:"#1786bd", glifo:"AUTO"},
+  sterrato:{et:"Auto + strada sterrata",      col:"#cf8a13", glifo:"STERRATO"},
+  breve:   {et:"Auto + breve tratto a piedi", col:"#2f9772", glifo:"5–15 MIN"},
+  lungo:   {et:"Solo a piedi",                col:"#dd5b45", glifo:"20–60 MIN"},
+  barca:   {et:"Solo in barca",               col:"#6470c4", glifo:"BARCA"},
+  nc:      {et:"Accesso non documentato",    col:"#93a6b3", glifo:"N/C"}
+};
+const ZONE={capcorse:"Cap Corse",agriati:"Agriate e Nebbio",balagna:"Balagne",porto:"Golfo di Porto",
+  cargese:"Cargèse e Sagone",ajaccio:"Golfo di Ajaccio",valinco:"Valinco e Sartenais",sud:"Estremo Sud",
+  pvecchio:"Golfo di Porto-Vecchio",orientale:"Costa Orientale"};
+const SERVIZI=[["parcheggio","Parcheggio"],["ristorante","Ristorante"],["bar","Bar"],
+  ["lettini","Lettini e ombrelloni"],["docce","Docce"],["wc","WC"],["sorveglianza","Sorveglianza"],
+  ["sport","Sport acquatici"],["cani","Cani ammessi"],["ombra","Ombra naturale"]];
+const ICONE={
+  parcheggio:'<rect x="2.6" y="2.6" width="14.8" height="14.8" rx="3.4"/><path d="M7.6 14.6V5.6h2.9a2.6 2.6 0 010 5.2H7.6"/>',
+  ristorante:'<path d="M5.2 2.6v5.2a1.9 1.9 0 001.9 1.9v7.7"/><path d="M5.2 2.6v3.9M9 2.6v3.9M9 2.6v5.2a1.9 1.9 0 01-1.9 1.9"/><path d="M15.4 2.6c-1.5 1.2-2.1 2.9-2.1 4.7 0 1.3.7 2.1 2.1 2.3v7.8"/>',
+  bar:'<path d="M3.4 3.6h13.2L10 10.4z"/><path d="M10 10.4v5.2M6.6 16.4h6.8"/>',
+  lettini:'<path d="M2.4 9.6a7.6 7.6 0 0115.2 0z"/><path d="M10 9.6v6.6"/><path d="M7.9 16.6a2.1 2.1 0 004.2 0"/>',
+  docce:'<path d="M4.2 3.4h5.4a4 4 0 014 4v1.1"/><path d="M10.6 8.5h6.8"/><path d="M12.4 11.6v1.2M14 14.3v1.2M15.6 11.6v1.2M11 15v1.2M17.2 15v1.2"/>',
+  wc:'<rect x="2.6" y="2.6" width="14.8" height="14.8" rx="3.4"/><path d="M5.2 6.8l1.3 6.4 1.4-4 1.4 4 1.3-6.4"/><path d="M12.6 13.2V6.8h1.9a1.7 1.7 0 010 3.4h-1.9"/>',
+  sorveglianza:'<circle cx="10" cy="10" r="7.5"/><circle cx="10" cy="10" r="3.1"/><path d="M4.7 4.7l3 3M15.3 4.7l-3 3M4.7 15.3l3-3M15.3 15.3l-3-3"/>',
+  sport:'<path d="M1.8 15.2c1.7 0 1.7-1.7 3.4-1.7s1.7 1.7 3.4 1.7 1.7-1.7 3.4-1.7 1.7 1.7 3.4 1.7 1.7-1.7 2.8-1.7"/><path d="M10 11.4V2.8l5.2 8.6z"/>',
+  cani:'<ellipse cx="10" cy="13.4" rx="4.1" ry="3.4"/><circle cx="4.7" cy="9.3" r="1.85"/><circle cx="7.9" cy="5.7" r="1.85"/><circle cx="12.1" cy="5.7" r="1.85"/><circle cx="15.3" cy="9.3" r="1.85"/>',
+  ombra:'<path d="M10 2.4l3.9 5.8h-2.3l3 4.6H5.4l3-4.6H6.1z"/><path d="M10 12.8v4.8"/>'
+};
+
+const SPIAGGE=[{"n":"Albo","com":"Ogliastro","z":"capcorse","lat":42.8097,"lon":9.3335,"lato":"W","lung":"≈600 m","fondo":"Ciottoli neri tondi, fondale che scende subito","folla":3,"acc":"auto","camm":"Nessuna","park":"Grande e gratuito sulla D80","sv":{"parcheggio":1,"ristorante":0.5,"bar":1,"lettini":0,"docce":0,"wc":0.5,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Sassi neri","Niente sabbia in auto","Accesso immediato"],"nota":"La versione facile della spiaggia nera: stessi ciottoli scuri di Nonza ma con parcheggio grande a bordo strada e un chiosco. Il fondale scende subito, quindi si nuota bene ma non è da bambini piccoli.","pid":"ChIJ8dCsmcjX1hIR694ggOS2TMA","sc":["#5c5c53","#3aa4ae","rocce",null],"sid":"corsica-073"},{"n":"Barcaggio","com":"Ersa","z":"capcorse","lat":43.0065,"lon":9.4144,"lato":"N","lung":"≈600 m","fondo":"Sabbia chiara, fondale bassissimo","folla":3,"acc":"breve","camm":"Auto fino al borgo, poi qualche minuto sul sentiero dei doganieri","park":"Sterrato gratuito prima del borgo, limitato in agosto","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0,"docce":0,"wc":0.5,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Punta nord dell'isola","Bambini","Mucche in spiaggia"],"nota":"La spiaggia più a nord della Corsica, con la Giraglia all'orizzonte e le mucche semibrade che stazionano sulla sabbia. Acqua bassissima e calda, perfetta con i bambini; dopo le mareggiate però la posidonia e le meduse si accumulano e nessuno le rimuove. Il ristorante non accetta carte.","pid":"ChIJFzRpBzPE1hIRBd0AKYxTwpU","sc":["#e6d7b0","#46b6bd","macchia","isola"],"sid":"corsica-001"},{"n":"Farinole","com":"Farinole","z":"capcorse","lat":42.7359,"lon":9.3453,"lato":"W","lung":"≈700 m","fondo":"Ciottoli fini e sabbia grossa","folla":3,"acc":"auto","camm":"Nessuna","park":"Ampio parcheggio a bordo strada","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0,"wc":0.5,"sorveglianza":0.5,"sport":0.5,"cani":0.5,"ombra":0,"bb":0},"id":["Tramonto","Surf con mareggiata","Accesso rapido"],"nota":"Acqua limpidissima e accesso immediato dalla strada del Cap, con un ristorante affacciato: al mattino presto è quasi deserta. È anche uno spot da onda quando entra la mareggiata. Nota dolente ricorrente: la battigia raccoglie molta microplastica portata dalle correnti.","pid":"ChIJnaukreoo1xIRLHUPnK9yRRA","sc":["#ded0ae","#3fb2bd","macchia",null],"sid":"corsica-005"},{"n":"Giottani","com":"Barrettali","z":"capcorse","lat":42.8663,"lon":9.3401,"lato":"W","lung":"≈400 m","fondo":"Ciottoli, con un po' di sabbia sul bagnasciuga","folla":2,"acc":"auto","camm":"Nessuna, ma l'ingresso dalla D80 è facile da mancare","park":"Gratuito accanto alla spiaggia","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0,"docce":0,"wc":0.5,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":1,"bb":0},"id":["Pineta ombrosa","Piattaforma per tuffi","Aragosta"],"nota":"Baia riparata sotto falesie alte, con una pineta che dà ombra vera e una piattaforma per i tuffi. L'acqua è di qualità eccellente. Il ristorante è più autentico di quelli di Centuri per assaggiare l'aragosta locale.","pid":"ChIJtSb2BDTX1hIRYl9nraP33W0","sc":["#cfc0a4","#3fb6bf","pini",null],"sid":"corsica-072"},{"n":"Marine de Meria","com":"Meria","z":"capcorse","lat":42.9336,"lon":9.4646,"lato":"E","lung":"≈300 m","fondo":"Ghiaia e ciottoli","folla":2,"acc":"auto","camm":"Nessuna","park":"Piccolo spiazzo alla marina","sv":{"parcheggio":0.5,"ristorante":1,"bar":1,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Fuori dai circuiti","Sosta prima di Macinaggio"],"nota":"Una marina minuscola con una paillote e nient'altro, a pochi minuti da Macinaggio. Ci si ferma per il silenzio e per il pesce, non per la sabbia.","pid":null,"sc":["#cfc2a6","#41acb8","macchia","barche"],"sid":"corsica-070"},{"n":"Marine de Scalo","com":"Pino","z":"capcorse","lat":42.9126,"lon":9.3478,"lato":"W","lung":"≈150 m","fondo":"Sassi, scarpe consigliate","folla":2,"acc":"auto","camm":"1 minuto dalla marina","park":"Piccolo, alla marina sotto il paese","sv":{"parcheggio":0.5,"ristorante":0.5,"bar":1,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":1,"cani":0.5,"ombra":0,"bb":0},"id":["Kayak e SUP","Silenzio","Case di pietra"],"nota":"Una marina minuscola sotto il paese di Pino, con un bar-snack e il noleggio di kayak e paddle. Spiaggetta sassosa, più un punto d'imbarco che un posto da giornata intera, ma il posto è memorabile.","pid":"ChIJCVH1D8vR1hIRU8iJTUXUAgo","sc":["#c4b9a2","#42b2bc","paese","barche"],"sid":"corsica-074"},{"n":"Misincu","com":"Cagnano","z":"capcorse","lat":42.8764,"lon":9.4727,"lato":"E","lung":"≈400 m","fondo":"Sabbia fine, riva pianeggiante","folla":3,"acc":"auto","camm":"1–2 minuti","park":"Limitato: se arrivi tardi non trovi posto","sv":{"parcheggio":0.5,"ristorante":1,"bar":1,"lettini":0.5,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0.5,"bb":0},"id":["Bambini","Hotel con vista","Tranquilla"],"nota":"Sabbia fine e riva piatta: una delle poche del Cap davvero comode con i bambini. Un hotel elegante affacciato con cabanas e ristorante, ma sulla spiaggia pubblica non ci sono docce né servizi. Un po' di posidonia sull'ingresso in acqua.","pid":"ChIJ86xouXXd1hIR1N1FIbp0Y2M","sc":["#ecdcb6","#4bc0c2","macchia",null],"sid":"corsica-069"},{"n":"Mute","com":"Centuri","z":"capcorse","lat":42.9608,"lon":9.3501,"lato":"W","lung":"≈200 m","fondo":"Ciottoli piatti, fondale sassoso","folla":2,"acc":"auto","camm":"1 minuto dal porto","park":"Nel borgo di Centuri","sv":{"parcheggio":0.5,"ristorante":1,"bar":1,"lettini":0,"docce":0,"wc":0.5,"sorveglianza":0,"sport":0.5,"cani":0.5,"ombra":0,"bb":0},"id":["Immersioni","Aragosta a Centuri","Borgo di pescatori"],"nota":"Caletta di ciottoli piatti sotto uno dei porti più belli del Cap. Entrare e uscire dall'acqua è scomodo per via dei sassi, ma c'è un diving club sulla spiaggia e il fondale è ricchissimo. Centuri è il paese dell'aragosta.","pid":"ChIJSRmntNvP1hIR0J71b_RcTRc","sc":["#c6bba4","#3fb0bd","paese","barche"],"sid":"corsica-071"},{"n":"Nonza","com":"Nonza","z":"capcorse","lat":42.7912,"lon":9.3444,"lato":"W","lung":"≈1 km","fondo":"Ghiaia nera e verde","folla":2,"acc":"breve","camm":"Circa 15 minuti di scalinata dal paese: la salita di ritorno è impegnativa","park":"Piccolo spiazzo sul lato nord con sentiero sconnesso, oppure in paese","sv":{"parcheggio":0.5,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Paesaggio unico","Poca gente","Vista dal borgo"],"nota":"La spiaggia nera della Corsica: la ghiaia scura arriva dagli scarichi della vecchia miniera d'amianto di Canari, cosa che tiene lontana la folla anche in agosto. Non ci sono divieti di balneazione, ma non c'è nemmeno un servizio. I sassi si arroventano: servono scarpe da scoglio.","pid":"ChIJif8SQCAo1xIRH3iMOFvETSo","sc":["#57584f","#3aa0a8","rocce","torre"],"sid":"corsica-004"},{"n":"Pietracorbara","com":"Pietracorbara","z":"capcorse","lat":42.8393,"lon":9.48,"lato":"E","lung":"≈1 km","fondo":"Sabbia bianca con qualche ciottolo","folla":3,"acc":"auto","camm":"Nessuna","park":"Due parcheggi gratuiti: quello a nord ha quasi sempre posto","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":1,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":0.5,"cani":1,"ombra":0.5,"bb":0},"id":["Bambini","Cani ammessi","Vicino a Bastia"],"nota":"Probabilmente la spiaggia migliore vicino a Bastia: sabbia chiara, acqua bassa e trasparente, tre bar-ristoranti sull'arenile e due zattere a una cinquantina di metri per i tuffi. Alcuni chioschi mettono i lettini gratis. Alle spalle, la scenografia delle montagne del Cap.","pid":"ChIJjaGia5rf1hIRLS-1ZgAYszY","sc":["#eddcb6","#4bc0c2","pini","barche"],"sid":"corsica-003"},{"n":"Sisco","com":"Sisco","z":"capcorse","lat":42.8093,"lon":9.4899,"lato":"E","lung":"≈700 m","fondo":"Ciottoli, spesso ricoperti di alghe e scivolosi","folla":2,"acc":"auto","camm":"Nessuna","park":"Lungo la marina, gratuito","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0,"docce":0,"wc":0.5,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Poca gente","Acqua fresca"],"nota":"Ciottoli coperti di muschio e spesso scivolosi: le scarpe da scoglio non sono un optional, e non è la spiaggia giusta con bambini piccoli. Tre chilometri più a nord, verso il Cap, c'è una spiaggia sabbiosa molto più comoda.","pid":"ChIJHTLLu_ff1hIR0ysPG4rynZw","sc":["#c9bda6","#3fa9b8","macchia",null],"sid":"corsica-068"},{"n":"Tamarone","com":"Rogliano · Macinaggio","z":"capcorse","lat":42.9756,"lon":9.4549,"lato":"E","lung":"≈800 m","fondo":"Sabbia e ciottoli misti","folla":3,"acc":"sterrato","camm":"Nessuna: breve sterrato dal porto di Macinaggio","park":"Sterrato gratuito dietro la spiaggia","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0,"wc":0.5,"sorveglianza":0,"sport":0.5,"cani":0.5,"ombra":0,"bb":0},"id":["Sentiero dei doganieri","Calette vicine","Snorkeling"],"nota":"Punto di partenza del Sentier des Douaniers verso Barcaggio, con una paillote sulla sabbia. La spiaggia principale si riempie: bastano cinque minuti a piedi verso nord per trovare calette libere. Dopo le mareggiate l'alga secca copre la battigia per metri.","pid":"ChIJ51g4PIDE1hIRJG7BYzLZNKc","sc":["#ddcba6","#3ea9b8","macchia","torre"],"sid":"corsica-002"},{"n":"Cala di Malfalcu","com":"Santo-Pietro-di-Tenda","z":"agriati","lat":42.724,"lon":9.1178,"lato":"N","lung":"≈200 m","fondo":"Sabbia, fondale basso","folla":2,"acc":"barca","camm":"Solo 4×4, enduro o barca: pista lunga e tecnica dalla Bocca di Vezzu","park":"Nessuno strutturato","sv":{"parcheggio":0,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Cala selvaggia","Mucche in spiaggia","Solo per esperti"],"nota":"Caletta piccolissima dentro gli Agriate, raggiungibile solo con un fuoristrada vero o una enduro, e con un po' di mestiere alla guida. Bellissima con vento, ma lo stagno alle spalle può dare odore e intorbidire il fondale.","pid":"ChIJISf8AO7T0BIRx2fc-kIpDNU","sc":["#f0e2bc","#57cfc9","macchia",null],"sid":"corsica-078"},{"n":"Fiume Bughju","com":"Saint-Florent","z":"agriati","lat":42.7002,"lon":9.2598,"lato":"S","lung":"≈250 m","fondo":"Sabbia chiara","folla":2,"acc":"lungo","camm":"40–60 minuti a piedi dall'ultimo parcheggio sopra Fornali","park":"Sterrato sconnesso sopra la spiaggia di Fornali","sv":{"parcheggio":0.5,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Isolata","Acqua cristallina","Mattina presto"],"nota":"Un'ora scarsa di cammino e non c'è più nessuno. Nessuna ombra, nessuna acqua, nessun servizio: vai la mattina presto e torna dopo le ore più calde, con scorte abbondanti.","pid":"ChIJYfnIH78t1xIRdgcTEtqHvC0","sc":["#f2e4bd","#5ad2cc","macchia",null],"sid":"corsica-076"},{"n":"Fiume Santu","com":"Saint-Florent","z":"agriati","lat":42.7049,"lon":9.254,"lato":"S","lung":"≈500 m","fondo":"Sabbia fine, acqua bassa","folla":3,"acc":"breve","camm":"Circa 30 minuti a piedi da Saint-Florent lungo la costa","park":"A Saint-Florent","sv":{"parcheggio":0,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0.5,"bb":0},"id":["A piedi da Saint-Florent","Acqua bassa","Snorkeling sugli scogli"],"nota":"Ci si arriva camminando da Saint-Florent, senza taxi-boat. Acqua limpida e bassa, ma in agosto la baia è invasa da barche ormeggiate quasi a riva: nuotare significa zigzagare tra le carene. Il fiume alle spalle ha un odore sulfureo, e le vespe trovano il picnic in pochi secondi.","pid":"ChIJtR5w8j4s1xIRipPbsk3mQVA","sc":["#eedeb8","#52cac6","macchia","barche"],"sid":"corsica-075"},{"n":"Ghignu","com":"Santo-Pietro-di-Tenda","z":"agriati","lat":42.7291,"lon":9.1378,"lato":"N","lung":"≈400 m","fondo":"Sabbia bianca, ampie secche","folla":2,"acc":"barca","camm":"Nessuna, ma prima ci sono ~12 km di pista","park":"A fine pista, libero","sv":{"parcheggio":0.5,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Deserta","4×4 o barca","Vecchie paillers"],"nota":"Dodici chilometri di pista molto dura — serve un 4×4 con almeno 15 cm di altezza libera, e i rami graffiano la carrozzeria — oppure la barca. In cambio, sabbia bianca, secche lunghissime e quasi nessuno anche ad agosto.","pid":"ChIJVdfl-obT0BIRa4iHxAMm7IU","sc":["#f7ebc8","#5fd8ce","macchia",null],"sid":"corsica-077"},{"n":"La Roya","com":"Saint-Florent","z":"agriati","lat":42.6753,"lon":9.2858,"lato":"E","lung":"≈1 km","fondo":"Sabbia mista a ghiaino","folla":3,"acc":"auto","camm":"Nessuna: ci si arriva anche a piedi dal paese","park":"Parcheggio all'estremità alta della spiaggia","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":0.5,"cani":0.5,"ombra":1,"bb":0},"id":["Bambini piccoli","A piedi dal paese","Ombra naturale"],"nota":"La spiaggia comoda di Saint-Florent: niente taxi-boat, ci arrivi a piedi o in otto minuti d'auto. Acqua bassissima e calda a nord, ottima con i bambini piccoli e per i cani; il lato est è più profondo ma raccoglie posidonia. Diverse segnalazioni parlano di microplastica sulla battigia. Alberi in fila per l'ombra.","pid":"ChIJbaHevXsu1xIRmCAZmaF-8nQ","sc":["#e3d5b2","#41abb8","pini","paese"],"sid":"corsica-008"},{"n":"Lotu","com":"Saint-Florent","z":"agriati","lat":42.7197,"lon":9.2336,"lato":"N","lung":"≈500 m","fondo":"Sabbia rosata finissima","folla":4,"acc":"barca","camm":"Taxi-boat da Saint-Florent, oppure 4×4. A piedi si raggiunge Saleccia in circa un'ora","park":"Non esiste: si arriva via mare","sv":{"parcheggio":0,"ristorante":0.5,"bar":0.5,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Taxi-boat","Sentiero verso Saleccia","Acqua da piscina"],"nota":"Acqua da piscina e sabbia rosata, dentro l'area protetta degli Agriate. Nessun servizio sulla spiaggia — il ristorante più vicino è a dieci minuti a piedi lungo la costa — e nessun WC. Arriva col primo battello: a metà giornata la baia è piena di barche ormeggiate a ridosso della riva.","pid":"ChIJ2zni_30s1xIR93cpFlY7EdY","sc":["#f6e8cd","#5fd8d0","macchia","barche"],"sid":"corsica-007"},{"n":"Saleccia","com":"Santo-Pietro-di-Tenda","z":"agriati","lat":42.7264,"lon":9.205,"lato":"N","lung":"≈1 km","fondo":"Sabbia bianca finissima","folla":4,"acc":"barca","camm":"Nessuna una volta arrivati, ma prima ci sono 12 km di pista","park":"Pista a pedaggio (~6 €) da Casta: senza 4×4 può volerci più di un'ora. In alternativa taxi-boat da Saint-Florent","sv":{"parcheggio":0.5,"ristorante":1,"bar":1,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Caraibi corsi","Avventura","Barca da Saint-Florent"],"nota":"Sabbia bianca e acqua turchese dentro il deserto degli Agriate. Chi ci arriva se l'è guadagnata: la pista è lunga e dura, e sulla spiaggia non ci sono né WC né spogliatoi. Un ristorante e un campeggio a un'estremità, mucche libere sull'altra. In alta stagione le barche riempiono comunque la baia.","pid":"ChIJx3x5Zqcs1xIRvajZWqVi-dg","sc":["#f8efd2","#63dcd2","macchia",null],"sid":"corsica-006"},{"n":"Aregno · Algajola","com":"Algajola","z":"balagna","lat":42.6104,"lon":8.8722,"lato":"N","lung":"≈1,5 km","fondo":"Sabbia grossa, ingresso ripido","folla":3,"acc":"auto","camm":"Nessuna","park":"Grande e gratuito","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":1,"cani":0.5,"ombra":0.5,"bb":0},"id":["Windsurf e SUP","Ristoranti","Onde"],"nota":"La più attrezzata della Balagne: parcheggio gratuito, tre o quattro ristoranti e noleggi di paddle e windsurf. Quando entra il maestrale ci sono onde vere, quindi è lo spot da tavola della zona; per lo stesso motivo non è la scelta migliore con bambini piccoli. Ingresso in acqua ripido, ombra solo tra i cespugli sul lato destro.","pid":"ChIJ5UsYRTDC0BIRqy51t9xnMFM","sc":["#e0d0a9","#3fb0bd","paese",null],"sid":"corsica-013"},{"n":"Argentella · Crovani","com":"Calenzana","z":"balagna","lat":42.4724,"lon":8.6792,"lato":"W","lung":"≈1,5 km","fondo":"Ciottoli tondi scuri, fondale ripido","folla":2,"acc":"auto","camm":"1 minuto dal parcheggio","park":"Piccolo e gratuito: arriva presto","sv":{"parcheggio":0.5,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Sassi colorati","Silenzio","Vento frequente"],"nota":"Un chilometro e mezzo di ciottoli levigati e colorati, praticamente deserta anche ad agosto. Il fondale scende subito e il vento entra spesso, quindi non sempre è una spiaggia da bagno. Zero ombra e zero servizi: ombrellone e materassino obbligatori.","pid":"ChIJMwxsmWyT0BIRTbkRT4R8xL4","sc":["#cbbfa6","#42b4be","rocce",null],"sid":"corsica-083"},{"n":"Arinella di Lumio","com":"Lumio","z":"balagna","lat":42.5765,"lon":8.8052,"lato":"N","lung":"≈600 m","fondo":"Ciottoli tondi, niente sabbia","folla":3,"acc":"auto","camm":"1 minuto su passerella di legno dal parcheggio","park":"Ampio, gratuito e ombreggiato","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":1,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":0.5,"cani":0.5,"ombra":0.5,"bb":0},"id":["Snorkeling eccezionale","Lettini","Webcam sul posto"],"nota":"Niente sabbia: solo ciottoli tondi, che però continuano sott'acqua e creano uno degli ambienti migliori dell'isola per lo snorkeling, con moltissimo pesce. Ristorante con noleggio lettini — i drink sono cari — e parcheggio gratuito. C'è anche una webcam pubblica sulla spiaggia.","pid":"ChIJzeaHpkXq0BIRgqPaVdAC2Cw","sc":["#d8cbaa","#48c2c4","pini",null],"sid":"corsica-080"},{"n":"Bodri","com":"Corbara · Île-Rousse","z":"balagna","lat":42.6298,"lon":8.9136,"lato":"N","lung":"≈500 m","fondo":"Sabbia finissima quasi bianca","folla":4,"acc":"breve","camm":"5–7 minuti dal parcheggio","park":"Circa 3 €; pieno già prima di mezzogiorno","sv":{"parcheggio":1,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0.5,"bb":0},"id":["Sabbia finissima","Trenino","Naturisti a nord"],"nota":"Per molti la più bella della Balagne: sabbia da borotalco, acqua limpidissima e pochissima posidonia. In compenso non c'è niente sulla spiaggia — acqua, cibo e ombrellone da casa. La parte nord è frequentata da naturisti. Anche qui il trenino costiero è l'alternativa intelligente al parcheggio.","pid":"ChIJDwxXNYPD0BIRlZnVOqm03lM","sc":["#f7ebca","#5ed9cf","pini",null],"sid":"corsica-012"},{"n":"Calvi · la Pineta","com":"Calvi","z":"balagna","lat":42.5552,"lon":8.7758,"lato":"W","lung":"≈4 km","fondo":"Sabbia fine","folla":4,"acc":"auto","camm":"Nessuna","park":"Diffuso lungo la route de la Pinède","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":1,"cani":0,"ombra":1,"bb":0},"id":["Tutti i servizi","Famiglie","Vista sulla cittadella"],"nota":"Quattro chilometri di sabbia con la pineta alle spalle e la cittadella genovese di fronte: è la spiaggia più comoda dell'isola, con tutto a portata di mano e mare quasi sempre calmo. È anche la più costruita, tra campeggi, stabilimenti e musica dalle paillote fino a tardi.","pid":"ChIJj5FTfADr0BIRj5QbL7qyoXs","sc":["#ecdcb6","#4bbfc4","pini","paese"],"sid":"corsica-014"},{"n":"Ghjunchitu","com":"Corbara","z":"balagna","lat":42.6273,"lon":8.9059,"lato":"N","lung":"≈700 m","fondo":"Sabbia bianca fine","folla":4,"acc":"breve","camm":"Circa 10 minuti dal parcheggio, oltre la ferrovia","park":"3 € al giorno, solo contanti","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0,"docce":0,"wc":0.5,"sorveglianza":0.5,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Bambini","Trenino della Balagne","Acqua bassa"],"nota":"Sabbia bianca, acqua bassa e senza onde: ottima con i bambini, e infatti in luglio-agosto è molto affollata. Il trucco è arrivarci col trenino Calvi–Île-Rousse, che ferma vicino ed elimina il problema del parcheggio. Bar e parcheggio prendono solo contanti.","pid":"ChIJh-cZAZnD0BIRaX1V61F2ZlM","sc":["#f3e5c4","#58d0c8","macchia",null],"sid":"corsica-011"},{"n":"L'Alga","com":"Calvi","z":"balagna","lat":42.5615,"lon":8.7272,"lato":"W","lung":"≈250 m","fondo":"Sabbia mista a sassi e argilla","folla":2,"acc":"sterrato","camm":"Qualche minuto su sterrato senza asfalto","park":"Informale lungo la pista","sv":{"parcheggio":0.5,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Acqua limpidissima","Snorkeling","Passeggiata verso Calvi"],"nota":"Acqua tra le più limpide della Balagne, con fondale vivo e molto pesce, ma la baia intrappola la posidonia: dopo una mareggiata può essere impraticabile per giorni. Nessun servizio, nessun negozio: porta tutto. Bella come tappa della passeggiata costiera verso Calvi.","pid":"ChIJ7ecWQY3s0BIRaPHob4WpoeE","sc":["#ddcfae","#4fc8c8","granito",null],"sid":"corsica-081"},{"n":"Lozari","com":"Belgodère","z":"balagna","lat":42.6412,"lon":9.0155,"lato":"N","lung":"≈1 km","fondo":"Sabbia a grana grossa","folla":3,"acc":"auto","camm":"Nessuna","park":"Gratuito, con un po' d'ombra","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0,"docce":0,"wc":0,"sorveglianza":0.5,"sport":0.5,"cani":0.5,"ombra":0.5,"bb":0},"id":["Spazio anche in agosto","Tramonto","Windsurf"],"nota":"Un chilometro di arenile con le montagne alle spalle: anche a ferragosto un posto lo trovi. Due ristoranti sul fronte mare e una baracca che noleggia windsurf, ma niente lettini né WC pubblici. Il fondale scende in fretta — d'estate però ci sono i bagnini. Bellissima verso il tramonto, quando la folla se ne va.","pid":"ChIJWSrGEALP0BIRVYIR2Ak1gjg","sc":["#dfd0ab","#42b3bc","macchia",null],"sid":"corsica-010"},{"n":"Nichiareto","com":"Calenzana","z":"balagna","lat":42.5266,"lon":8.7158,"lato":"W","lung":"≈200 m","fondo":"Ciottoli","folla":2,"acc":"lungo","camm":"Sentiero costiero: mettine in conto 40–50 minuti","park":"Lungo la strada, sopra la baia","sv":{"parcheggio":0.5,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Picnic","Sorgente d'acqua dolce","Nessuno"],"nota":"Baia bellissima e quasi sempre vuota, con una piccola sorgente d'acqua dolce vicino alla riva. Molti ciottoli e nessun servizio: è un posto da picnic e da ancoraggio più che da giornata in spiaggia.","pid":"ChIJFzeo_zGT0BIRfrHjH5ya_sc","sc":["#cec1a6","#4ac0c2","rocce",null],"sid":"corsica-082"},{"n":"Ostriconi","com":"Palasca","z":"balagna","lat":42.6619,"lon":9.0607,"lato":"N","lung":"≈1 km","fondo":"Sabbia chiara, dune","folla":3,"acc":"breve","camm":"10–15 minuti dal parcheggio, con una passerella sul fiume","park":"Grande, gratuito e ombreggiato","sv":{"parcheggio":1,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Dune","Fotografia","Natura intatta"],"nota":"La porta occidentale del deserto degli Agriate: dune, macchia intatta, mucche al pascolo e nessuna costruzione. Non c'è assolutamente nulla, né acqua né chioschi né ombra: porta tutto e metti in conto i 15 minuti di ritorno. La parte nord-est è rocciosa, con belle piattaforme per i tuffi.","pid":"ChIJhyHyldXR0BIR3h7GbHyeUPI","sc":["#e9dcb6","#4ec2c0","dune",null],"sid":"corsica-009"},{"n":"Sant'Ambroggio","com":"Lumio","z":"balagna","lat":42.6018,"lon":8.8293,"lato":"N","lung":"≈300 m","fondo":"Sabbia fine, a tratti rosata","folla":3,"acc":"auto","camm":"1–3 minuti","park":"Gratuito sotto i pini vicino al porto; d'estate arriva presto","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":0.5,"cani":0.5,"ombra":1,"bb":0},"id":["Riparata dal vento","Bambini","Snorkeling"],"nota":"Baia chiusa che resta calma anche nelle giornate di vento, quando le spiagge vicine sono impraticabili: l'acqua non si muove e resta trasparente. Ombra vera nel parcheggio tra i pini. Molti posti lungo la strada sono privati delle residenze.","pid":"ChIJHUo5mPjp0BIRVjZblyLqvmo","sc":["#f2e4c2","#57d0ca","pini","barche"],"sid":"corsica-079"},{"n":"Arone","com":"Piana","z":"porto","lat":42.2077,"lon":8.5784,"lato":"W","lung":"≈900 m","fondo":"Sabbia a grana media","folla":3,"acc":"auto","camm":"Nessuna","park":"Gratuito accanto alla spiaggia","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":1,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":0.5,"cani":0.5,"ombra":0,"bb":0},"id":["Sabbia vera","Lettini","Tranquilla"],"nota":"Sabbia vera e acqua trasparente in una zona dove quasi tutto è ciottolo, con noleggio di lettini e ombrelloni e tre ristoranti a pochi passi. Molto più calma delle spiagge del sud. Lo snorkeling non è memorabile: si viene per il colore dell'acqua e per la baia chiusa tra le rocce.","pid":"ChIJZ8VORyp52hIRbC-FRpoGJu8","sc":["#ecdcb4","#4dc6c4","macchia",null],"sid":"corsica-020"},{"n":"Bussaglia","com":"Serriera","z":"porto","lat":42.2823,"lon":8.6871,"lato":"W","lung":"≈600 m","fondo":"Ciottoli, scarpette consigliate","folla":2,"acc":"auto","camm":"Nessuna","park":"Grande e gratuito accanto alla spiaggia","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0,"docce":1,"wc":0.5,"sorveglianza":0,"sport":1,"cani":0.5,"ombra":0,"bb":0},"id":["Snorkeling","Kayak","Golfo di Porto"],"nota":"Ciottoli e non sabbia: le scarpette da scoglio sono quasi obbligatorie. In cambio l'acqua è limpida, lo snorkeling sugli scogli a sinistra è buono e a giugno può capitare di avere la baia quasi per sé. Due caffè con doccia e un noleggio kayak; ombra naturale zero, l'ombrellone serve davvero.","pid":"ChIJTx8l19ud0BIR3JJePQq7ja4","sc":["#c9bda3","#43b8bd","rocce",null],"sid":"corsica-017"},{"n":"Caspiu","com":"Partinello","z":"porto","lat":42.3023,"lon":8.6611,"lato":"W","lung":"≈400 m","fondo":"Ciottoli piccoli","folla":2,"acc":"auto","camm":"1–2 minuti","park":"Gratuito vicino alla spiaggia","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0,"docce":0,"wc":0.5,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Pesce del giorno","Baia ampia","Quasi deserta"],"nota":"Baia larga con acqua cristallina e due ristoranti, uno dei quali serve il pesce pescato in giornata dal proprietario. A giugno è praticamente deserta. Ciottoli piccoli: le scarpette aiutano ma non sono indispensabili.","pid":"ChIJYXjvG9Gb0BIReGvL-jCwp0s","sc":["#d2c4a6","#49c0c2","rocce",null],"sid":"corsica-086"},{"n":"Ficajola","com":"Piana","z":"porto","lat":42.2514,"lon":8.6266,"lato":"W","lung":"≈120 m","fondo":"Ghiaia fine","folla":3,"acc":"breve","camm":"5–10 minuti in discesa dal parcheggio; il ritorno è in salita","park":"Gratuito ma piccolo, in fondo a una stradina stretta e a tornanti","sv":{"parcheggio":1,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0.5,"bb":0},"id":["Calanche di Piana","Snorkeling","Scenografia"],"nota":"Una fessura di ghiaia incastrata tra le falesie rosse delle Calanche, con le vecchie casette dei pescatori sul fianco. La strada d'accesso è stretta e ripida: va guidata con calma. Lo snorkeling è ottimo e il posto migliore non è nemmeno la spiaggia, ma gli scogli laterali. Nessun servizio.","pid":"ChIJNxuZ-fGC0BIRQoyDqGkTYrk","sc":["#ddc9a4","#4cc4c4","granito","calette"],"sid":"corsica-019"},{"n":"Galéria","com":"Galéria","z":"porto","lat":42.4132,"lon":8.6487,"lato":"W","lung":"≈800 m","fondo":"Ciottoli e ghiaia","folla":2,"acc":"auto","camm":"Nessuna","park":"In paese, gratuito","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0,"docce":0,"wc":0.5,"sorveglianza":0,"sport":0.5,"cani":0.5,"ombra":0,"bb":0},"id":["Ingresso a Scandola","Foce del Fango","Poca gente"],"nota":"Ciottoli alla foce del Fango, all'imbocco della riserva di Scandola: paesaggio grandioso e quasi nessuno. Non è una spiaggia da sdraio tutto il giorno, è una sosta con vista e un caffè. Da qui si risalgono le piscine naturali del Fango, che valgono il viaggio quanto il mare.","pid":"ChIJcYBN-UeP0BIR15CcKPYx_Vk","sc":["#c8bda2","#3aa9b6","rocce",null],"sid":"corsica-015"},{"n":"Girolata","com":"Osani","z":"porto","lat":42.3497,"lon":8.6135,"lato":"W","lung":"≈250 m","fondo":"Ghiaia e sabbia grossa","folla":3,"acc":"barca","camm":"In barca da Porto o Calvi, oppure circa 1h30 a piedi dal Col de la Croix","park":"Non esiste: nel villaggio non arrivano strade","sv":{"parcheggio":0,"ristorante":1,"bar":1,"lettini":0,"docce":0,"wc":0.5,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Solo in barca o a piedi","Scandola","Villaggio senza strade"],"nota":"Un villaggio dove non arriva nessuna strada, dentro il perimetro di Scandola. La spiaggia in sé è piccola e nei giorni di punta le barche la assediano: il motivo per venire è la costa tutt'intorno. Come a Barcaggio, le mucche stazionano sulla sabbia — guarda dove metti i piedi.","pid":"ChIJr2tFVNSF0BIRHNlr649N2vg","sc":["#d2c4a4","#3fb2b8","rocce","barche"],"sid":"corsica-016"},{"n":"Gradelle","com":"Osani","z":"porto","lat":42.3031,"lon":8.6476,"lato":"W","lung":"≈300 m","fondo":"Ciottoli con qualche lingua di sabbia","folla":2,"acc":"auto","camm":"2 minuti dal parcheggio","park":"Nella baia; la discesa è stretta e ripida ma percorribile","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0,"docce":0,"wc":0.5,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0.5,"bb":0},"id":["Vista sulle Calanche","Snorkeling","Campeggio sul mare"],"nota":"Vista frontale sulle Calanche di Piana e sul Capo d'Orto: probabilmente il miglior panorama da una spiaggia del golfo. Acqua trasparente, ottima per snorkeling e paddle, un ristorante e un campeggio a pochi passi. A settembre è quasi vuota.","pid":"ChIJxeIXgBuD0BIRKahVmAlhiiE","sc":["#d8c9a8","#4cc4c4","rocce",null],"sid":"corsica-085"},{"n":"Porto","com":"Ota","z":"porto","lat":42.2648,"lon":8.6927,"lato":"W","lung":"≈500 m","fondo":"Ciottoli grossi","folla":3,"acc":"auto","camm":"Circa 3 minuti dal parcheggio","park":"Gratuito davanti alla spiaggia","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0,"wc":0.5,"sorveglianza":0,"sport":0.5,"cani":0.5,"ombra":0,"bb":0},"id":["Base per Scandola","Torre genovese","Calanche"],"nota":"Sassi grossi, scarpette necessarie, ma sei ai piedi della torre genovese di Porto e all'imbocco delle Calanche di Piana. È soprattutto la base per le gite in barca verso Scandola e le grotte marine. Fuori stagione non c'è quasi nessuno, ma chiudono anche quasi tutti i servizi.","pid":"ChIJ26oZM7-d0BIR15FB18y3Du8","sc":["#c6baa0","#3fb0ba","rocce","torre"],"sid":"corsica-018"},{"n":"Tuara","com":"Osani","z":"porto","lat":42.3401,"lon":8.6291,"lato":"W","lung":"≈200 m","fondo":"Ciottoli e sabbia grossa","folla":2,"acc":"lungo","camm":"Circa 45 minuti dal Col de la Croix, in discesa all'andata e in salita al ritorno","park":"Al Col de la Croix","sv":{"parcheggio":0.5,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Tappa verso Girolata","Mucche in spiaggia","Deserta"],"nota":"Deserta anche a ferragosto, con le mucche che scendono a riposare sulla riva. È la tappa naturale sul sentiero verso Girolata: da qui prosegui per l'interno, più facile, non per il tracciato a picco sul mare. Poco più avanti c'è una caletta ancora più bella.","pid":"ChIJA5iLDeOE0BIRHAEXKoEosF0","sc":["#d4c5a4","#48bec2","rocce",null],"sid":"corsica-084"},{"n":"Chiuni","com":"Cargèse","z":"cargese","lat":42.1705,"lon":8.5921,"lato":"W","lung":"≈1 km","fondo":"Sabbia dorata fine","folla":2,"acc":"auto","camm":"Nessuna","park":"Grande e gratuito, ma senza ombra","sv":{"parcheggio":1,"ristorante":0.5,"bar":0.5,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0.5,"cani":0.5,"ombra":0,"bb":0},"id":["Poca gente","Baia riparata","Snorkeling a nord"],"nota":"Baia lunga e riparata con pochissima gente anche in stagione. Lato est più profondo, lato ovest bassissimo, quindi c'è posto per tutti i gusti; lo snorkeling migliore è sul lato nord. La stradina d'accesso è dissestata ma percorribile con un'auto normale, piano.","pid":"ChIJw1i0iD952hIRpCgHnbnGLec","sc":["#eddcb0","#4ec4c2","macchia",null],"sid":"corsica-021"},{"n":"Liamone","com":"Casaglione","z":"cargese","lat":42.0734,"lon":8.72,"lato":"W","lung":"≈2 km","fondo":"Sabbia e ghiaino alla foce","folla":2,"acc":"auto","camm":"Nessuna","park":"Sterrato gratuito dietro le dune","sv":{"parcheggio":1,"ristorante":1,"bar":0.5,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":1,"ombra":0,"bb":0},"id":["Tramonto","Spazio","Foce del fiume"],"nota":"Spiaggia lunga e naturale alla foce del Liamone, splendida al tramonto e praticamente vuota. Un avvertimento serio: i locali segnalano correnti sotto la superficie vicino alla foce e non c'è alcuna sorveglianza. Non è una spiaggia per bambini o per nuotatori incerti.","pid":"ChIJ9yYUmMRx2hIRnU8e4-UAn2A","sc":["#ded0ac","#3fadb8","dune",null],"sid":"corsica-024"},{"n":"Menasina","com":"Cargèse","z":"cargese","lat":42.1333,"lon":8.6157,"lato":"W","lung":"≈400 m","fondo":"Sabbia bianca, onde frequenti","folla":2,"acc":"breve","camm":"10–15 minuti dal parcheggio in alto, su un sentiero stretto","park":"Sulla collina sopra la spiaggia","sv":{"parcheggio":0.5,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0.5,"bb":0},"id":["Onde","Poca gente","Ombra di legno"],"nota":"Sabbia bianca e onde vere, senza quasi nessuno. Il sentiero è percorribile anche da chi non è allenato, ma passa vicino a filo spinato e fichi d'India: attenzione con i bambini. Sulla spiaggia ci sono ripari d'ombra in legno, ma niente bar: porta acqua.","pid":"ChIJXWpIie172hIRyFodGpEFhbM","sc":["#f2e4bf","#4fc8c6","macchia",null],"sid":"corsica-087"},{"n":"Peru","com":"Cargèse","z":"cargese","lat":42.1465,"lon":8.593,"lato":"W","lung":"≈700 m","fondo":"Sabbia fine, acqua bassa a lungo","folla":2,"acc":"auto","camm":"1–2 minuti dal parcheggio del Lustincone","park":"In fondo alla strada, gratuito","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0,"docce":0,"wc":0.5,"sorveglianza":0,"sport":0.5,"cani":0.5,"ombra":0,"bb":0},"id":["Bambini","Torre di Omigna","Chioschi simpatici"],"nota":"Acqua bassa per decine di metri, comodissima con i bambini, e due chioschi con vera personalità sulla sabbia. Dalla spiaggia parte il sentiero per la torre genovese di Omigna, mezz'ora scarsa. Qualche medusa nelle giornate calde e ferme.","pid":"ChIJr8WlvuB72hIRxJ7Y8F3PdJQ","sc":["#eedeb6","#4ec8c6","macchia","torre"],"sid":"corsica-022"},{"n":"Sagone","com":"Vico","z":"cargese","lat":42.1141,"lon":8.6969,"lato":"W","lung":"≈2 km","fondo":"Sabbia fine","folla":3,"acc":"auto","camm":"Nessuna","park":"Grande, dall'altra parte della strada","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":1,"cani":0.5,"ombra":0,"bb":0},"id":["Servizi","Mare calmo","Comoda"],"nota":"Sabbia fine e mare quasi sempre piatto, con tutto il paese di Sagone alle spalle. È la scelta pratica se cerchi servizi sulla costa ovest senza scendere fino ad Ajaccio: gelaterie, noleggi e ristoranti a pochi metri dall'asciugamano.","pid":"ChIJi65x9oNx2hIRpOPuHF6MpIM","sc":["#eaddb8","#49bcc0","paese",null],"sid":"corsica-023"},{"n":"Stagnoli","com":"Cargèse","z":"cargese","lat":42.1184,"lon":8.6508,"lato":"W","lung":"≈500 m","fondo":"Sabbia, ingresso basso","folla":2,"acc":"auto","camm":"Nessuna","park":"Ampio lungo la strada","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0,"wc":0.5,"sorveglianza":0,"sport":0.5,"cani":0.5,"ombra":0,"bb":0},"id":["Surf","Accesso immediato","Ristorante sulla sabbia"],"nota":"Accesso diretto dalla strada e parcheggio abbondante, cosa rara da queste parti. Quando entra la mareggiata diventa uno spot da surf; nelle giornate calme l'ingresso in acqua è basso e tranquillo. Il ristorante A Paolina è affacciato sulla sabbia.","pid":"ChIJFed7RnB62hIRS7C-h5IYMGo","sc":["#eddeb8","#4cc4c2","macchia",null],"sid":"corsica-088"},{"n":"Tiuccia","com":"Casaglione","z":"cargese","lat":42.0662,"lon":8.7352,"lato":"W","lung":"≈200 m","fondo":"Sabbia grossa e ciottoli, calette rocciose","folla":2,"acc":"auto","camm":"1–2 minuti","park":"Lungo la strada del Liamone","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0,"docce":0,"wc":0.5,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Snorkeling","Torre di Capigliolu","Piccola e viva"],"nota":"Piccola e isolata, con acqua turchese e fondale vivo: ottima per lo snorkeling. Poco oltre il paese parte una passeggiata facile fino alla torre genovese di Capigliolu, con vista su tutta la spiaggia del Liamone.","pid":"ChIJCaMLLgBx2hIRoULkOnLb1SI","sc":["#e6d8b4","#4ec6c4","granito","torre"],"sid":"corsica-089"},{"n":"Agosta","com":"Albitreccia · Porticcio","z":"ajaccio","lat":41.8604,"lon":8.7914,"lato":"E","lung":"≈2 km","fondo":"Sabbia chiara","folla":3,"acc":"auto","camm":"Nessuna","park":"Abbondante lungo la spiaggia","sv":{"parcheggio":1,"ristorante":0.5,"bar":0.5,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":0.5,"cani":0.5,"ombra":0,"bb":0},"id":["Parcheggio facile","Tramonto sul golfo","Poco affollata"],"nota":"Lunga e sorprendentemente poco affollata di fronte a Porticcio, con parcheggio facile e negozi sulla strada alle spalle. Sulla sabbia non ci sono chioschi: bar e ristoranti stanno tutti sul lato strada. L'acqua è meno calda che nelle baie chiuse, ma il tramonto sul golfo di Ajaccio ripaga.","pid":"ChIJBXrppapB2hIRUg4QPu7EjNg","sc":["#e3d5b2","#42b5bd","paese",null],"sid":"corsica-028"},{"n":"Barbicaghja","com":"Ajaccio","z":"ajaccio","lat":41.9092,"lon":8.6895,"lato":"W","lung":"≈200 m","fondo":"Sabbia argentata e scogli","folla":3,"acc":"auto","camm":"1–2 minuti dalla fermata dell'autobus","park":"Qualche posto nelle vicinanze, limitato","sv":{"parcheggio":0.5,"ristorante":1,"bar":1,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":0.5,"cani":0,"ombra":0,"bb":0},"id":["Snorkeling","Autobus da Ajaccio","Piccola e limpida"],"nota":"Caletta sulla route des Sanguinaires raggiungibile con l'autobus urbano dal centro di Ajaccio, il che la rende perfetta senza auto. Acqua limpidissima e scogli buoni per lo snorkeling, ma lo spazio è poco: se arrivi a mezzogiorno d'agosto rischi di non trovare dove stendere l'asciugamano.","pid":"ChIJiYziGido2hIRNyK8RzreR10","sc":["#e7dab8","#4cc2c4","granito","paese"],"sid":"corsica-026"},{"n":"Cala d'Orzu","com":"Coti-Chiavari","z":"ajaccio","lat":41.7375,"lon":8.707,"lato":"W","lung":"≈400 m","fondo":"Sabbia fine","folla":2,"acc":"sterrato","camm":"Nessuna se scendi la pista; le calette a sud richiedono un tratto sugli scogli","park":"In fondo alla pista","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0,"docce":0,"wc":0.5,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Calette a sud","Poca gente","Due ristoranti"],"nota":"Dieci minuti di sterrato stretto, ripido e polveroso — meglio con un'auto alta, ma con calma si fa anche con una normale. Sabbia fine, acqua azzurra e due ristoranti (cari). Scavalcando gli scogli a sud si arriva a una caletta dove spesso non c'è nessuno. A settembre attenzione alle meduse.","pid":"ChIJazHtJXhP2hIRfR2BSIxGOW0","sc":["#f2e4c0","#57d0cb","granito","calette"],"sid":"corsica-097"},{"n":"Capo di Feno","com":"Ajaccio","z":"ajaccio","lat":41.938,"lon":8.6224,"lato":"W","lung":"≈1 km","fondo":"Sabbia chiara, onde frequenti","folla":3,"acc":"sterrato","camm":"Nessuna, ma si arriva per pista sterrata. Alternativa: a piedi dalla Parata","park":"Due grandi aree gratuite","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0,"docce":0,"wc":0.5,"sorveglianza":0.5,"sport":0.5,"cani":0.5,"ombra":0,"bb":0},"id":["Surf","Tramonto","Niente cemento"],"nota":"La spiaggia da onde di Ajaccio, senza una costruzione in vista: ci si arriva per uno sterrato, oppure camminando dalla Parata. Bagnini fino alle 19 in estate, un paio di paillote con prezzi da spiaggia e spesso senza bancomat — porta contanti. Ombra inesistente.","pid":"ChIJ-X3yIqRn2hIRCf1iShMbTyQ","sc":["#e5d6b0","#3fb3bf","macchia",null],"sid":"corsica-025"},{"n":"Cupabia","com":"Serra-di-Ferro","z":"ajaccio","lat":41.7388,"lon":8.7818,"lato":"W","lung":"≈1 km","fondo":"Sabbia fine, ingresso dolcissimo","folla":3,"acc":"auto","camm":"2–3 minuti dal parcheggio","park":"Misto gratuito e a pagamento; si riempie, non arrivare tardi","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0,"docce":0,"wc":0.5,"sorveglianza":0,"sport":0.5,"cani":0.5,"ombra":0,"bb":0},"id":["Snorkeling","Acqua bassa","Sabbia fine"],"nota":"Sabbia fine, ingresso in acqua dolcissimo e scogli laterali pieni di pesci: una delle migliori dell'isola per lo snorkeling facile. Nessun ombrellone a noleggio e nessuna ombra naturale, quindi portalo. Con vento da sud-ovest entrano le onde. Bella la passeggiata costiera fino a Porto Pollo.","pid":"ChIJC2kLN4NI2hIRI6OibcvP1SE","sc":["#f2e4bf","#5acdc8","macchia",null],"sid":"corsica-031"},{"n":"Isolella","com":"Pietrosella","z":"ajaccio","lat":41.8469,"lon":8.7638,"lato":"W","lung":"≈400 m","fondo":"Sabbia, acqua riparata","folla":4,"acc":"auto","camm":"1–2 minuti","park":"Piccolo: dopo le 10 è pieno","sv":{"parcheggio":0.5,"ristorante":0.5,"bar":0.5,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Snorkeling","Riparata dal vento","Arrivare presto"],"nota":"Piccola penisola che ripara la baia: quando altrove sventola bandiera gialla, qui il mare resta piatto. Per molti è la migliore del golfo per lo snorkeling. Il parcheggio è il limite: dopo le dieci del mattino, in stagione, non trovi più posto.","pid":"ChIJ0ykFR5VB2hIRD2s2qTpTA3A","sc":["#f0e2bd","#55cec8","granito",null],"sid":"corsica-095"},{"n":"La Viva","com":"Grosseto-Prugna","z":"ajaccio","lat":41.8941,"lon":8.803,"lato":"E","lung":"≈1,5 km","fondo":"Sabbia chiara","folla":3,"acc":"auto","camm":"1 minuto dalla strada","park":"Gratuito dall'altra parte della strada","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":1,"cani":1,"ombra":0,"bb":0},"id":["Cani ammessi","Sport acquatici","Tramonti"],"nota":"Spiaggia grande e pubblica con parcheggio gratuito, bar e ristoranti ben forniti a prezzi ragionevoli, e cani benvenuti. È ventosa, e per questo ci sono due centri di sport acquatici. Tramonti con colori notevoli.","pid":"ChIJ424I4HNB2hIRcr4wSzyQLJ4","sc":["#e9dbb8","#48bcc0","macchia",null],"sid":"corsica-094"},{"n":"Lava","com":"Appietto","z":"ajaccio","lat":41.992,"lon":8.669,"lato":"W","lung":"≈800 m","fondo":"Sabbia fine","folla":3,"acc":"auto","camm":"Nessuna","park":"Vicino alla spiaggia","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":1,"cani":0.5,"ombra":0,"bb":0},"id":["Sport acquatici","Ristorante con vista","Passeggiate"],"nota":"Spiaggia ampia e pulita con noleggi di barche e sport acquatici, e il ristorante dell'hotel Marina di Lava affacciato. Nessuna ombra naturale, e in alta stagione le barche davanti tolgono un po' di vista. Bellissima al mattino presto.","pid":"ChIJx0cwLORv2hIRgBw_s22vsDE","sc":["#ecdcb8","#4cc2c2","macchia","barche"],"sid":"corsica-090"},{"n":"Mare e Sole","com":"Pietrosella","z":"ajaccio","lat":41.8133,"lon":8.7732,"lato":"W","lung":"≈1,5 km","fondo":"Sabbia chiara fine","folla":3,"acc":"auto","camm":"1–2 minuti dalla strada","park":"Gratuito lungo la strada","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":0.5,"cani":0.5,"ombra":0.5,"bb":0},"id":["La più bella del golfo","Acqua trasparente","Ristorante sul mare"],"nota":"Per molti la più bella del golfo di Ajaccio: sabbia chiara, acqua che sembra una piscina e una lunghezza tale da non sembrare mai piena, anche quando lo è. Il ristorante La Plage d'Argent è affacciato sulla sabbia con vista notevole — in stagione conviene prenotare.","pid":"ChIJ55aqjMhG2hIRTJ2HmL4pBF8","sc":["#f2e4c0","#57d0ca","macchia",null],"sid":"corsica-029"},{"n":"Ricanto · Tahiti","com":"Ajaccio","z":"ajaccio","lat":41.9269,"lon":8.7758,"lato":"S","lung":"≈2,5 km","fondo":"Sabbia fine","folla":4,"acc":"auto","camm":"Nessuna","park":"Grande parcheggio sulla route du Ricanto","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":1,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":1,"cani":0.5,"ombra":0,"bb":0},"id":["Ultimo bagno prima del volo","Servizi","Moto d'acqua e diving"],"nota":"La spiaggia urbana di Ajaccio, tra la città e l'aeroporto: lunga, sabbiosa, con parcheggio, ristoranti sul mare, noleggio moto d'acqua, palestra e un diving. Perfetta per l'ultimo bagno prima del volo; meno se stai cercando la Corsica selvaggia.","pid":"ChIJ0dDhJkRq2hIR6pZHR9LTb3Q","sc":["#e6d9b6","#45b6bd","paese","pontile"],"sid":"corsica-027"},{"n":"Ruppione","com":"Pietrosella","z":"ajaccio","lat":41.8167,"lon":8.7833,"lato":"W","lung":"≈500 m","fondo":"Sabbia media","folla":3,"acc":"auto","camm":"Nessuna","park":"Gratuito, praticamente sull'acqua","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":1,"cani":0.5,"ombra":0,"bb":1},"id":["Accesso facilissimo","SUP","Ricci e pesci","Bandiera Blu"],"nota":"Uno degli accessi più comodi del golfo: parcheggio gratuito a pochi metri dall'acqua e due chioschi alle estremità, con noleggio paddle. Acqua turchese e calda anche a settembre, fondale con ricci e conchiglie. La sabbia è meno fine che a Mare e Sole.","pid":"ChIJd-0TL9JG2hIR_b9zXuO5zwc","sc":["#ecdcb8","#51cac6","macchia",null],"sid":"corsica-096"},{"n":"Saint-François","com":"Ajaccio","z":"ajaccio","lat":41.9167,"lon":8.7331,"lato":"S","lung":"≈150 m","fondo":"Sabbia fine","folla":4,"acc":"auto","camm":"Nessuna: sei in centro","park":"Parcheggi cittadini a pagamento","sv":{"parcheggio":0.5,"ristorante":1,"bar":1,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":0,"cani":0,"ombra":0,"bb":0},"id":["In centro ad Ajaccio","Bagno senza auto","Acqua sorprendentemente limpida"],"nota":"Una striscia di sabbia in pieno centro ad Ajaccio, sotto la cittadella: acqua molto più limpida di quanto ci si aspetti da una spiaggia urbana. Nei weekend è piena, ma per un bagno tra due visite in città è imbattibile.","pid":"ChIJpZE7We5p2hIRUEKEFKcZCB0","sc":["#e5d7b6","#45b8bd","paese","barche"],"sid":"corsica-091"},{"n":"Scudo","com":"Ajaccio","z":"ajaccio","lat":41.9053,"lon":8.6721,"lato":"W","lung":"≈250 m","fondo":"Sabbia","folla":3,"acc":"auto","camm":"Nessuna","park":"Lungo la route des Sanguinaires","sv":{"parcheggio":0.5,"ristorante":1,"bar":1,"lettini":1,"docce":0.5,"wc":1,"sorveglianza":0.5,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Paillote e musica","Cocktail sulla sabbia","Aperitivo"],"nota":"Più che una spiaggia è una paillote con la sabbia davanti: musica, bar completo, lettini e cucina fino a tarda sera. Se cerchi silenzio, cammina dieci minuti lungo la costa e ne trovi di più tranquille.","pid":null,"sc":["#e8dab6","#49bfc0","paese",null],"sid":"corsica-093"},{"n":"Terre Sacrée","com":"Ajaccio","z":"ajaccio","lat":41.91,"lon":8.645,"lato":"W","lung":"≈300 m","fondo":"Sabbia e qualche scoglio","folla":3,"acc":"auto","camm":"1–2 minuti dalla route des Sanguinaires","park":"Facile lungo la strada","sv":{"parcheggio":1,"ristorante":0.5,"bar":1,"lettini":0,"docce":0,"wc":0.5,"sorveglianza":0.5,"sport":0,"cani":0.5,"ombra":0,"bb":1},"id":["Vista sulle Sanguinaires","Tramonto","A 15 min dal centro","Bandiera Blu"],"nota":"Sabbia chiara e acqua trasparente con le Isole Sanguinarie di fronte: uno dei tramonti migliori di tutta la costa ovest. Solo un chiosco, niente ristorante vero. A metà agosto si riempie, fuori stagione molti locali sono chiusi.","pid":"ChIJHcvYO9dd2hIR5d0BJwY_Hco","sc":["#eddeb8","#4ec4c4","granito","isola"],"sid":"corsica-092"},{"n":"Trottel","com":"Ajaccio","z":"ajaccio","lat":41.91227,"lon":8.72476,"lato":null,"lung":null,"fondo":null,"folla":null,"acc":"nc","camm":null,"park":null,"sv":{"parcheggio":null,"ristorante":null,"bar":null,"lettini":null,"docce":null,"wc":null,"sorveglianza":null,"sport":null,"ombra":null,"cani":null,"bb":1},"id":["Bandiera Blu"],"nota":null,"pid":null,"sc":["#d9d2c2","#3fc0b6","macchia",null],"sid":"corsica-112","vo":null},{"n":"Verghia","com":"Coti-Chiavari","z":"ajaccio","lat":41.8093,"lon":8.7628,"lato":"W","lung":"≈400 m + calette","fondo":"Sabbia e roccia","folla":2,"acc":"breve","camm":"Pochi minuti dall'allée des Platanes; qualche minuto in più per le calette laterali","park":"Lungo il viale alberato, gratuito","sv":{"parcheggio":1,"ristorante":0.5,"bar":0.5,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":1,"bb":0},"id":["Calette nascoste","Ombra vera","Poca gente"],"nota":"Eucalipti e platani fino quasi alla sabbia: una delle poche spiagge dell'isola dove l'ombra naturale è abbondante. Il vero valore però sono le calette laterali lungo l'allée des Platanes: se la spiaggia principale è piena, cammina cinque minuti e ne trovi una vuota.","pid":"ChIJLfh7AwBH2hIRQ0co3UU8dc8","sc":["#e5d8b4","#4bc0c0","pini","calette"],"sid":"corsica-030"},{"n":"Abbartello","com":"Olmeto","z":"valinco","lat":41.6993,"lon":8.8392,"lato":"W","lung":"≈400 m","fondo":"Sabbia e scogli","folla":2,"acc":"auto","camm":"1–2 minuti","park":"Lungo la strada","sv":{"parcheggio":1,"ristorante":0.5,"bar":0.5,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Il migliore per snorkeling","Tuffi dagli scogli","Poca gente"],"nota":"Molti la indicano come la migliore del Valinco per lo snorkeling: scogli affioranti ovunque, buoni anche per i tuffi, e pochissima gente. Non è una spiaggia da ombrellone e sdraio, è una spiaggia da maschera.","pid":"ChIJO_E639Q32hIRjZg-XasH3m0","sc":["#eadcb8","#4ec6c6","granito","massi"],"sid":"corsica-098"},{"n":"Baracci","com":"Olmeto","z":"valinco","lat":41.687,"lon":8.9168,"lato":"E","lung":"≈2 km","fondo":"Grana media, ingresso ripido","folla":2,"acc":"auto","camm":"Nessuna","park":"Gratuito e facile","sv":{"parcheggio":1,"ristorante":0,"bar":0.5,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Tramonto","Sempre vuota","Sabbia piacevole"],"nota":"Lunghissima e quasi sempre deserta, con la sabbia dalla grana più piacevole del Valinco. Due avvertenze: l'ingresso in acqua è ripido, quindi occhio ai bambini, ed è ventosa, il che significa che la corrente vi porta anche parecchi detriti.","pid":"ChIJ_alXLtE22hIRJvpvcYhtKNU","sc":["#e6d8b4","#45b8bd","dune",null],"sid":"corsica-100"},{"n":"Cala Piscona","com":"Olmeto","z":"valinco","lat":41.6966,"lon":8.8595,"lato":"W","lung":"≈300 m","fondo":"Sabbia bianca a grana grossa","folla":2,"acc":"sterrato","camm":"5 minuti a piedi se lasci l'auto sulla pista","park":"Gratuito lungo lo sterrato","sv":{"parcheggio":0.5,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Quasi privata","Calette a sinistra","Nessun servizio"],"nota":"Sterrato breve ma sconnesso: con un'utilitaria conviene lasciarla lungo la pista e fare cinque minuti a piedi. Sabbia bianca, fondale che degrada dolcemente e, a metà settembre, la sensazione di avere una spiaggia privata. Zero servizi.","pid":"ChIJZSyiOfM32hIR4_21HoRd43Q","sc":["#f4e6c2","#59d0cb","macchia","calette"],"sid":"corsica-099"},{"n":"Campomoro","com":"Belvédère-Campomoro","z":"valinco","lat":41.6296,"lon":8.8149,"lato":"W","lung":"≈1 km","fondo":"Sabbia bianca, acqua bassa","folla":4,"acc":"auto","camm":"Nessuna","park":"A pagamento (~2 €/h) e con pochi posti: arriva prima delle 9 o nel tardo pomeriggio","sv":{"parcheggio":0.5,"ristorante":1,"bar":1,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":1,"cani":0.5,"ombra":0,"bb":0},"id":["Bambini","Torre genovese","Kayak e diving"],"nota":"Baia riparata con acqua bassa e senza onde, perfetta con i bambini, dominata dalla torre genovese più grande della Corsica. Il vero collo di bottiglia è il parcheggio, a pagamento e limitato. Vale la salita alla torre e la passeggiata fino alle rocce scolpite dal vento, oltre la punta.","pid":"ChIJp0MTtmdK2hIRFtUsrLz_48g","sc":["#f4e6c4","#57d0cb","macchia","torre"],"sid":"corsica-035"},{"n":"Erbaju","com":"Sartène","z":"valinco","lat":41.5014,"lon":8.92,"lato":"S","lung":"≈2 km","fondo":"Sabbia bianca","folla":2,"acc":"lungo","camm":"La pista d'accesso è stata privatizzata: si arriva a piedi da Roccapina, 30–40 minuti lungo la costa","park":"A Roccapina","sv":{"parcheggio":0,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Vuota","Naturisti","A piedi da Roccapina"],"nota":"Due chilometri di sabbia bianca completamente vuoti a fianco di Roccapina. L'accesso in auto è chiuso perché la strada è privata, quindi l'unico modo è camminare dalla spiaggia accanto. Nessun servizio di alcun tipo, ed è frequentata anche da naturisti.","pid":"ChIJA5gwMfnL2xIR8DNSFcsot6g","sc":["#f7ebc9","#5ed6cf","dune",null],"sid":"corsica-038"},{"n":"Portigliolo","com":"Belvédère-Campomoro","z":"valinco","lat":41.6468,"lon":8.8726,"lato":"W","lung":"≈3 km","fondo":"Sabbia fine, fondale dolce","folla":2,"acc":"auto","camm":"2–3 minuti dalla strada","park":"Gratuito e abbondante lungo la strada","sv":{"parcheggio":1,"ristorante":1,"bar":0.5,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0.5,"cani":0.5,"ombra":0.5,"bb":0},"id":["Famiglie","Spazio","Sabbia fine"],"nota":"Chilometri di sabbia fine con fondale che degrada dolcemente e quasi nessuna posidonia: una delle migliori del Valinco per le famiglie, e c'è sempre spazio. Niente lettini né ombrelloni a noleggio, una sola zona d'ombra naturale. Si può arrivare a piedi da Propriano lungo la costa.","pid":"ChIJ33735c812hIRFmKPV_FD7-A","sc":["#f0e2bd","#53cbc7","macchia",null],"sid":"corsica-034"},{"n":"Porto Pollo","com":"Serra-di-Ferro","z":"valinco","lat":41.7095,"lon":8.795,"lato":"E","lung":"≈800 m","fondo":"Sabbia chiara con scogli","folla":3,"acc":"auto","camm":"Nessuna","park":"Lungo la strada, in genere disponibile","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":1,"cani":0.5,"ombra":0,"bb":1},"id":["Passeggiata verso Cupabia","Servizi","Snorkeling sugli scogli","Bandiera Blu"],"nota":"Piccolo borgo di mare con chioschi e ristoranti sul lungomare e barche all'ancora davanti: buon compromesso tra servizi e tranquillità. Poca ombra. Dalla spiaggia parte una bella passeggiata costiera fino a Cupabia, e gli scogli laterali sono ottimi per lo snorkeling.","pid":"ChIJRZ1FB1dI2hIRu-ZedVt-jaE","sc":["#e9dcb8","#4dc4c2","paese","barche"],"sid":"corsica-032"},{"n":"Propriano · il Lido","com":"Propriano","z":"valinco","lat":41.6761,"lon":8.8964,"lato":"E","lung":"≈700 m","fondo":"Sabbia, ingresso in pendenza","folla":3,"acc":"auto","camm":"Nessuna","park":"Gratuito sulla spiaggia","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":1,"wc":1,"sorveglianza":1,"sport":1,"cani":0.5,"ombra":0,"bb":0},"id":["Base logistica","Bagnini","A piedi dal porto"],"nota":"La spiaggia del paese: docce, bagnini, parcheggio gratuito e il porto a due passi, con le uscite in barca per i delfini. Ingresso in acqua in pendenza e snorkeling discreto nei bassi. Comoda come base per tutto il Valinco, ma non è la più scenografica della zona.","pid":"ChIJe8nvhOw22hIRc_buF-YS9qE","sc":["#e5d8b6","#43b7bd","paese","barche"],"sid":"corsica-033"},{"n":"Roccapina","com":"Sartène","z":"valinco","lat":41.4964,"lon":8.9328,"lato":"S","lung":"≈500 m","fondo":"Sabbia bianca fine","folla":4,"acc":"sterrato","camm":"Nessuna se scendi la pista; circa 30 minuti a piedi se lasci l'auto sulla T40","park":"Gratuito a fine pista","sv":{"parcheggio":1,"ristorante":0,"bar":0.5,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Il Leone di Roccapina","Torre genovese","Acqua cristallina"],"nota":"La baia sotto il Leone di Roccapina, con la torre genovese sulla cresta: una delle immagini simbolo del sud. La pista d'accesso è famosa per le buche — con un'auto bassa e a pieno carico è una prova vera. Nessun servizio: acqua e cibo da portare. La posidonia può coprire buona parte della battigia.","pid":"ChIJt78GCgPM2xIRJfvMoJYP9jw","sc":["#f6eac8","#5cd4ce","granito","torre"],"sid":"corsica-039"},{"n":"Tizzano","com":"Sartène","z":"valinco","lat":41.5352,"lon":8.8561,"lato":"W","lung":"≈300 m","fondo":"Sabbia, fondale che scende in fretta","folla":2,"acc":"auto","camm":"Nessuna","park":"In paese, vicino al porticciolo","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0,"wc":0.5,"sorveglianza":0,"sport":0.5,"cani":0.5,"ombra":0,"bb":0},"id":["Autentica","Acqua calda","Porticciolo di pescatori"],"nota":"Piccolo porto di pescatori in fondo a una lunga strada dall'interno: proprio per questo resta tranquillo anche in agosto, con un'aria molto più corsa che turistica. Acqua calda e trasparente, fondale che scende in fretta. Può essere ventoso: se pensi di uscire in kayak, controlla prima.","pid":"ChIJZ1fD4mDK2xIRyhp0OMlIJ_s","sc":["#e8dab6","#4ac2c2","paese","barche"],"sid":"corsica-036"},{"n":"Tralicetu","com":"Sartène","z":"valinco","lat":41.5228,"lon":8.8803,"lato":"W","lung":"≈2 km","fondo":"Sabbia chiara","folla":2,"acc":"barca","camm":"3–4 km di pista molto dissestata; dal Col de Zivia si può scendere a piedi","park":"Pochissimi posti a fine pista","sv":{"parcheggio":0.5,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Deserta","Avventura","Fauna marina"],"nota":"Probabilmente il posto più solitario di tutta la costa ovest, protetto dal Conservatoire du littoral. La pista è dura: serve un'auto alta, e la salita di ritorno è peggio della discesa. Niente ombra, niente acqua, niente nulla — ma ricci, stelle marine e pesci a due bracciate dalla riva.","pid":"ChIJ2bFks0zK2xIRkBGDEXE4rh0","sc":["#f0e2bd","#55ccc8","dune",null],"sid":"corsica-037"},{"n":"Balistra","com":"Bonifacio","z":"sud","lat":41.4402,"lon":9.2224,"lato":"E","lung":"≈800 m","fondo":"Sabbia chiara","folla":2,"acc":"sterrato","camm":"Nessuna, ma prima c'è la pista","park":"Gratuito e abbondante a fine pista. Circa 10 minuti di sterrato pieno di buche: sconsigliato alle auto ribassate","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Poca gente","Acqua calma e tiepida"],"nota":"La pista lunga e sconnessa è esattamente il motivo per cui la spiaggia resta vuota. Acqua calmissima e spesso più calda del resto della costa. Il chiosco ha prezzi alti e non offre WC ai clienti. Nelle giornate ventose la sabbia punge.","pid":"ChIJfYxUQaV92RIR-b8q6__OEHA","sc":["#eee0bb","#52c9c6","macchia",null],"sid":"corsica-046"},{"n":"Cala Longa","com":"Bonifacio","z":"sud","lat":41.3914,"lon":9.2354,"lato":"E","lung":"≈200 m + calette","fondo":"Sabbia e roccia","folla":2,"acc":"auto","camm":"2 minuti; 10–15 per le calette laterali sugli scogli","park":"Una ventina di posti lungo la strada, si riempiono presto","sv":{"parcheggio":0.5,"ristorante":1,"bar":1,"lettini":0,"docce":0,"wc":0.5,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Snorkeling","Calette nascoste","Per niente turistica"],"nota":"Piccola e sorprendentemente poco turistica, con un chiosco che fa crêpe e caffè buoni. Il trucco: dalla spiaggia principale prendi il sentierino sulla destra e scavalca gli scogli — la terza caletta è quasi sempre deserta.","pid":"ChIJrWs9ZxB92RIRjxW5hjsG_aQ","sc":["#ecdfbc","#4ec6c4","granito","calette"],"sid":"corsica-044"},{"n":"Chevanu","com":"Pianottoli-Caldarello","z":"sud","lat":41.4708,"lon":9.0366,"lato":"S","lung":"≈500 m","fondo":"Sabbia dorata","folla":3,"acc":"auto","camm":"2–3 minuti dal parcheggio","park":"Spazioso e gratuito","sv":{"parcheggio":1,"ristorante":0,"bar":0.5,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Alternativa a Roccapina","Snorkeling a sinistra","Accesso facile"],"nota":"La risposta a Roccapina per chi non vuole affrontare lo sterrato: acqua altrettanto trasparente, sabbia dorata e parcheggio a due minuti su asfalto. Lo snorkeling migliore è sul lato sinistro. Alle 9 del mattino ci sono dieci persone.","pid":"ChIJU549A1fR2xIRtW_ajXS9N90","sc":["#f4e6c4","#5bd2cc","granito",null],"sid":"corsica-101"},{"n":"Fazzio","com":"Bonifacio","z":"sud","lat":41.3933,"lon":9.1368,"lato":"S","lung":"≈250 m","fondo":"Sabbia chiara","folla":2,"acc":"lungo","camm":"Circa 50 minuti a piedi da Bonifacio, oppure 20–30 da Paraguan","park":"A Bonifacio o a Paraguan; non seguire il navigatore fino in fondo","sv":{"parcheggio":0,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Snorkeling","Passeggiata da Bonifacio","Quasi sempre vuota"],"nota":"Uno dei posti più tranquilli dell'estremo sud, raggiungibile solo a piedi o in barca. Avvertenza pratica: non seguire il navigatore in auto, non distingue le strade dalle mulattiere — lascia l'auto vicino all'ospedale e cammina. Con vento l'acqua si intorbida e lo snorkeling salta.","pid":"ChIJ7YL6JNfZ2xIRX0xke7FMccI","sc":["#f4e8c8","#5cd6ce","granito",null],"sid":"corsica-105"},{"n":"Grand Sperone","com":"Bonifacio","z":"sud","lat":41.3685,"lon":9.2142,"lato":"S","lung":"≈250 m","fondo":"Sabbia bianca","folla":2,"acc":"lungo","camm":"30–45 minuti da Piantarella su sentieri stretti nella macchia, lungo il campo da golf","park":"A Piantarella. Le strade oltre il golf sono private: in auto non si passa","sv":{"parcheggio":0.5,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["La più bella del tratto","Snorkeling","Poca gente"],"nota":"La più bella e la più faticosa del sud: non è raggiungibile in auto. Porta poca roba, perché i sentieri tra la macchia sono stretti, e tanta acqua e crema solare, perché l'ombra è zero. A destra guardando il mare c'è la zona migliore per lo snorkeling.","pid":"ChIJN0K2aOpj2RIR1kke_Wx1go0","sc":["#f9efd4","#6ce5d8","granito","massi"],"sid":"corsica-043"},{"n":"La Testa","com":"Figari","z":"sud","lat":41.447,"lon":9.0906,"lato":"S","lung":"≈150 m + calette","fondo":"Sabbia bianchissima, molta posidonia","folla":2,"acc":"sterrato","camm":"Circa 3 km di pista, poi qualche decina di metri a piedi","park":"Ampio a fine pista","sv":{"parcheggio":0.5,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Acqua da laguna","Snorkeling","Calette successive"],"nota":"Tre chilometri di pista in buone condizioni e poi una serie di calette bianchissime con acqua color laguna. La prima è minuscola — sta comoda una decina di persone — e quasi tutti si fermano lì: conviene proseguire. Molta posidonia sulla battigia, nessun servizio.","pid":"ChIJsbV3z_vR2xIRXFMueJ0i82Q","sc":["#f8edcd","#63dcd2","granito","calette"],"sid":"corsica-102"},{"n":"La Tonnara","com":"Bonifacio","z":"sud","lat":41.426,"lon":9.1044,"lato":"S","lung":"≈300 m","fondo":"Sabbia media, ingresso graduale","folla":3,"acc":"auto","camm":"Nessuna","park":"Grande e in buone condizioni","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0,"sport":1,"cani":0.5,"ombra":0,"bb":0},"id":["Kitesurf","Tramonto","Ristoranti aperti tutto il giorno"],"nota":"Lo spot da kitesurf e foil dell'estremo sud, con due grandi ristoranti aperti dalla mattina a tarda sera e un noleggio di kayak e tavole. Tramonti notevoli. Punto dolente segnalato spesso: molta plastica portata dalle correnti. Da qui si cammina facilmente verso le calette vicine.","pid":"ChIJAQAAAMDX2xIRzo8VJU3PffM","sc":["#e6d9b6","#4dc6c6","macchia",null],"sid":"corsica-040"},{"n":"Paraguan","com":"Bonifacio","z":"sud","lat":41.3994,"lon":9.1335,"lato":"S","lung":"≈300 m","fondo":"Sabbia, molta posidonia","folla":3,"acc":"auto","camm":"1 minuto, ma la strada finale è stretta e ripida","park":"Piccolo, in fondo alla discesa","sv":{"parcheggio":0.5,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Porta d'accesso a Fazzio","Baia per le barche"],"nota":"Onestamente: la spiaggia in sé delude spesso, coperta di alghe in decomposizione e con odore forte. La strada finale è a una corsia sola, ripida e con fossi ai lati: con un'auto piccola può essere un problema. Il suo valore è essere il punto di partenza per Fazzio, venti minuti più avanti.","pid":"ChIJs9PJ0WLX2xIRl9tJhtjMThg","sc":["#ded0ae","#42b0b8","macchia",null],"sid":"corsica-104"},{"n":"Petit Sperone","com":"Bonifacio","z":"sud","lat":41.3709,"lon":9.2212,"lato":"E","lung":"≈150 m","fondo":"Sabbia bianca finissima","folla":3,"acc":"lungo","camm":"15–20 minuti da Piantarella costeggiando la riva e salendo sulle rocce. Scarpe chiuse, non infradito. In alternativa, kayak","park":"A Piantarella, lungo la strada","sv":{"parcheggio":0.5,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Acqua caraibica","Kayak","Vista sulla Sardegna"],"nota":"Ci si arriva solo a piedi passando per Piantarella e arrampicandosi un po' sulle rocce, oppure in kayak. È piccolissima e si riempie in fretta: vale la pena esserci entro le 9. Di fronte, le isole della Sardegna nord-orientale.","pid":"ChIJLVLUesJi2RIRceAHMrP3Hqg","sc":["#f8edd0","#66e0d4","granito","isola"],"sid":"corsica-042"},{"n":"Piantarella","com":"Bonifacio","z":"sud","lat":41.3737,"lon":9.2209,"lato":"E","lung":"≈500 m","fondo":"Sabbia, fondale bassissimo, molta posidonia","folla":3,"acc":"breve","camm":"5–10 minuti dalla strada; in alcuni punti si scavalcano rocce","park":"Lungo la strada, limitato e senza indicazioni chiare","sv":{"parcheggio":0.5,"ristorante":0,"bar":0.5,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":1,"cani":0.5,"ombra":0,"bb":0},"id":["Windsurf e kite","Kayak","Île Piana a piedi"],"nota":"Lo spot di windsurf e kitesurf di Bonifacio, e il punto da cui si attraversa a piedi nell'acqua bassa fino all'Île Piana, circa cinque minuti. Avvertenza onesta: la posidonia in decomposizione può dare un odore molto forte nelle giornate calde.","pid":"ChIJkTJu4fBj2RIR8z6Sw5uIDdU","sc":["#e6d9b4","#4fc8c8","macchia","isola"],"sid":"corsica-041"},{"n":"Rondinara","com":"Bonifacio","z":"sud","lat":41.468,"lon":9.2669,"lato":"E","lung":"≈1 km","fondo":"Sabbia bianca finissima, baia a conchiglia","folla":4,"acc":"sterrato","camm":"3–5 minuti dal parcheggio","park":"A pagamento, circa 6 € (≈3 € le moto). Deviazione di alcuni chilometri dalla T10, ultimo tratto stretto","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0,"sport":0.5,"cani":0.5,"ombra":0,"bb":0},"id":["Bambini","Baia quasi circolare","Beach volley"],"nota":"La baia più fotografata del sud: quasi chiusa, acqua bassa e senza onde, e un campo da beach volley. Porta l'ombrellone — l'ombra naturale non esiste e i pochi lettini finiscono subito. Per lo snorkeling devi arrivare fino agli scogli laterali.","pid":"ChIJMb_oO6Z-2RIRQyhduRLd_CM","sc":["#f7ecce","#5ed7cd","macchia","baia"],"sid":"corsica-047"},{"n":"Sant'Amanza","com":"Bonifacio","z":"sud","lat":41.4128,"lon":9.2337,"lato":"E","lung":"≈2 km di calette","fondo":"Sabbia chiara","folla":3,"acc":"auto","camm":"1–3 minuti dalla D58","park":"Lungo la D58, gratuito, distribuito sulle calette","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0,"sport":1,"cani":0.5,"ombra":0,"bb":0},"id":["A 10 min da Bonifacio","Windsurf e kite","Riparata dal vento"],"nota":"Golfo riparato a dieci minuti da Bonifacio, con più calette in fila lungo la D58. Il tratto di Maora accumula posidonia e rifiuti: spostati verso Gandina, più avanti, dove l'acqua è nettamente migliore.","pid":"ChIJXS1VJB592RIRXiA_jePppYI","sc":["#e9dcb8","#46b9bd","macchia","barche"],"sid":"corsica-045"},{"n":"Ventilegne","com":"Bonifacio","z":"sud","lat":41.4416,"lon":9.1225,"lato":"S","lung":"≈400 m","fondo":"Sabbia, foce di fiume","folla":2,"acc":"sterrato","camm":"Pochi minuti dalla pista","park":"Informale, lungo lo sterrato","sv":{"parcheggio":0.5,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Natura e silenzio","Fiume e mare","Niente servizi"],"nota":"Golfo appartato dove un fiume pulito sfocia in mare, con fauna e fioriture notevoli. Nessun servizio di alcun tipo. Nota meno bella e ricorrente: il campeggio libero, vietato ma diffuso, lascia rifiuti e sporcizia in giro.","pid":"ChIJUULFO97W2xIRgyCSdbD_h4o","sc":["#e9dcb6","#4fc8c6","macchia",null],"sid":"corsica-103"},{"n":"Cala Rossa","com":"Lecci","z":"pvecchio","lat":41.6205,"lon":9.3327,"lato":"E","lung":"≈700 m","fondo":"Sabbia fine, ciottoli sul bagnasciuga","folla":3,"acc":"auto","camm":"1 minuto dalla strada","park":"Gratuito lungo la strada. Arriva presto la mattina o dopo le 18","sv":{"parcheggio":1,"ristorante":1,"bar":0.5,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0.5,"bb":0},"id":["Nuoto","Meno affollata delle vicine"],"nota":"Acqua più scura e profonda delle spiagge vicine: si nuota subito, ma è poco adatta ai bambini piccoli. Nessun WC pubblico — l'unico bagno è quello del ristorante, consumando. I primi metri d'acqua hanno sassolini scomodi.","pid":"ChIJy18pu4KE2RIRdGcXylEZP_M","sc":["#e3d4b0","#2f95ad","pini",null],"sid":"corsica-052"},{"n":"Carataggio","com":"Porto-Vecchio","z":"pvecchio","lat":41.5747,"lon":9.3464,"lato":"E","lung":"≈600 m","fondo":"Sabbia chiara, laguna interna","folla":2,"acc":"lungo","camm":"20–25 minuti su sentiero polveroso ma non ripido, senza segnaletica","park":"Solo lungo la strada parallela: nessun parcheggio dedicato né indicazioni","sv":{"parcheggio":0.5,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0.5,"bb":0},"id":["Fuori dai circuiti","Bassa stagione"],"nota":"Nessun cartello e nessun parcheggio: si lascia l'auto lungo la strada e si scende a piedi per una ventina di minuti. In cambio, ad aprile o a giugno presto la trovi quasi vuota. Nel pomeriggio la laguna interna può intorbidirsi.","pid":"ChIJ3_gdE96C2RIRsuNWrd1j0Ys","sc":["#efe1bd","#4cc4c0","granito","laguna"],"sid":"corsica-051"},{"n":"Palombaggia","com":"Porto-Vecchio","z":"pvecchio","lat":41.5579,"lon":9.3253,"lato":"E","lung":"≈2 km","fondo":"Sabbia bianca, granito rosa, pini marittimi","folla":4,"acc":"auto","camm":"Da 1 a 5 minuti secondo l'accesso","park":"Misto: gratuito all'estremità nord-est, a pagamento agli accessi centrali. Diversi beach club lo scontano se pranzi da loro","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":1,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":0.5,"cani":0,"ombra":1,"bb":0},"id":["La cartolina","Snorkeling","Beach club"],"nota":"L'icona della Corsica del sud, e infatti ad agosto è piena e il parcheggio è una lotteria. Il tratto migliore è quello verso Tamaricciu. WC pubblici di fatto assenti: si passa dai beach club. Attenzione agli aghi di pino, pungono davvero.","pid":"ChIJ0w9YUIqC2RIRL7bpRUsVYG4","sc":["#f6e8c6","#57d2c8","granito","pini-granito"],"sid":"corsica-050"},{"n":"Pinarellu","com":"Sainte-Lucie-de-Porto-Vecchio","z":"pvecchio","lat":41.6731,"lon":9.3739,"lato":"E","lung":"≈2 km","fondo":"Sabbia bianca finissima","folla":3,"acc":"auto","camm":"1–2 minuti dalla strada","park":"Gratuito lungo la strada dietro la spiaggia: con un po' di pazienza un posto si libera","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0,"wc":0,"sorveglianza":0,"sport":1,"cani":0.5,"ombra":1,"bb":0},"id":["Bambini piccoli","Kayak e SUP","Acqua tiepida"],"nota":"L'acqua resta bassa e tiepida per decine di metri: è la più adatta ai bambini piccoli di tutto il tratto. All'estremità sud la sabbia si stringe, c'è molta meno gente e c'è un piccolo bar locale. Mancano cestini e sorveglianza.","pid":"ChIJJXynabSa2RIRV3xbwduyBM4","sc":["#f1e3c0","#55cec6","pini","isola"],"sid":"corsica-054"},{"n":"Saint-Cyprien","com":"Lecci · San Ciprianu","z":"pvecchio","lat":41.6385,"lon":9.3493,"lato":"E","lung":"≈2 km","fondo":"Sabbia chiara, qualche scoglio al centro","folla":3,"acc":"auto","camm":"Nessuna","park":"Gratuito, subito dietro la spiaggia","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":1,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":1,"cani":0,"ombra":1,"bb":0},"id":["Sport acquatici","Snorkeling","Ombra naturale"],"nota":"La spiaggia più sportiva del golfo: parasailing, wakeboard, wing foil, windsurf e tubing. Ombra naturale sotto gli alberi e praterie di posidonia poco al largo, ottime per lo snorkeling. Cani non ammessi.","pid":"ChIJYWikaUSF2RIRHZk92rEt8J0","sc":["#ecdcb8","#4bc2c2","pini","barche"],"sid":"corsica-053"},{"n":"Santa Giulia","com":"Porto-Vecchio","z":"pvecchio","lat":41.5312,"lon":9.2738,"lato":"E","lung":"≈2 km","fondo":"Sabbia bianca, acqua bassissima da laguna","folla":4,"acc":"auto","camm":"1–4 minuti dai parcheggi","park":"A pagamento, 5–10 € al giorno. Ci sono anche sterrati gratuiti col fondo sconnesso","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":1,"docce":1,"wc":1,"sorveglianza":0.5,"sport":1,"cani":0,"ombra":0.5,"bb":0},"id":["Bambini","Beach club","Acqua bassa"],"nota":"Acqua trasparente e bassa per decine di metri, perfetta con i bambini, con beach club veri e propri sulla sabbia. Rovescio della medaglia: dalle 11 in poi in agosto trovare posto è difficile e la posidonia secca sulla battigia non viene rimossa.","pid":"ChIJ7ZE1wQB_2RIRmdsTMdyTqf4","sc":["#f7ebcc","#63dcd0","pini","laguna"],"sid":"corsica-048"},{"n":"Tamaricciu","com":"Porto-Vecchio","z":"pvecchio","lat":41.5517,"lon":9.3143,"lato":"E","lung":"≈400 m","fondo":"Sabbia bianca, grandi massi di granito","folla":4,"acc":"breve","camm":"≈10 minuti dalla strada in alto","park":"A pagamento, parcometro o app PayByPhone","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":1,"docce":0,"wc":0.5,"sorveglianza":0,"sport":0.5,"cani":0,"ombra":0.5,"bb":0},"id":["Snorkeling","Granito rosa","Tre spiagge a piedi"],"nota":"Stretta: gli ombrelloni stanno su una fila sola e i lettini costano intorno ai 30 €. Il fondale scende più in fretta che a Palombaggia e i massi sommersi la rendono la migliore della zona per lo snorkeling. Da qui, camminando, incateni tre spiagge di seguito.","pid":"ChIJrSUKMdqD2RIRvQUa-6x7sMQ","sc":["#f6e9c8","#4fcfcb","granito","massi"],"sid":"corsica-049"},{"n":"Alistro","com":"San-Giuliano","z":"orientale","lat":42.2554,"lon":9.5555,"lato":"E","lung":"≈2 km","fondo":"Sabbia scura","folla":2,"acc":"auto","camm":"Nessuna","park":"Piccolo, vicino al chiosco","sv":{"parcheggio":0.5,"ristorante":1,"bar":1,"lettini":0,"docce":0,"wc":0.5,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Faro di Alistro","Vista sulle montagne","Tranquilla"],"nota":"Spiaggia selvatica sotto il faro di Alistro, tranquilla anche a inizio luglio, con un bar-ristorante affacciato che invita a fermarsi. È la prima non naturista scendendo da Bravone. Al pomeriggio l'acqua a volte perde limpidezza.","pid":"ChIJI-tvC41n1xIRowzY471JgOg","sc":["#cbb99a","#3ba0b0","dune",null],"sid":"corsica-109"},{"n":"Anghione","com":"Castellare-di-Casinca","z":"orientale","lat":42.4767,"lon":9.5335,"lato":"E","lung":"≈3 km","fondo":"Sabbia chiara","folla":2,"acc":"auto","camm":"Nessuna","park":"Gratuito lungo la route d'Anghione","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":0.5,"cani":0.5,"ombra":0,"bb":0},"id":["Paillote stagionali","Spazio","Campeggi vicini"],"nota":"Tre chilometri di sabbia poco costruita con paillote stagionali, campeggi e diverse attività intorno: comoda e mai affollata. Non è sabbia bianchissima, ma la tranquillità e la facilità d'accesso compensano.","pid":"ChIJHYHxdAA_1xIRTpP9hfjpU-g","sc":["#e0d0ac","#3fa8b6","dune",null],"sid":"corsica-111"},{"n":"Bravone","com":"Linguizzetta","z":"orientale","lat":42.2013,"lon":9.556,"lato":"E","lung":"≈4 km","fondo":"Sabbia scura grossa, ciottoli in acqua","folla":2,"acc":"auto","camm":"Nessuna","park":"Sterrato gratuito dietro la spiaggia","sv":{"parcheggio":1,"ristorante":0.5,"bar":1,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":1,"cani":1,"ombra":0,"bb":0},"id":["Solitudine","Cani ammessi","Snorkeling sugli scogli"],"nota":"Lunghissima e quasi deserta, con un chiosco che la sera mette musica e due noleggi di tavole e moto d'acqua. Il fondale scende in fretta: occhio ai bambini. A nord della foce del Bravona il tratto è frequentato da naturisti fino a Linguizzetta.","pid":"ChIJRTR_bN5h1xIR4O7x1zlBiUw","sc":["#b8a284","#3597ab","dune",null],"sid":"corsica-063"},{"n":"Calzarellu","com":"Prunelli-di-Fiumorbo","z":"orientale","lat":41.9874,"lon":9.4394,"lato":"E","lung":"≈3 km","fondo":"Sabbia bianca","folla":2,"acc":"auto","camm":"Nessuna","park":"Accanto alla spiaggia","sv":{"parcheggio":1,"ristorante":0.5,"bar":1,"lettini":0,"docce":0,"wc":0.5,"sorveglianza":1,"sport":0,"cani":0.5,"ombra":0,"bb":0},"id":["Bagnini","Sempre spazio","Bar a 30 metri"],"nota":"Lunghissima, pulita e con i bagnini in servizio — cosa non scontata da queste parti — e un bar a trenta metri con prezzi normali. Le onde e la corrente possono farsi sentire: non è la più adatta ai bambini piccoli, nonostante la sorveglianza.","pid":"ChIJEZqX2EDv2RIRGI77C5qxIxc","sc":["#eddfb8","#44b4bc","dune",null],"sid":"corsica-107"},{"n":"Canella","com":"Sari-Solenzara","z":"orientale","lat":41.8001,"lon":9.3952,"lato":"E","lung":"≈600 m","fondo":"Sabbia bianca, scogli rossi ai lati","folla":4,"acc":"auto","camm":"2–3 minuti dal parcheggio","park":"A pagamento, forfait di circa 10 € al giorno. Qualche posto libero lungo la strada, se arrivi presto","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0,"wc":0,"sorveglianza":0,"sport":0.5,"cani":0.5,"ombra":0.5,"bb":0},"id":["Snorkeling","Acqua trasparente","Fotografie"],"nota":"Acqua limpidissima e vita sottomarina notevole: lo snorkeling migliore è all'estremità sinistra, vicino all'arco naturale di roccia. Porta contanti — al chiosco spesso non passa il bancomat e non hanno resto.","pid":"ChIJnVlYgkSS2RIRXdJ0L4-tTG0","sc":["#f2e2be","#4ec9c4","granito","arco"],"sid":"corsica-058"},{"n":"Fautea","com":"Zonza · Conca","z":"orientale","lat":41.716,"lon":9.393,"lato":"E","lung":"≈500 m","fondo":"Sabbia chiara e roccia","folla":3,"acc":"breve","camm":"3–5 minuti dal bordo della statale","park":"Piazzole lungo la N198, limitate. Nessun parcheggio attrezzato","sv":{"parcheggio":0.5,"ristorante":0.5,"bar":0.5,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0.5,"bb":0},"id":["Panorama","Torre genovese","Snorkeling"],"nota":"Sito protetto del Conservatoire du littoral, dominato da una torre genovese: niente costruzioni e niente stabilimenti, per scelta. Vale la breve salita alla torre per la vista su tutta la costa fino a Pinarellu.","pid":null,"sc":["#e9dab6","#48c0c0","granito","torre"],"sid":"corsica-055"},{"n":"Favone","com":"Conca","z":"orientale","lat":41.7738,"lon":9.3965,"lato":"E","lung":"≈1 km","fondo":"Sabbia chiara","folla":3,"acc":"auto","camm":"Nessuna","park":"Gratuito a due passi dalla spiaggia","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":0.5,"cani":0.5,"ombra":0.5,"bb":0},"id":["Famiglie","Sosta pratica","Snorkeling facile"],"nota":"Una delle soste più pratiche del sud: parcheggio gratuito attaccato alla sabbia, mare quasi sempre senza onde, ristoranti e un piccolo negozio dall'altro lato della statale. Ottima con i bambini.","pid":"ChIJYUSgeieS2RIRK-bkxxdzEkg","sc":["#eddfba","#45b8bd","pini",null],"sid":"corsica-057"},{"n":"L'Arinella","com":"Bastia","z":"orientale","lat":42.6696,"lon":9.447,"lato":"E","lung":"≈1,5 km","fondo":"Sabbia scura e ghiaia","folla":3,"acc":"auto","camm":"Nessuna: si scende dal lungomare","park":"Lungo la strada, gratuito. C'è anche una navetta gratuita dall'ufficio del turismo di Bastia, 3 km a nord","sv":{"parcheggio":1,"ristorante":0.5,"bar":1,"lettini":0,"docce":1,"wc":1,"sorveglianza":0.5,"sport":0.5,"cani":0.5,"ombra":0,"bb":0},"id":["Bagno veloce","Raggiungibile senza auto"],"nota":"Non è la spiaggia più bella dell'isola e si vede che è urbana, ma è l'unica raggiungibile a piedi o in navetta da Bastia. Perfetta per il primo pomeriggio o per ammazzare l'attesa del traghetto.","pid":"ChIJz6tcEn0k1xIRymu_ZBA0pdg","sc":["#c9b79a","#3f9fb0","paese",null],"sid":"corsica-067"},{"n":"La Marana","com":"Furiani · Borgo","z":"orientale","lat":42.6422,"lon":9.4604,"lato":"E","lung":"≈10 km","fondo":"Sabbia fine chiara","folla":2,"acc":"auto","camm":"Da 1 a 3 minuti dalle piazzole","park":"Piazzole sparse lungo la route de la Lagune. In alta stagione sono poche e si riempiono","sv":{"parcheggio":0.5,"ristorante":0.5,"bar":0.5,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0.5,"cani":1,"ombra":1,"bb":0},"id":["Alba sull'Elba","Camminate lunghe","A 10 min da Bastia"],"nota":"Dieci chilometri di sabbia tra la pineta e lo stagno di Biguglia. I servizi però ci sono solo a macchia di leopardo: su diversi accessi non trovi né bar né WC, e il parcheggio è il vero collo di bottiglia.","pid":"ChIJucoXRFkj1xIRmz1KmR_wdjw","sc":["#e3d3ac","#3aa2b6","pini",null],"sid":"corsica-066"},{"n":"Mare e Stagnu","com":"Tallone · Aléria","z":"orientale","lat":42.1302,"lon":9.5551,"lato":"E","lung":"≈3 km","fondo":"Sabbia fine chiara","folla":2,"acc":"sterrato","camm":"Nessuna, ma le piste sono sconnesse","park":"Libero lungo le piste, molto usato dai camper","sv":{"parcheggio":1,"ristorante":0.5,"bar":0.5,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":1,"ombra":0,"bb":0},"id":["Camper","Solitudine vera","Tramonto sulle montagne"],"nota":"Se percorri la pista fino in fondo hai la spiaggia praticamente tutta per te anche in agosto. Due ristoranti e un campeggio solo all'estremità sud. I bidoni sono soltanto nel parcheggio principale: riporta indietro i rifiuti.","pid":"ChIJA81MkPrf2RIRScrQOpyXnmU","sc":["#e6d6ad","#3ea2b3","macchia",null],"sid":"corsica-062"},{"n":"Moriani-Plage","com":"San-Nicolao","z":"orientale","lat":42.3713,"lon":9.5272,"lato":"E","lung":"≈3 km","fondo":"Sabbia grigia fine","folla":3,"acc":"auto","camm":"Nessuna","park":"Ampio e gratuito, a ridosso della sabbia","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":1,"docce":1,"wc":1,"sorveglianza":0.5,"sport":1,"cani":0.5,"ombra":0.5,"bb":0},"id":["Famiglie","Tutti i servizi","Sosta comoda"],"nota":"È la spiaggia attrezzata della Costa Verde: negozi, gelaterie e ristoranti a due passi dalla sabbia, tutto su un unico livello. Se viaggi con bambini è la sosta più semplice di tutta la costa est.","pid":"ChIJL_vS_hNC1xIRkkM1iMIGFTQ","sc":["#c8bda4","#3ba3b7","paese","pontile"],"sid":"corsica-064"},{"n":"Padulone","com":"Aléria","z":"orientale","lat":42.1075,"lon":9.55,"lato":"E","lung":"≈2 km","fondo":"Sabbia chiara con legni portati dal fiume","folla":3,"acc":"auto","camm":"Nessuna","park":"Gratuito, direttamente a bordo spiaggia","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0,"wc":0.5,"sorveglianza":0,"sport":0.5,"cani":1,"ombra":1,"bb":0},"id":["Aperitivo al tramonto","Accesso facile"],"nota":"Due chioschi sulla sabbia e un campeggio alle spalle. La spiaggia è disseminata di tronchi portati dal Tavignano: c'è chi la trova disordinata e chi ci si arrampica volentieri, e comunque danno un po' d'ombra.","pid":"ChIJSRobSCne2RIRtzayORzUxRQ","sc":["#dfcda6","#3da0b2","dune","tronchi"],"sid":"corsica-061"},{"n":"Pineto","com":"Borgo","z":"orientale","lat":42.5806,"lon":9.5176,"lato":"E","lung":"≈2 km","fondo":"Sabbia chiara","folla":2,"acc":"breve","camm":"5–10 minuti su sterrato e sentiero tra l'erba alta e le tamerici","park":"Sterrato sconnesso, non livellato: sconsigliato alle auto molto ribassate","sv":{"parcheggio":0.5,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":1,"ombra":0,"bb":0},"id":["Solitudine","Natura intatta"],"nota":"Spiaggia completamente selvaggia vicino all'aeroporto di Bastia-Poretta: niente bar, niente acqua, niente ombra. Devi portarti tutto. In compenso ci si arriva solo a piedi e resta silenziosa.","pid":"ChIJNU5wOcA91xIRubHknTdHDo8","sc":["#e8d8b2","#48a5b4","macchia",null],"sid":"corsica-065"},{"n":"Pinia","com":"Ghisonaccia","z":"orientale","lat":42.0086,"lon":9.4617,"lato":"E","lung":"≈2 km","fondo":"Sabbia fine","folla":3,"acc":"auto","camm":"1 minuto dalla pineta","park":"Vicino alla spiaggia, solo per auto sotto i 2 metri","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":0.5,"cani":0.5,"ombra":1,"bb":0},"id":["Ombra vera","Bambini","Pineta e mountain bike"],"nota":"La pineta arriva fino a trenta metri dall'acqua e dà ombra vera sulla sabbia: sulla costa est è una rarità, e con i bambini cambia la giornata. Ristoranti vicini e, a un paio di chilometri, sentieri nella foresta buoni per la bici.","pid":"ChIJsdJX9frn2RIR-qvt4yCFLUA","sc":["#e8dab6","#42b0ba","pini",null],"sid":"corsica-106"},{"n":"Prunete","com":"Cervione","z":"orientale","lat":42.322,"lon":9.5458,"lato":"E","lung":"≈2 km","fondo":"Sabbia grigia fine","folla":2,"acc":"auto","camm":"Nessuna","park":"Gratuito vicino alla spiaggia","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":0.5,"cani":0.5,"ombra":0,"bb":0},"id":["Poco turistica","Passeggiata a Taverna","Ottobre ancora caldo"],"nota":"Il tipo di spiaggia che i turisti saltano per andare in posti più famosi, e per questo resta tranquilla. Un fast-food e un ristorante a cinquanta metri, e una passeggiata di tre quarti d'ora lungo il mare fino alla marina di Taverna. In ottobre l'acqua è ancora sui 23 gradi.","pid":"ChIJiS9BcXNp1xIR1A_ZzWuiXJA","sc":["#cfc0a2","#3da4b4","dune",null],"sid":"corsica-110"},{"n":"Solenzara","com":"Sari-Solenzara","z":"orientale","lat":41.8641,"lon":9.3981,"lato":"E","lung":"≈1,5 km","fondo":"Sabbia e ghiaia fine","folla":3,"acc":"auto","camm":"Nessuna: sei in paese","park":"In paese, gratuito, a pochi metri","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0.5,"wc":1,"sorveglianza":0.5,"sport":1,"cani":1,"ombra":0.5,"bb":0},"id":["Base logistica","Cani ammessi","Porto e barca"],"nota":"Spiaggia, porto e paese nello stesso posto: qui trovi tutto a piedi, dalla farmacia al ristorante. È la base migliore del tratto centrale, anche perché da qui risali le piscine naturali del fiume Solenzara.","pid":"ChIJX7wBYwDt2RIRaxGgzXrTJnc","sc":["#ddccaa","#3aa3ba","paese","barche"],"sid":"corsica-059"},{"n":"Tarco","com":"Conca","z":"orientale","lat":41.7497,"lon":9.4033,"lato":"E","lung":"≈800 m","fondo":"Ciottoli sul bagnasciuga, poi sabbia","folla":2,"acc":"auto","camm":"Nessuna","park":"Facile e gratuito","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":0.5,"ombra":0.5,"bb":0},"id":["Tranquillità","Nuoto"],"nota":"Resta tranquilla anche in agosto, con un paio di ristoranti intorno. Si entra in acqua su ciottoli e il fondale scende in fretta: comoda per chi vuole nuotare, meno per chi ha bimbi piccoli.","pid":"ChIJN0GlPACR2RIR6DHUJklZLDE","sc":["#dfd0ae","#41acb8","macchia",null],"sid":"corsica-056"},{"n":"Travu","com":"Ventiseri","z":"orientale","lat":41.9169,"lon":9.4118,"lato":"E","lung":"≈1 km","fondo":"Ciottoli grossi e sabbia","folla":2,"acc":"auto","camm":"1–2 minuti","park":"Sterrato libero","sv":{"parcheggio":0.5,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"cani":1,"ombra":0,"bb":0},"id":["Selvaggia","Silenzio","Foce del Travo"],"nota":"Sabbia e ciottoloni alla foce del Travo, senza un servizio in vista e senza quasi nessuno. Una sosta da silenzio più che da giornata organizzata. Occhio al granchio blu, ormai comune sulla costa est.","pid":"ChIJA9diZwDt2RIRdC_d8cpHFWY","sc":["#d8cbaa","#3faab6","dune",null],"sid":"corsica-108"},{"n":"Vignale","com":"Ghisonaccia","z":"orientale","lat":42.0049,"lon":9.4577,"lato":"E","lung":"≈5 km","fondo":"Sabbia fine","folla":3,"acc":"auto","camm":"Nessuna","park":"Ampio e gratuito in fondo alla route de la Mer","sv":{"parcheggio":1,"ristorante":1,"bar":1,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":1,"cani":0.5,"ombra":0,"bb":0},"id":["Famiglie","Nuotate lunghe","Poco costruita"],"nota":"Facilissima da raggiungere, lunga e poco edificata: la classica spiaggia da famiglia della Costa Serena. L'erosione se la sta mangiando anno dopo anno, il fronte sabbioso si è ridotto parecchio.","pid":"ChIJwV8rycrn2RIR3oV6DPodkuY","sc":["#e5d5ae","#3fa4b6","dune",null],"sid":"corsica-060"}];
+SPIAGGE.sort((a,b)=> b.lat-a.lat);
+
+/* ======================= WEBCAM PUBBLICHE ======================= */
+/* Solo telecamere che inquadrano davvero quella spiaggia o la sua baia.
+   Niente webcam di porti o aeroporti "vicini": se non c'è, la riga non compare. */
+const WEBCAM=[
+ {sp:["Marine de Scalo"],n:"Marine de Scalo",vista:"inquadra la marina",
+  u:"https://share.earthcam.net/Tramontu/corsica/camera/live"},
+ {sp:["Arinella di Lumio"],n:"Plage de l'Arinella",vista:"inquadra la spiaggia",
+  u:"https://www.arinella.fr/residence-corse/webcam"},
+ {sp:["Propriano · il Lido"],n:"Porto di Propriano",vista:"inquadra la baia accanto alla spiaggia",
+  u:"https://www.vision-environnement.com/webcam/france/corse/3316-propriano/"},
+ {sp:["Santa Giulia"],n:"Golfo di Santa Giulia",vista:"inquadra il golfo dall'alto",
+  u:"https://www.portovecchio-tourisme.corsica/webcam-de-santa-giulia/"},
+ {sp:["Palombaggia"],n:"Plage de la Folacca",vista:"inquadra Folacca, all'estremità sud di Palombaggia",
+  u:"https://www.skylinewebcams.com/fr/webcam/france/corsica/porto-vecchio/porto-vecchio-folacca-beach.html"},
+ {sp:["Tamaricciu"],n:"Plage de la Folacca",vista:"inquadra la spiaggia contigua, a nord",
+  u:"https://www.skylinewebcams.com/fr/webcam/france/corsica/porto-vecchio/porto-vecchio-folacca-beach.html"}
+];
+const camDella=b=>WEBCAM.find(c=>c.sp.includes(b.n))||null;
+
+/* ======================= GEOMETRIA ======================= */
+const ISOLA="M30.1,620.3 L31.7,618.5 L35.5,622.0 L37.0,620.5 L36.3,617.4 L37.2,614.3 L40.2,612.9 L41.7,615.9 L41.0,617.9 L42.5,619.8 L52.8,621.3 L55.5,617.1 L58.6,617.0 L55.6,610.7 L57.9,609.0 L62.3,610.5 L64.0,607.4 L69.8,610.4 L75.5,606.2 L78.5,606.5 L79.5,603.2 L78.6,599.9 L75.7,598.5 L74.6,596.4 L74.8,594.2 L77.0,592.2 L81.0,590.8 L74.5,586.2 L78.8,583.9 L76.8,581.6 L77.4,579.2 L86.9,578.3 L88.0,574.6 L100.7,577.7 L103.3,579.5 L102.8,581.1 L104.0,582.2 L110.9,579.0 L111.0,576.4 L112.2,576.2 L114.7,570.6 L114.8,566.7 L113.7,565.9 L115.6,563.4 L111.3,560.3 L109.5,560.8 L105.5,555.9 L107.1,554.2 L118.8,553.4 L118.7,549.9 L119.8,548.2 L118.2,545.5 L116.4,545.5 L116.5,542.8 L118.3,542.3 L122.8,536.8 L123.4,534.2 L125.9,534.1 L126.5,531.1 L123.1,525.4 L110.4,526.0 L107.5,527.8 L106.2,527.1 L106.8,523.0 L115.5,512.4 L117.3,507.9 L117.6,502.2 L116.2,500.3 L117.2,499.0 L116.8,493.3 L117.8,490.0 L123.0,487.2 L127.5,488.3 L128.7,490.5 L136.9,485.4 L137.8,483.6 L136.8,481.0 L139.6,479.9 L142.4,480.3 L144.8,483.1 L153.3,481.2 L153.0,479.0 L149.6,476.2 L151.0,473.9 L146.8,471.8 L148.7,469.2 L152.3,468.0 L151.5,464.7 L153.6,462.5 L151.1,458.4 L154.7,455.7 L155.1,453.2 L151.3,449.8 L152.0,447.7 L150.3,446.6 L149.8,444.5 L151.5,440.6 L144.4,440.6 L148.5,437.5 L146.1,435.0 L150.1,433.5 L156.9,428.0 L157.9,428.4 L156.2,431.9 L155.9,437.2 L159.4,437.6 L157.5,438.9 L158.3,448.5 L163.8,446.3 L166.7,442.3 L169.8,443.6 L177.2,439.8 L178.8,441.9 L181.5,441.3 L181.4,443.6 L179.3,444.0 L177.5,446.6 L180.3,451.3 L185.8,453.8 L194.1,453.1 L201.4,449.7 L209.9,440.1 L210.1,436.9 L208.2,430.9 L205.3,429.2 L208.6,427.0 L208.4,424.4 L213.6,423.1 L214.0,421.6 L213.1,416.7 L207.9,413.0 L208.4,411.7 L225.1,408.5 L225.9,412.1 L228.3,412.6 L233.7,409.9 L235.5,406.3 L240.4,403.3 L242.8,406.3 L247.8,405.2 L251.7,406.4 L256.6,402.2 L256.0,397.8 L259.7,395.9 L258.7,393.4 L261.9,391.4 L259.7,390.4 L259.5,388.1 L261.7,387.4 L263.1,388.7 L265.3,386.6 L267.1,389.0 L268.5,386.9 L270.0,389.0 L275.4,389.6 L281.0,387.9 L283.3,383.2 L288.3,378.5 L292.8,380.3 L296.1,379.0 L296.7,375.7 L294.0,374.6 L293.8,373.2 L297.5,374.0 L298.9,376.1 L296.9,377.8 L297.0,379.6 L299.0,380.5 L299.4,382.3 L304.5,383.7 L312.3,382.1 L315.1,383.1 L321.5,378.4 L328.5,378.7 L330.3,376.7 L337.1,378.2 L341.9,374.3 L345.3,377.3 L350.0,376.8 L353.8,374.1 L359.0,366.6 L363.4,364.5 L366.9,366.3 L379.6,359.7 L381.1,355.8 L376.9,351.5 L379.2,349.3 L376.9,347.5 L375.8,341.1 L376.1,339.9 L379.6,339.1 L378.3,335.7 L378.1,328.1 L379.3,327.1 L380.9,329.3 L386.8,331.0 L390.6,327.4 L390.6,324.3 L394.7,321.6 L396.0,318.8 L394.5,315.9 L397.2,310.6 L406.5,310.1 L411.2,301.9 L413.4,302.8 L414.8,299.7 L418.3,301.5 L418.6,298.8 L423.1,295.5 L430.2,298.3 L435.5,293.6 L439.2,295.8 L442.2,292.9 L448.6,291.0 L452.9,291.7 L453.2,293.4 L458.1,295.4 L458.7,297.0 L461.8,297.0 L472.2,301.5 L478.6,298.7 L482.5,293.7 L485.0,294.0 L487.4,291.9 L493.9,302.1 L495.1,302.1 L495.4,305.7 L501.7,306.9 L503.7,306.6 L504.0,305.2 L506.4,307.2 L511.9,307.9 L510.5,311.6 L510.3,318.4 L512.6,320.7 L513.6,323.8 L520.0,323.5 L519.8,327.6 L523.3,329.4 L524.8,333.4 L526.7,334.1 L526.2,338.5 L528.9,341.4 L529.7,345.3 L535.5,347.1 L539.3,344.6 L540.7,342.8 L539.5,340.9 L540.2,339.0 L549.4,333.9 L555.1,326.7 L554.2,314.1 L555.2,308.7 L559.8,306.9 L563.1,303.7 L562.6,300.6 L566.9,297.6 L570.0,291.4 L569.1,288.6 L570.4,285.0 L566.3,273.2 L566.6,268.8 L565.0,266.6 L567.6,261.1 L566.0,257.3 L567.6,253.3 L566.9,247.4 L568.1,246.8 L568.5,243.8 L567.8,236.3 L561.5,224.5 L557.1,222.7 L553.4,211.7 L550.5,209.8 L546.4,203.6 L550.0,201.0 L550.7,195.3 L559.3,186.2 L562.6,179.5 L562.2,176.8 L566.4,174.6 L565.2,172.5 L561.3,170.8 L558.1,164.2 L558.6,153.4 L554.0,149.8 L554.7,143.9 L569.2,134.3 L569.6,132.8 L571.8,132.7 L573.6,129.9 L576.2,129.3 L577.7,122.9 L580.7,121.8 L573.2,118.1 L573.5,113.9 L578.2,108.0 L579.3,103.0 L576.6,99.6 L571.4,96.5 L570.4,92.0 L573.0,88.7 L570.5,86.8 L573.7,82.5 L572.7,78.0 L567.7,71.6 L569.7,66.7 L567.4,64.4 L568.5,62.9 L566.8,60.2 L568.7,57.7 L568.9,55.1 L576.0,51.1 L578.5,47.5 L584.1,49.7 L586.3,48.6 L590.2,49.5 L595.5,44.8 L599.9,47.8 L602.1,46.6 L604.2,48.3 L607.3,46.3 L608.7,48.5 L612.3,49.0 L615.9,48.1 L620.0,43.6 L625.6,45.8 L627.3,51.5 L630.9,53.4 L634.0,53.0 L636.5,57.3 L636.0,59.9 L640.3,61.2 L642.7,64.6 L647.5,64.8 L649.1,66.2 L647.7,68.6 L647.4,73.3 L643.7,75.5 L642.9,77.8 L645.2,84.8 L642.1,84.7 L641.1,88.4 L644.5,95.2 L644.3,98.7 L650.1,105.3 L652.9,111.3 L650.1,114.9 L651.7,119.6 L655.0,122.7 L653.5,124.3 L654.7,126.1 L653.8,129.0 L654.9,134.8 L652.8,136.8 L652.7,139.3 L656.4,143.9 L655.3,147.8 L657.0,154.3 L655.8,156.3 L658.8,161.6 L657.6,164.1 L655.7,164.1 L655.3,166.8 L659.2,169.3 L659.1,171.3 L661.0,173.3 L661.5,176.6 L660.6,179.8 L663.8,188.2 L662.0,190.9 L662.7,195.7 L660.4,197.8 L660.2,200.4 L664.0,204.1 L664.6,215.2 L667.0,221.3 L666.8,226.3 L668.6,228.7 L667.6,239.1 L663.3,246.0 L662.5,249.8 L659.8,251.9 L658.0,258.1 L654.7,260.4 L651.3,269.3 L650.7,272.5 L652.4,276.3 L649.4,279.7 L647.8,287.1 L648.1,294.4 L644.1,305.7 L642.9,317.5 L644.1,320.6 L642.9,321.1 L641.7,327.6 L640.6,328.2 L642.3,330.7 L641.5,332.4 L638.6,333.3 L637.7,336.2 L638.3,343.1 L637.5,347.8 L640.1,359.9 L648.2,377.9 L659.3,395.6 L676.5,418.0 L686.1,433.0 L691.6,444.5 L695.2,460.8 L696.5,483.3 L693.3,500.7 L693.1,513.5 L697.8,533.0 L700.8,539.7 L700.6,557.3 L701.1,565.0 L702.4,567.6 L698.1,586.3 L695.0,607.9 L694.9,619.3 L698.5,644.7 L700.1,646.6 L699.7,649.1 L702.9,662.4 L707.0,672.1 L708.5,681.9 L713.3,699.9 L708.4,744.2 L708.6,755.0 L710.8,760.5 L710.8,772.5 L712.8,777.0 L710.5,792.2 L709.6,809.2 L709.8,821.4 L711.1,826.1 L709.9,843.0 L706.7,860.3 L693.0,877.0 L652.9,940.3 L646.0,948.8 L644.2,953.3 L635.6,961.6 L628.2,971.5 L615.9,993.9 L614.5,1005.5 L617.5,1018.4 L614.9,1027.0 L615.8,1030.4 L608.1,1046.5 L607.7,1056.0 L604.7,1066.8 L606.3,1073.6 L605.4,1077.3 L608.4,1082.8 L607.0,1089.5 L609.3,1096.6 L608.5,1097.8 L611.0,1113.1 L610.7,1118.0 L607.0,1123.5 L605.7,1132.9 L602.8,1135.8 L604.5,1139.1 L604.3,1142.1 L606.6,1143.5 L606.7,1145.5 L604.6,1148.5 L605.9,1150.1 L604.0,1156.9 L606.7,1159.2 L609.3,1157.7 L612.1,1164.3 L610.3,1169.8 L610.6,1177.7 L608.8,1179.9 L610.7,1181.1 L611.4,1185.6 L608.4,1196.4 L610.4,1204.4 L607.7,1208.3 L611.0,1211.7 L608.8,1212.9 L609.7,1216.0 L607.7,1218.2 L606.8,1230.3 L601.1,1233.8 L598.2,1232.5 L595.1,1234.1 L588.3,1243.3 L590.6,1250.5 L592.5,1251.6 L594.6,1250.3 L598.8,1250.8 L594.2,1256.3 L594.7,1258.8 L597.9,1259.9 L598.3,1263.7 L596.7,1266.9 L594.4,1268.2 L595.3,1271.7 L597.0,1272.4 L596.0,1273.3 L593.9,1270.7 L591.8,1270.6 L590.5,1274.9 L588.5,1275.3 L587.0,1281.0 L583.0,1281.4 L581.4,1278.1 L578.7,1277.1 L572.9,1279.5 L571.1,1283.2 L571.0,1286.9 L575.6,1289.3 L575.0,1291.3 L577.1,1296.0 L576.4,1299.1 L574.5,1297.4 L569.7,1297.9 L563.7,1294.6 L559.2,1298.7 L553.4,1300.4 L550.9,1298.5 L555.2,1297.4 L555.4,1296.2 L548.6,1290.9 L548.3,1288.9 L545.1,1288.6 L542.8,1293.8 L544.2,1300.3 L538.0,1304.2 L531.9,1305.9 L530.4,1310.9 L531.7,1315.1 L527.6,1316.3 L530.1,1317.9 L529.1,1323.4 L537.3,1327.7 L539.3,1326.9 L541.1,1323.3 L543.3,1322.9 L548.8,1313.0 L552.1,1309.6 L557.9,1310.3 L559.4,1311.9 L562.7,1311.1 L564.8,1313.2 L567.4,1319.2 L570.5,1318.2 L575.8,1319.1 L577.1,1317.5 L585.8,1316.3 L585.3,1321.9 L584.2,1323.2 L581.2,1322.4 L581.2,1324.7 L577.3,1328.2 L575.3,1334.4 L572.3,1336.2 L573.5,1344.4 L568.6,1350.6 L559.7,1350.5 L553.7,1354.4 L551.5,1358.3 L547.6,1358.4 L545.6,1360.4 L546.0,1363.5 L541.9,1363.0 L535.0,1371.7 L534.9,1373.9 L531.8,1376.7 L529.2,1377.9 L526.2,1375.8 L522.5,1376.4 L521.4,1381.1 L522.4,1383.5 L526.5,1383.5 L529.3,1385.6 L529.7,1388.4 L525.3,1397.9 L519.1,1403.7 L520.1,1405.3 L522.7,1404.6 L524.4,1407.6 L528.8,1403.8 L530.6,1404.7 L532.0,1408.8 L529.2,1414.0 L531.9,1418.5 L529.7,1419.8 L529.4,1424.2 L524.4,1427.0 L523.8,1430.3 L521.3,1430.7 L521.4,1429.3 L520.1,1428.7 L518.1,1430.4 L518.5,1433.3 L520.8,1433.2 L525.3,1436.2 L522.7,1438.4 L520.8,1438.1 L517.6,1434.6 L512.7,1438.9 L512.9,1443.4 L511.5,1444.9 L508.8,1444.5 L502.6,1451.9 L489.2,1456.1 L488.9,1462.5 L492.6,1470.5 L490.4,1472.9 L490.7,1477.6 L489.3,1480.8 L484.2,1481.5 L486.2,1483.0 L484.1,1485.7 L487.6,1489.8 L489.3,1489.6 L491.0,1486.3 L503.7,1474.1 L509.9,1471.5 L512.1,1468.5 L516.8,1468.5 L512.9,1477.1 L513.6,1478.6 L512.4,1480.8 L513.2,1481.7 L507.2,1485.1 L504.1,1492.7 L497.8,1498.9 L493.8,1509.0 L487.9,1514.6 L487.1,1517.3 L488.4,1520.0 L486.7,1523.3 L481.9,1522.6 L480.2,1524.1 L474.4,1524.2 L473.6,1525.6 L472.3,1525.3 L472.2,1523.2 L469.7,1524.8 L467.7,1523.7 L460.3,1524.4 L459.0,1523.1 L458.4,1517.5 L456.4,1516.1 L456.0,1512.3 L451.6,1507.1 L447.5,1505.9 L439.3,1507.3 L440.0,1504.2 L443.5,1504.5 L443.9,1503.4 L441.4,1502.2 L435.2,1504.9 L430.5,1501.4 L429.9,1499.2 L426.4,1500.4 L424.5,1499.1 L428.4,1495.5 L428.1,1494.3 L420.7,1497.2 L410.1,1498.4 L405.7,1501.8 L402.4,1499.5 L403.7,1495.1 L400.9,1494.8 L400.8,1492.4 L402.6,1489.4 L402.7,1486.4 L404.3,1485.0 L403.4,1483.4 L407.4,1479.3 L409.6,1479.7 L412.5,1476.3 L412.1,1474.1 L409.8,1474.3 L409.6,1471.0 L411.3,1467.5 L413.1,1467.8 L417.4,1463.0 L418.9,1463.2 L420.3,1461.2 L419.5,1457.3 L421.5,1456.6 L420.6,1455.3 L412.0,1457.1 L412.5,1453.7 L411.3,1453.0 L410.5,1455.2 L406.0,1455.5 L402.8,1449.2 L400.1,1453.1 L397.2,1453.6 L395.1,1456.4 L389.4,1456.0 L389.1,1454.5 L386.8,1453.9 L386.0,1449.8 L384.2,1448.1 L384.0,1444.2 L386.1,1439.3 L385.0,1435.0 L387.1,1434.7 L387.6,1431.0 L391.4,1428.8 L392.3,1425.0 L389.4,1424.3 L388.0,1426.3 L386.0,1426.3 L376.6,1438.8 L374.4,1440.7 L371.7,1439.0 L367.9,1442.9 L365.7,1441.6 L367.1,1435.8 L365.0,1430.8 L363.2,1430.5 L359.5,1433.2 L357.4,1438.5 L355.0,1437.7 L356.2,1434.7 L352.0,1433.2 L350.2,1428.8 L351.8,1423.9 L350.2,1423.3 L346.1,1427.2 L342.0,1426.5 L338.5,1423.3 L337.1,1417.2 L335.3,1417.3 L329.0,1427.6 L327.4,1427.0 L327.9,1423.5 L323.6,1421.4 L324.3,1419.5 L322.0,1417.4 L317.2,1419.5 L318.2,1417.3 L317.6,1413.9 L313.3,1411.3 L308.7,1410.8 L305.7,1413.3 L300.6,1413.5 L298.6,1412.7 L297.6,1408.2 L295.3,1407.7 L291.5,1413.2 L286.7,1413.8 L288.0,1410.0 L287.2,1405.7 L283.1,1397.5 L280.6,1396.6 L279.5,1398.2 L273.3,1396.0 L262.2,1399.3 L261.1,1396.6 L267.0,1389.5 L258.5,1382.6 L256.1,1381.9 L250.4,1386.0 L246.4,1385.1 L243.7,1387.9 L236.3,1387.9 L233.9,1386.3 L235.4,1380.3 L240.5,1374.4 L243.5,1372.9 L240.8,1369.1 L241.2,1363.3 L236.6,1367.3 L235.1,1361.9 L230.9,1363.0 L228.5,1361.3 L221.2,1364.1 L215.4,1360.2 L216.5,1357.2 L212.4,1353.5 L208.3,1354.4 L205.7,1352.9 L203.0,1354.1 L199.2,1352.5 L198.4,1347.9 L194.8,1344.3 L196.2,1343.7 L198.8,1346.1 L208.2,1337.7 L207.6,1336.1 L205.7,1336.4 L201.0,1332.7 L200.8,1325.7 L195.4,1327.2 L194.1,1325.6 L194.6,1322.9 L191.5,1323.0 L189.4,1321.0 L192.2,1320.6 L192.9,1318.8 L198.1,1316.1 L196.9,1314.1 L197.3,1311.6 L200.9,1307.6 L200.8,1301.1 L200.2,1299.1 L197.1,1297.5 L201.1,1295.4 L203.2,1292.5 L202.9,1290.6 L200.8,1289.2 L203.4,1286.4 L202.9,1284.6 L208.8,1283.8 L209.7,1279.8 L208.9,1277.0 L210.6,1276.4 L213.6,1278.9 L213.4,1282.9 L214.7,1286.1 L220.4,1287.3 L222.8,1282.8 L226.2,1281.2 L226.4,1279.6 L233.7,1278.1 L234.5,1275.3 L238.1,1275.6 L240.8,1270.9 L244.1,1272.2 L248.2,1270.4 L253.0,1272.4 L254.9,1271.5 L258.2,1266.8 L260.8,1250.8 L266.5,1249.4 L271.7,1243.8 L274.2,1245.6 L279.1,1244.6 L282.3,1242.1 L284.6,1238.9 L282.4,1232.3 L264.2,1233.4 L262.2,1229.6 L259.2,1227.8 L256.5,1229.6 L253.1,1227.3 L235.6,1226.8 L230.7,1223.9 L223.7,1215.6 L215.2,1211.3 L212.7,1211.7 L211.1,1215.1 L208.1,1214.1 L203.6,1215.3 L201.5,1222.9 L195.2,1224.7 L195.1,1222.0 L198.4,1219.9 L198.2,1216.3 L191.7,1215.5 L187.4,1211.8 L188.9,1206.6 L193.9,1202.1 L193.3,1199.7 L196.4,1194.8 L194.3,1189.6 L190.0,1186.7 L177.0,1190.7 L164.6,1197.9 L157.9,1198.6 L155.3,1202.0 L151.1,1203.7 L144.8,1204.4 L142.0,1200.6 L145.0,1191.7 L143.0,1188.6 L137.1,1186.5 L133.1,1188.0 L130.8,1186.3 L128.0,1188.1 L121.2,1184.7 L117.3,1185.3 L114.5,1188.5 L112.5,1187.8 L113.2,1179.5 L118.4,1176.6 L122.2,1176.7 L129.8,1181.6 L137.2,1177.3 L142.3,1171.8 L145.6,1172.1 L158.7,1157.5 L161.5,1152.0 L158.6,1150.9 L157.3,1148.2 L158.1,1145.4 L156.3,1143.4 L153.4,1143.8 L151.7,1142.2 L151.6,1138.6 L147.1,1138.8 L145.4,1136.0 L147.2,1133.1 L151.8,1130.5 L153.8,1132.7 L153.3,1134.9 L154.2,1135.9 L162.3,1134.9 L163.6,1136.7 L166.1,1136.4 L167.3,1135.0 L166.4,1132.9 L167.3,1129.5 L172.6,1124.0 L176.8,1122.9 L179.4,1126.1 L187.6,1123.8 L189.1,1120.7 L188.4,1119.2 L189.9,1111.3 L194.3,1109.3 L196.0,1105.5 L194.9,1103.9 L188.2,1102.6 L182.7,1094.6 L177.7,1097.2 L173.9,1095.9 L174.0,1093.4 L177.8,1092.7 L180.2,1090.5 L187.7,1092.9 L195.3,1091.2 L198.8,1088.6 L200.4,1084.0 L200.2,1074.3 L197.7,1072.3 L197.0,1069.3 L193.8,1067.7 L196.9,1064.8 L196.9,1063.2 L193.5,1060.9 L192.9,1058.8 L202.2,1056.8 L208.2,1052.7 L208.9,1050.0 L203.8,1036.1 L197.2,1025.7 L193.5,1021.9 L188.5,1019.4 L185.4,1019.8 L181.9,1023.6 L178.8,1020.9 L176.8,1015.0 L174.8,1014.0 L167.0,1015.9 L167.3,1019.2 L166.4,1020.4 L167.5,1029.8 L160.9,1029.7 L160.0,1032.3 L155.6,1033.2 L153.0,1036.7 L143.8,1037.7 L131.9,1035.9 L125.0,1038.2 L123.8,1040.2 L116.2,1037.4 L101.0,1035.1 L93.3,1038.3 L89.7,1042.2 L84.5,1043.5 L78.8,1049.5 L77.7,1048.3 L83.3,1041.9 L81.6,1038.3 L79.5,1037.5 L79.4,1035.4 L80.8,1030.3 L83.5,1027.9 L83.7,1022.7 L88.3,1020.5 L86.3,1016.7 L88.3,1015.2 L88.9,1012.5 L87.1,1008.4 L79.6,1008.5 L77.6,1005.7 L78.0,1002.2 L76.5,1001.4 L77.7,997.4 L71.5,996.4 L72.8,993.1 L72.0,990.3 L67.5,988.3 L68.1,986.0 L74.2,983.3 L80.1,982.8 L80.3,980.8 L82.9,979.6 L90.3,980.3 L94.4,983.0 L105.5,982.4 L116.6,974.0 L119.2,969.6 L119.8,965.1 L118.8,960.8 L116.9,959.5 L112.6,961.6 L109.6,954.7 L111.0,946.7 L113.3,942.9 L121.4,935.9 L128.5,933.7 L130.1,930.2 L134.8,928.9 L140.1,930.8 L150.8,927.2 L156.7,922.9 L155.6,916.0 L158.2,915.1 L164.2,918.1 L167.4,917.2 L171.3,909.9 L168.9,905.1 L169.7,901.0 L165.8,897.9 L165.2,895.3 L152.6,896.6 L153.5,891.4 L149.9,880.7 L147.5,877.0 L143.3,875.2 L146.7,868.2 L143.9,861.3 L140.2,858.6 L139.9,852.7 L132.9,850.4 L130.6,856.0 L129.5,855.8 L126.9,859.2 L121.1,857.4 L117.0,858.2 L115.0,861.7 L112.6,862.8 L112.0,856.1 L104.8,845.1 L97.6,846.5 L97.6,843.9 L96.2,842.6 L89.3,843.6 L85.2,839.8 L84.1,834.5 L81.5,832.9 L75.4,835.3 L71.3,835.1 L69.6,837.2 L59.9,837.5 L69.0,824.3 L66.6,819.9 L64.5,819.4 L63.5,817.5 L55.7,816.9 L52.7,819.7 L45.9,822.3 L47.3,818.0 L54.5,813.0 L57.7,814.0 L61.6,810.9 L62.3,808.1 L67.4,806.3 L68.9,802.7 L65.6,799.7 L54.3,801.8 L47.4,799.6 L50.6,794.1 L63.5,792.7 L64.1,790.2 L60.6,788.3 L58.6,784.2 L59.7,782.6 L58.0,778.3 L60.8,777.3 L61.0,768.9 L58.8,767.3 L51.8,769.9 L53.1,767.4 L53.3,762.2 L56.1,762.7 L58.0,761.2 L57.4,759.3 L51.4,756.4 L54.7,753.2 L55.6,748.6 L53.2,746.4 L48.5,746.9 L47.6,745.4 L45.1,747.2 L45.1,748.5 L41.1,749.3 L38.4,747.8 L38.5,745.5 L33.4,742.5 L33.1,740.6 L37.3,738.0 L41.0,738.8 L44.5,741.8 L48.5,739.4 L55.2,739.2 L57.4,737.6 L57.6,735.0 L60.2,733.4 L62.3,734.6 L68.1,733.6 L69.4,731.9 L78.9,728.3 L79.5,726.4 L84.2,727.2 L84.5,724.1 L90.6,727.5 L99.6,726.2 L102.6,722.2 L117.0,720.6 L122.6,717.1 L124.7,718.2 L131.6,717.5 L134.3,714.2 L134.6,711.4 L132.5,708.6 L134.2,704.8 L130.4,699.4 L125.8,701.4 L122.9,698.6 L122.3,697.5 L124.5,696.6 L125.0,694.1 L122.1,692.4 L122.5,689.2 L120.1,687.5 L117.9,688.7 L113.1,683.9 L113.5,682.0 L108.8,683.6 L105.5,681.4 L100.8,684.4 L97.9,680.2 L92.6,679.9 L93.7,678.6 L93.7,674.7 L91.9,673.1 L79.4,676.5 L78.2,678.1 L74.4,675.9 L75.8,673.4 L74.3,670.3 L71.6,669.6 L71.9,667.1 L75.7,664.1 L87.8,659.2 L92.0,655.2 L90.8,652.7 L92.2,648.2 L85.2,646.7 L85.0,641.2 L83.4,639.5 L81.8,642.4 L80.9,640.6 L76.1,639.5 L73.4,636.3 L67.0,636.9 L65.2,639.3 L61.4,640.4 L60.6,643.6 L55.5,650.0 L52.3,650.1 L49.7,654.3 L46.6,653.5 L45.2,655.0 L44.6,653.6 L42.8,654.0 L43.3,649.9 L45.8,647.9 L45.8,644.0 L43.9,643.4 L42.5,645.2 L40.8,642.3 L41.2,639.5 L43.8,636.5 L42.2,633.2 L44.3,631.6 L44.5,629.7 L43.1,628.7 L43.7,625.8 L40.9,626.1 L37.8,622.9 L34.4,624.4 L30.1,620.3 Z";
+const ISOLE="M520.7,1525.5L519.1,1523.9L518.3,1524.3L518.5,1525.7L517.7,1527.8L514.6,1525.9L514.9,1524.9L513.3,1523.8L512.6,1524.6L510.5,1524.1L510.0,1522.5L507.4,1523.0L506.9,1522.3L511.5,1519.4L511.6,1518.2L512.3,1517.2L513.8,1518.1L513.5,1519.3L514.4,1520.1L515.8,1519.5L515.7,1518.2L518.9,1518.4L519.4,1519.5L517.3,1522.2L518.4,1522.8L522.9,1521.6L523.1,1522.3L522.3,1523.3L521.9,1525.2L520.7,1525.5Z|M514.0,1549.2L513.9,1551.7L512.7,1553.7L511.4,1552.9L511.9,1550.3L510.9,1549.5L509.2,1550.6L508.7,1549.3L509.3,1548.7L507.6,1547.8L506.1,1547.9L505.9,1547.0L506.5,1545.0L509.3,1544.3L509.1,1543.0L511.3,1542.9L511.3,1541.1L512.8,1541.3L512.0,1542.9L511.0,1547.0L512.5,1546.9L512.0,1548.7L514.5,1548.1L514.0,1549.2Z|M64.3,1067.5L64.4,1065.6L67.1,1063.8L68.1,1063.6L70.5,1060.9L71.9,1060.1L72.4,1061.4L69.7,1065.3L68.9,1066.0L69.5,1067.3L68.6,1067.8L65.8,1066.8L64.3,1067.5Z|M34.6,620.6L34.9,623.7L34.4,624.4L31.8,621.6L31.0,621.7L30.1,620.3L31.7,618.5L34.6,620.6Z|M579.4,1360.5L578.9,1359.7L579.5,1358.2L580.3,1357.6L581.3,1355.7L583.3,1356.6L583.2,1357.9L582.2,1359.3L580.7,1360.5L579.4,1360.5Z|M601.4,1252.7L599.7,1252.4L599.9,1250.6L601.9,1248.8L602.8,1248.5L603.6,1249.3L604.4,1251.0L603.8,1252.0L602.7,1251.3L601.4,1252.7Z|M612.5,33.9L611.1,33.2L610.9,32.1L609.3,30.7L609.6,29.4L611.0,29.1L611.8,30.7L612.1,32.9L612.5,33.9Z|M589.5,1351.4L588.6,1351.2L587.2,1349.6L587.3,1347.4L588.5,1347.1L589.7,1348.6L590.1,1350.3L589.5,1351.4Z|M490.9,1520.4L491.6,1519.7L491.5,1518.1L492.0,1517.3L493.5,1519.0L490.9,1520.4Z|M576.8,1369.6L576.0,1368.5L574.7,1367.7L574.9,1366.9L576.7,1367.6L576.8,1369.6Z|M567.4,87.2L566.8,85.2L567.6,84.9L568.6,86.6L567.4,87.2Z|M581.8,1284.9L580.6,1284.1L580.9,1283.0L582.1,1283.3L581.8,1284.9Z".split("|");
+const CIME=[{n:"Cinto",lat:42.3800,lon:8.9230,h:2706},{n:"Rotondo",lat:42.2260,lon:9.0190,h:2622},
+ {n:"d'Oro",lat:42.1710,lon:9.0980,h:2389},{n:"Renoso",lat:42.0010,lon:9.1170,h:2352},
+ {n:"Incudine",lat:41.8600,lon:9.2010,h:2134},{n:"Bavella",lat:41.7960,lon:9.2260,h:1899}];
+const PAESI=[{n:"Bastia",lat:42.700,lon:9.450},{n:"Saint-Florent",lat:42.681,lon:9.302},
+ {n:"Île-Rousse",lat:42.634,lon:8.937},{n:"Calvi",lat:42.567,lon:8.757},{n:"Porto",lat:42.266,lon:8.700},
+ {n:"Corte",lat:42.306,lon:9.150},{n:"Cargèse",lat:42.135,lon:8.596},{n:"Ajaccio",lat:41.926,lon:8.737},
+ {n:"Propriano",lat:41.676,lon:8.905},{n:"Sartène",lat:41.620,lon:8.974},{n:"Bonifacio",lat:41.387,lon:9.159},
+ {n:"Porto-Vecchio",lat:41.591,lon:9.280},{n:"Aléria",lat:42.115,lon:9.513},{n:"Ghisonaccia",lat:42.010,lon:9.406}];
+
+const svg=document.getElementById("carta"), telaio=document.getElementById("telaio");
+document.getElementById("gTerra").innerHTML='<path class="terra" d="'+ISOLA+'"/>'+ISOLE.map(d=>'<path class="isolotto" d="'+d+'"/>').join("");
+document.getElementById("gBatim").innerHTML=[10,24,44,70].map((o,i)=>
+  '<path class="batim" d="'+ISOLA+'" transform="translate('+o+',0)" opacity="'+(0.5-i*0.11).toFixed(2)+'"/>').join("");
+(function(){
+  let g="";
+  for(let la=43.0;la>=41.4;la-=0.2){const y=py(la).toFixed(1),gr=Math.floor(la),pr=Math.round((la-gr)*60);
+    g+='<line class="griglia" x1="-40" y1="'+y+'" x2="800" y2="'+y+'"/>';
+    g+='<text x="784" y="'+(+y-4)+'" text-anchor="end" class="grado-lat" font-family="IBM Plex Mono,monospace" font-size="9" fill="#7ea9be" opacity=".8">'+gr+"°"+String(pr).padStart(2,"0")+"′N</text>";}
+  for(let lo=8.6;lo<=9.6;lo+=0.2) g+='<line class="griglia" x1="'+px(lo).toFixed(1)+'" y1="-40" x2="'+px(lo).toFixed(1)+'" y2="1600"/>';
+  document.getElementById("gGriglia").innerHTML=g;
+})();
+document.getElementById("gCime").innerHTML=CIME.map(c=>{const x=px(c.lon),y=py(c.lat);
+  return '<g class="segno" data-x="'+x.toFixed(1)+'" data-y="'+y.toFixed(1)+'" transform="translate('+x.toFixed(1)+','+y.toFixed(1)+')">'+
+   '<path class="cima" d="M-8,6 L0,-7 L8,6"/>'+
+   '<text class="eti-cima" y="17" text-anchor="middle" font-size="8">'+c.h+'</text></g>';}).join("");
+document.getElementById("gPaesi").innerHTML=PAESI.map(p=>{const x=px(p.lon),y=py(p.lat);
+  return '<g class="segno" data-x="'+x.toFixed(1)+'" data-y="'+y.toFixed(1)+'" transform="translate('+x.toFixed(1)+','+y.toFixed(1)+')">'+
+   '<rect class="paese-pt" x="-2" y="-2" width="4" height="4"/>'+
+   '<text class="eti-paese" y="-6" text-anchor="middle" font-size="8.5">'+p.n+'</text></g>';}).join("");
+
+const raggio=b=>{const v=parseFloat(String(b.lung).replace(/[^0-9,\.]/g,"").replace(",",".")||"1");
+  const k=/km/.test(b.lung)?v:v/1000; return Math.max(3,Math.min(6.4,3+Math.sqrt(k||.3)*1.6));};
+/* Bandiera Blu: una bandierina che sventola sull'asta, sotto il segno della
+   spiaggia. Il disegno è fermo: con centosessanta segni per pagina, farla
+   sventolare davvero costerebbe più di quel che vale. */
+const BANDIERA='M-0.42,0.9L-0.42,-9.2L0.42,-9.2L0.42,0.9Z'
+  +'M0.42,-8.85C2.15,-9.9 3.6,-7.8 5.35,-8.75L5.35,-5.75C3.6,-4.8 2.15,-6.9 0.42,-5.85Z';
+/* Dodici posizioni: le prime quattro accostate al segno, le altre otto
+   piu’ lontane — e quelle vogliono il filo che le lega al segno. */
+const posEti={W:[-10,3.5,"end"],E:[10,3.5,"start"],N:[0,-11,"middle"],S:[0,17,"middle"]};
+const SCALE=[["E",10,3.5,"start",0],["W",-10,3.5,"end",0],["N",0,-11,"middle",0],["S",0,17,"middle",0],["NE",17,-10,"start",1],["NW",-17,-10,"end",1],["SE",17,17,"start",1],["SW",-17,17,"end",1],["E2",30,3.5,"start",1],["W2",-30,3.5,"end",1],["N2",0,-25,"middle",1],["S2",0,31,"middle",1]];
+document.getElementById("gMarker").innerHTML=SPIAGGE.map((b,i)=>{
+  const A=ACCESSI[b.acc]||ACCESSI.nc,c=A.col,p=posEti[b.lato]||posEti.E;
+  /* La forma dice quel che sappiamo: cerchio dimensionato se la lunghezza è nota,
+     quadratino fisso se non lo è. Il colore dice l'accesso, grigio se ignoto. */
+  const noto=!!b.lung,r=noto?raggio(b):2.9;
+  return '<g class="marker" data-i="'+i+'" tabindex="0" role="button" aria-label="'+b.n+', '+b.com+'" '+
+   'transform="translate('+px(b.lon).toFixed(1)+','+py(b.lat).toFixed(1)+')">'+
+   '<circle r="9" fill="transparent"/>'+
+   (noto ? '<circle class="alone" r="'+(r+3).toFixed(1)+'" stroke="'+c+'"/>'
+         + '<circle class="cuore" r="'+r.toFixed(1)+'" fill="'+c+'"/>'
+         : '<rect class="alone-q" x="'+(-r-2.2).toFixed(1)+'" y="'+(-r-2.2).toFixed(1)+'" width="'+((r+2.2)*2).toFixed(1)+'" height="'+((r+2.2)*2).toFixed(1)+'" rx="1" stroke="'+c+'"/>'
+         + '<rect class="cuore-q" x="'+(-r).toFixed(1)+'" y="'+(-r).toFixed(1)+'" width="'+(r*2).toFixed(1)+'" height="'+(r*2).toFixed(1)+'" rx=".6" fill="'+c+'"/>')+
+   (b.sv.bb?'<g class="banda"><path class="bandierina" d="'+BANDIERA+'"/></g>':'')+
+   '<g class="etim"><line class="guida" x1="0" y1="0" x2="0" y2="0"/><text class="nome" x="'+p[0]+'" y="'+p[1]+'" text-anchor="'+p[2]+'">'+b.n+'</text></g></g>';}).join("");
+const MARKER=[...document.querySelectorAll(".marker")];
+
+/* Le due legende nascono dagli stessi dati della carta: le misure passano per
+   raggio(), i colori vengono da ACCESSI. Se domani si cambia la formula o si
+   aggiunge un modo d'accesso, la legenda si aggiorna da sola. */
+(function legende(){
+  const cerchio=(r,riemp,bordo)=>'<svg viewBox="-8 -8 16 16" width="16" height="16" aria-hidden="true">'
+    +'<circle r="'+r.toFixed(1)+'" fill="'+riemp+'" stroke="'+bordo+'" stroke-width="1.4"/></svg>';
+  const voce=(dis,et)=>'<span class="lg-voce">'+dis+'<i>'+et+'</i></span>';
+
+  document.getElementById("lgMisure").innerHTML =
+    [["≈100 m","100 m"],["≈500 m","500 m"],["≈1 km","1 km"],["≈2 km","2 km"],["≈4 km","4 km"]]
+      .map(([lung,et])=>voce(cerchio(raggio({lung}),"#fff","#5f849c"),et)).join("")
+    + (SPIAGGE.some(b=>!b.lung)?voce('<svg viewBox="-8 -8 16 16" width="16" height="16" aria-hidden="true">'
+        +'<rect x="-2.9" y="-2.9" width="5.8" height="5.8" rx=".6" fill="#fff" stroke="#5f849c" stroke-width="1.4"/></svg>',"lunghezza non nota"):"");
+
+  document.getElementById("lgColori").innerHTML =
+    Object.values(ACCESSI).map(a=>voce(cerchio(4.6,a.col,"#fff"),a.et)).join("")+(SPIAGGE.some(b=>b.sv.bb)?voce('<svg viewBox="-8 -8 16 16" width="16" height="16" aria-hidden="true">'
+      +'<circle r="3.4" cy="-2.2" fill="#9ed4ea" stroke="#fff" stroke-width="1.1"/>'
+      +'<path transform="translate(0,-1.4) scale(.62)" fill="#1786bd" d="'+BANDIERA+'"/></svg>',"Bandiera Blu 2026"):"");
+})();
+
+
+/* ---------------- scritte a dimensione costante ----------------
+   Le etichette vivono nel sistema della carta, quindi crescono con
+   l'ingrandimento. Qui vengono rimpicciolite della stessa quantità, così a
+   video restano sempre della stessa taglia; e quando due si toccano si
+   nasconde la meno importante (l'ordine è quello in cui sono elencate). */
+const SEGNI=[...document.querySelectorAll("#gPaesi .segno, #gCime .segno")];
+const GRADI=[...document.querySelectorAll("#gGriglia .grado-lat")];
+const ETIM=MARKER.map(m=>m.querySelector(".etim"));
+const BANDE=MARKER.map(m=>m.querySelector(".banda"));
+let ultimoF="";
+const urtano=(r,m)=>!(r.x+r.w<m.x||m.x+m.w<r.x||r.y+r.h<m.y||m.y+m.h<r.y);
+
+/* quanti pixel deve misurare a video ciascuna scritta */
+/* quanti pixel deve misurare a video: le scritte in altezza,
+   il segno della spiaggia in raggio */
+const TAGLIA={nome:15, citta:12, quota:11, grado:12, segno:6.6, bandiera:17};
+/* il raggio tipico che raggio() restituisce, in unità di carta:
+   serve a convertire la misura a video in un fattore di scala */
+const SEGNO_BASE=4.4;
+/* l'altezza del disegno della bandierina in unità di carta */
+const BANDIERA_ALTA=10.1;
+/* Quanto spazio c'è, in media, fra una spiaggia e la sua vicina: si misura
+   una volta sola perché non dipende dall'ingrandimento. Primo quartile, così
+   tre spiagge su quattro stanno più comode di così. */
+const PASSO=(function(){
+  if(SPIAGGE.length<2) return 60;
+  const X=SPIAGGE.map(b=>px(b.lon)), Y=SPIAGGE.map(b=>py(b.lat)), d=[];
+  for(let i=0;i<X.length;i++){
+    let m=Infinity;
+    for(let j=0;j<X.length;j++){ if(i===j) continue;
+      const q=(X[i]-X[j])*(X[i]-X[j])+(Y[i]-Y[j])*(Y[i]-Y[j]);
+      if(q<m) m=q; }
+    d.push(Math.sqrt(m));
+  }
+  d.sort((a,b)=>a-b);
+  return d[Math.floor(d.length*0.25)]||60;
+})();
+function adattaTesti(v,s){
+  const r=telaio.getBoundingClientRect();
+  const perUnita=Math.min((r.width||600)/v.w,(r.height||600)/v.h) || 1;
+  /* fattore che porta un carattere da N unità di carta a TAGLIA pixel */
+  const q=x=>Math.max(.02,Math.min(24,x/perUnita));
+  const fCitta=q(TAGLIA.citta)/8.5, fGrado=q(TAGLIA.grado)/9;
+  SEGNI.forEach(g=>g.setAttribute("transform",
+    "translate("+g.dataset.x+","+g.dataset.y+") scale("+fCitta.toFixed(3)+")"));
+  GRADI.forEach(t=>{t.setAttribute("x",(v.x+v.w-16*fGrado).toFixed(1));
+    t.setAttribute("font-size",q(TAGLIA.grado).toFixed(2));});
+  /* il segno della spiaggia ha una sua scala: l'etichetta la annulla e
+     riparte dalla misura a video */
+  const fNome=q(TAGLIA.nome)/11;
+  const k=fNome/(s||1);
+  ETIM.forEach(g=>{ if(g) g.setAttribute("transform","scale("+k.toFixed(3)+")"); });
+  /* la bandierina non segue il segno: ha la sua misura a video, e resta
+     piantata con la base dell'asta al centro del cerchietto */
+  const kb=((TAGLIA.bandiera/perUnita)/BANDIERA_ALTA)/(s||1);
+  BANDE.forEach(g=>{ if(g) g.setAttribute("transform","scale("+kb.toFixed(3)+")"); });
+  const f=fCitta;
+
+  /* la sovrapposizione dipende anche da dove si guarda, non solo da quanto:
+     spostandosi alla stessa distanza le etichette restavano quelle di prima */
+  const firma=f.toFixed(3)+"|"+v.x.toFixed(0)+"|"+v.y.toFixed(0);
+  if(firma===ultimoF) return;
+  ultimoF=firma;
+  const messi=[];
+  /* dentro davvero: prima bastava che l'etichetta sfiorasse l'inquadratura, e
+     i nomi sul bordo restavano scritti a metà, tagliati dalla cornice */
+  const dentro=r=>r.x>=v.x && r.y>=v.y && r.x+r.w<=v.x+v.w && r.y+r.h<=v.y+v.h;
+
+  /* I segni occupano il posto per primi: una scritta sotto un pallino non si
+     legge, e il pallino non si può spostare. Ogni nome però può sfiorare il
+     proprio segno — è a quello che si riferisce. */
+  const ing=(s||1)*3.4;
+  const bolle=MARKER.map((m,i)=>{
+    if(m.classList.contains("spento")||m.style.display==="none") return null;
+    const b=SPIAGGE[i];
+    return {x:px(b.lon)-ing, y:py(b.lat)-ing, w:ing*2, h:ing*2};
+  });
+  const liberoDa=(r,mio)=>!bolle.some((q,j)=>q&&j!==mio&&urtano(r,q));
+
+  /* Prima le città: sono poche e danno l'ossatura alla carta. Se cedessero il
+     posto ai nomi delle spiagge — che sono cento volte tanti — resterebbe un
+     pulviscolo di nomi senza un riferimento per orientarsi. */
+  SEGNI.forEach(g=>{
+    g.style.display="";
+    const t=g.querySelector("text"); if(!t) return;
+    const b=t.getBBox(), x=+g.dataset.x, y=+g.dataset.y;
+    const r={x:x+b.x*f-1, y:y+b.y*f-1, w:b.width*f+2, h:b.height*f+2};
+    if(!dentro(r)||!liberoDa(r,-1)) { g.style.display="none"; return; }
+    if(messi.some(q=>urtano(r,q))) g.style.display="none"; else messi.push(r);
+  });
+
+  /* Poi i nomi delle spiagge, nello spazio rimasto. Il nome sta a destra del
+     segno; se a destra sborda, passa a sinistra. */
+  MARKER.forEach((m,i)=>{
+    const g=ETIM[i]; if(!g) return;
+    g.style.display="";
+    if(m.classList.contains("spento")||m.style.display==="none") return;
+    const t=g.querySelector("text"); if(!t) return;
+    const b=SPIAGGE[i], x=px(b.lon), y=py(b.lat);
+    const gu=g.querySelector(".guida");
+    /* La spiaggia sa da che parte ha il mare: se il nome sta a ponente si
+       prova prima a ponente. Il resto della scaletta e' sempre lo stesso. */
+    const ord=(b.lato==="W")
+      ? SCALE.slice().sort((a,c)=>(a[1]>0)-(c[1]>0))
+      : SCALE;
+    let messo=false;
+    for(const [,dx,dy,anc,filo] of ord){
+      t.setAttribute("x",dx); t.setAttribute("y",dy); t.setAttribute("text-anchor",anc);
+      if(gu) gu.setAttribute("x2","0"), gu.setAttribute("y2","0");
+      let bb; try{ bb=t.getBBox(); }catch(e){ return; }
+      const r={x:x+bb.x*fNome-1,y:y+bb.y*fNome-1,w:bb.width*fNome+2,h:bb.height*fNome+2};
+      if(!dentro(r)||!liberoDa(r,i)) continue;
+      if(messi.some(q=>urtano(r,q))) continue;
+      /* il filo parte dal bordo del segno e si ferma appena prima della
+         scritta: attaccato al pallino sarebbe una macchia, dentro la
+         scritta la sporcherebbe */
+      if(gu){
+        if(filo){
+          const L=Math.hypot(dx,dy), ux=dx/L, uy=dy/L;
+          gu.setAttribute("x1",(ux*7).toFixed(1)); gu.setAttribute("y1",(uy*7).toFixed(1));
+          gu.setAttribute("x2",(dx-ux*4).toFixed(1)); gu.setAttribute("y2",(dy-uy*4-2).toFixed(1));
+        }else{
+          gu.setAttribute("x1","0"); gu.setAttribute("y1","0");
+          gu.setAttribute("x2","0"); gu.setAttribute("y2","0");
+        }
+      }
+      messi.push(r); messo=true; break;
+    }
+    if(!messo) g.style.display="none";
+  });
+}
+
+/* ======================= ZOOM ======================= */
+let vista={...PIENO}, zonaAttiva=null, anim=null;
+function aspetta(bb){const r=telaio.getBoundingClientRect(),ar=(r.width||400)/(r.height||700);
+  let{x,y,w,h}=bb; if(w/h<ar){const nw=h*ar;x-=(nw-w)/2;w=nw;}else{const nh=w/ar;y-=(nh-h)/2;h=nh;} return{x,y,w,h};}
+function applicaVista(v){
+  svg.setAttribute("viewBox",v.x.toFixed(1)+" "+v.y.toFixed(1)+" "+v.w.toFixed(1)+" "+v.h.toFixed(1));
+  /* Il segno cresce appena appena quando ci si avvicina: abbastanza per
+     restare comodo da toccare, non tanto da coprire la spiaggia. */
+  /* Il segno ha la taglia che gli lascia la vicina più prossima: mai così
+     piccolo da non poterlo cliccare, mai così grande da coprire la costa. */
+  const rt=telaio.getBoundingClientRect();
+  const perU=Math.min((rt.width||600)/v.w,(rt.height||600)/v.h)||1;
+  const rPx=Math.max(3.5,Math.min(TAGLIA.segno, 0.58*PASSO*perU));
+  const s=Math.max(.02,Math.min(8,(rPx/perU)/SEGNO_BASE));
+  MARKER.forEach((m,i)=>{const b=SPIAGGE[i];
+    m.setAttribute("transform","translate("+px(b.lon).toFixed(1)+","+py(b.lat).toFixed(1)+") scale("+s.toFixed(3)+")");});
+  /* I nomi compaiono quando la carta è abbastanza vicina da farceli stare: sotto
+     il 55% della larghezza totale. Prima dipendevano dall'aver scelto una zona,
+     e la stessa spiaggia mostrava o nascondeva il nome senza un motivo visibile. */
+  svg.classList.add("nomi");
+  adattaTesti(v,s);
+  if(typeof disegnaQui==="function") disegnaQui();
+}
+function vaiA(bb){
+  const t=aspetta(bb),d={...vista},rid=!!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  if(anim) cancelAnimationFrame(anim);
+  if(rid){vista=t;applicaVista(t);aggiornaScala();return;}
+  const t0=performance.now(),dur=520;
+  (function passo(now){const k=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-k,3);
+    vista={x:d.x+(t.x-d.x)*e,y:d.y+(t.y-d.y)*e,w:d.w+(t.w-d.w)*e,h:d.h+(t.h-d.h)*e};
+    applicaVista(vista); aggiornaScala(); if(k<1) anim=requestAnimationFrame(passo);})(t0);
+}
+function bboxZona(z){const m=SPIAGGE.filter(b=>b.z===z),xs=m.map(b=>px(b.lon)),ys=m.map(b=>py(b.lat)),pad=52;
+  const x=Math.min(...xs)-pad,y=Math.min(...ys)-pad;
+  return{x,y,w:Math.max(...xs)-x+pad,h:Math.max(...ys)-y+pad};}
+function selezionaZona(z){zonaAttiva=z;
+  document.querySelectorAll("#zone button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.z===(z||"")));
+  MARKER.forEach((m,i)=>m.classList.toggle("eti",!!z&&SPIAGGE[i].z===z));
+  vaiA(z?bboxZona(z):PIENO);}
+document.getElementById("zone").innerHTML='<button data-z="" aria-pressed="true">Tutta la regione</button>'+
+  Object.entries(ZONE).map(([k,v])=>'<button data-z="'+k+'" aria-pressed="false">'+v+'</button>').join("");
+document.getElementById("zone").addEventListener("click",e=>{const b=e.target.closest("button");if(b)selezionaZona(b.dataset.z||null);});
+/* --- navigazione: rotella, trascinamento, pizzico, tastiera, pulsanti --- */
+const ZMIN=PIENO.w/70, ZMAX=PIENO.w*1.35;
+const bussola=document.getElementById("bussola");
+function aggiornaScala(){
+  const r=svg.getBoundingClientRect(); if(!r.width) return;
+  const kmPerUnita=1/KY*111;                      // 1 unità SVG ≈ km
+  const largKm=vista.w*kmPerUnita;
+  bussola.textContent=largKm>=100? Math.round(largKm)+" km" : largKm.toFixed(largKm<10?1:0)+" km";
+}
+/* Il centro dell'inquadratura non esce dal rettangolo della regione: si può
+   arrivare a mettere il bordo della carta in mezzo allo schermo, non a
+   perderla del tutto. Senza questo, un trascinamento lungo lasciava sullo
+   schermo mare vuoto e nessun indizio su come tornare. */
+function dentroLaCarta(v){
+  const cx=Math.max(PIENO.x, Math.min(PIENO.x+PIENO.w, v.x+v.w/2)),
+        cy=Math.max(PIENO.y, Math.min(PIENO.y+PIENO.h, v.y+v.h/2));
+  return {x:cx-v.w/2, y:cy-v.h/2, w:v.w, h:v.h};
+}
+function fissa(v){
+  vista=dentroLaCarta(v);
+  applicaVista(vista); aggiornaScala();
+}
+function zoomA(f,fx,fy){
+  if(anim) cancelAnimationFrame(anim);
+  const nw=Math.max(ZMIN,Math.min(ZMAX,vista.w*f)), k=nw/vista.w;
+  fissa({x:fx-(fx-vista.x)*k, y:fy-(fy-vista.y)*k, w:nw, h:vista.h*k});
+}
+function centroVista(){ return [vista.x+vista.w/2, vista.y+vista.h/2]; }
+function puntoUtente(cx,cy){
+  const r=svg.getBoundingClientRect();
+  return [vista.x+(cx-r.left)/r.width*vista.w, vista.y+(cy-r.top)/r.height*vista.h];
+}
+svg.addEventListener("wheel",e=>{
+  e.preventDefault();
+  const d=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?400:1);
+  const [fx,fy]=puntoUtente(e.clientX,e.clientY);
+  zoomA(Math.pow(1.0018,d),fx,fy);
+},{passive:false});
+
+let trascino=null, mosso=0, pizzico=null;
+svg.addEventListener("pointerdown",e=>{
+  if(e.pointerType==="mouse"&&e.button!==0) return;
+  if(anim) cancelAnimationFrame(anim);
+  trascino={cx:e.clientX,cy:e.clientY,vx:vista.x,vy:vista.y}; mosso=0;
+});
+/* niente setPointerCapture: catturerebbe il mouseup e il click non arriverebbe più al marker.
+   Gli ascoltatori stanno sulla finestra, così il trascinamento continua anche fuori dalla carta. */
+addEventListener("pointermove",e=>{
+  if(!trascino) return;
+  const r=svg.getBoundingClientRect();
+  const dx=(e.clientX-trascino.cx)/r.width*vista.w, dy=(e.clientY-trascino.cy)/r.height*vista.h;
+  mosso=Math.max(mosso,Math.abs(e.clientX-trascino.cx)+Math.abs(e.clientY-trascino.cy));
+  if(mosso<4) return;                       // sotto soglia resta un clic, non un trascinamento
+  svg.classList.add("trascino");
+  fissa({x:trascino.vx-dx, y:trascino.vy-dy, w:vista.w, h:vista.h});
+});
+["pointerup","pointercancel"].forEach(t=>addEventListener(t,()=>{
+  trascino=null; svg.classList.remove("trascino");
+}));
+const distanza=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+const medio=t=>[(t[0].clientX+t[1].clientX)/2,(t[0].clientY+t[1].clientY)/2];
+svg.addEventListener("touchstart",e=>{ if(e.touches.length===2){ trascino=null;
+  const [cx,cy]=medio(e.touches); pizzico={d:distanza(e.touches),cx,cy}; } },{passive:true});
+/* Due dita fanno due cose insieme: il punto di mezzo che si sposta trascina la carta,
+   le dita che si allontanano la ingrandiscono. Prima si poteva solo ingrandire, e per
+   spostarsi bisognava uscire e rientrare dallo zoom. */
+svg.addEventListener("touchmove",e=>{
+  if(!pizzico||e.touches.length!==2) return;
+  e.preventDefault();
+  const d=distanza(e.touches), [cx,cy]=medio(e.touches);
+  const r=svg.getBoundingClientRect();
+  if(r.width){                                   // prima lo spostamento, alla vista corrente
+    const dx=(cx-pizzico.cx)/r.width*vista.w, dy=(cy-pizzico.cy)/r.height*vista.h;
+    if(dx||dy) fissa({x:vista.x-dx, y:vista.y-dy, w:vista.w, h:vista.h});
+  }
+  if(d>4){                                       // poi l'ingrandimento, centrato fra le dita
+    const [fx,fy]=puntoUtente(cx,cy);
+    zoomA(pizzico.d/d,fx,fy);
+  }
+  pizzico={d,cx,cy};
+},{passive:false});
+svg.addEventListener("touchend",()=>{pizzico=null;});
+
+document.getElementById("zPiu").onclick=()=>{const[c,d]=centroVista();zoomA(1/1.6,c,d);};
+document.getElementById("zMeno").onclick=()=>{const[c,d]=centroVista();zoomA(1.6,c,d);};
+document.getElementById("zFit").onclick=()=>selezionaZona(null);
+telaio.addEventListener("keydown",e=>{
+  const passo=vista.w*0.16;
+  const mosse={ArrowLeft:[-passo,0],ArrowRight:[passo,0],ArrowUp:[0,-passo*(vista.h/vista.w)],ArrowDown:[0,passo*(vista.h/vista.w)]};
+  if(mosse[e.key]){ e.preventDefault(); if(anim)cancelAnimationFrame(anim);
+    fissa({x:vista.x+mosse[e.key][0], y:vista.y+mosse[e.key][1], w:vista.w, h:vista.h}); return; }
+  const[c,d]=centroVista();
+  if(e.key==="+"||e.key==="="){e.preventDefault();zoomA(1/1.6,c,d);}
+  if(e.key==="-"||e.key==="_"){e.preventDefault();zoomA(1.6,c,d);}
+  if(e.key==="0"){e.preventDefault();selezionaZona(null);}
+});
+
+/* ---- dove sono ------------------------------------------------------------
+   La posizione non viene chiesta all'apertura: solo quando si preme il pulsante.
+   Il cerchio chiaro attorno al punto è il margine d'errore dichiarato dal
+   dispositivo, che nelle città può essere di poche decine di metri e in campagna
+   di qualche chilometro: disegnarlo evita di far credere a una precisione
+   che non c'è. */
+let posizione=null;
+const gQui=document.getElementById("gQui");
+const avvisoQui=document.getElementById("avvisoQui");
+let timerAvviso=null;
+
+function avvisa(t,ms,storto){
+  if(!avvisoQui) return;
+  avvisoQui.innerHTML=t; avvisoQui.hidden=false;
+  avvisoQui.classList.toggle("storto",!!storto);
+  clearTimeout(timerAvviso);
+  if(ms) timerAvviso=setTimeout(()=>{avvisoQui.hidden=true;},ms);
+}
+const scappa=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+/* «distanza» è già presa dal pizzico a due dita: qui serve un altro nome. */
+const kmScritti=k=>k<1?Math.round(k*1000)+" m":k<10?k.toFixed(1)+" km":Math.round(k)+" km";
+function kmFra(la1,lo1,la2,lo2){          // formula dell'emisenoverso
+  const R=6371, r=Math.PI/180;
+  const dla=(la2-la1)*r, dlo=(lo2-lo1)*r;
+  const s=Math.sin(dla/2)**2+Math.cos(la1*r)*Math.cos(la2*r)*Math.sin(dlo/2)**2;
+  return 2*R*Math.asin(Math.min(1,Math.sqrt(s)));
+}
+function piuVicina(la,lo){
+  let b=null,d=Infinity;
+  SPIAGGE.forEach(s=>{const k=kmFra(la,lo,s.lat,s.lon); if(k<d){d=k;b=s;}});
+  return b?{spiaggia:b,km:d}:null;
+}
+function disegnaQui(){
+  if(!posizione){ gQui.innerHTML=""; return; }
+  const {lat,lon,acc}=posizione;
+  const s=Math.max(.26,Math.min(1,vista.w/PIENO.w));
+  /* il raggio d'errore è in metri e va convertito nelle unità della carta,
+     dove un'unità vale 111/KY chilometri */
+  const rAcc=Math.max(4,(acc/1000)/(111/KY));
+  gQui.innerHTML='<g class="qui-segno" transform="translate('+px(lon).toFixed(1)+','+py(lat).toFixed(1)+')">'+
+    '<circle class="qui-alone" r="'+rAcc.toFixed(1)+'"/>'+
+    '<g transform="scale('+s.toFixed(3)+')">'+
+      '<circle class="qui-bordo" r="7"/><circle class="qui-punto" r="4"/></g></g>';
+}
+function vaiAllaPosizione(){
+  if(!navigator.geolocation){ avvisa("Questo browser non sa dire dove sei.",6000,true); return; }
+  if(!window.isSecureContext){
+    avvisa("La posizione funziona solo su un indirizzo <b>https</b>, non aprendo il file dal telefono.",8000,true);
+    return;
+  }
+  avvisa("Cerco la posizione…");
+  navigator.geolocation.getCurrentPosition(p=>{
+    const lat=p.coords.latitude, lon=p.coords.longitude, acc=p.coords.accuracy||0;
+    posizione={lat,lon,acc};
+    disegnaQui();
+    const vic=piuVicina(lat,lon);
+    const x=px(lon), y=py(lat);
+    const dentro = x>=PIENO.x && x<=PIENO.x+PIENO.w && y>=PIENO.y && y<=PIENO.y+PIENO.h;
+    if(dentro){
+      const l=Math.max(ZMIN,PIENO.w*0.16);
+      vaiA({x:x-l/2, y:y-l*0.5*(PIENO.h/PIENO.w), w:l, h:l*(PIENO.h/PIENO.w)});
+      avvisa(vic ? "Sei qui. La spiaggia più vicina è <b>"+scappa(vic.spiaggia.n)+"</b>, a "+kmScritti(vic.km)
+           : "Sei qui.", 9000);
+    } else {
+      avvisa(vic ? "Sei fuori da questa carta. La più vicina fra le spiagge segnate è <b>"+
+             scappa(vic.spiaggia.n)+"</b>, a "+kmScritti(vic.km)
+           : "Sei fuori da questa carta.", 10000, true);
+    }
+  }, e=>{
+    const m = e.code===1 ? "Permesso negato: la posizione si concede dalle impostazioni del browser."
+            : e.code===2 ? "Posizione non disponibile in questo momento."
+            : "La ricerca della posizione è durata troppo.";
+    avvisa(m,8000,true);
+  }, {enableHighAccuracy:true, timeout:12000, maximumAge:60000});
+}
+document.getElementById("zQui").addEventListener("click",vaiAllaPosizione);
+addEventListener("resize",()=>{applicaVista(vista=aspetta(zonaAttiva?bboxZona(zonaAttiva):PIENO));aggiornaScala();});
+applicaVista(vista=aspetta(PIENO)); aggiornaScala();
+
+/* ======================= METEO E MARE ======================= */
+const WMO={0:["Sereno","sole"],1:["Poco nuvoloso","sole"],2:["Parz. nuvoloso","nuvole"],3:["Coperto","coperto"],
+ 45:["Nebbia","nebbia"],48:["Nebbia gelata","nebbia"],51:["Pioviggine","pioggia"],53:["Pioviggine","pioggia"],
+ 55:["Pioviggine forte","pioggia"],56:["Pioviggine gelata","pioggia"],57:["Pioviggine gelata","pioggia"],
+ 61:["Pioggia debole","pioggia"],63:["Pioggia","pioggia"],65:["Pioggia forte","pioggia"],
+ 66:["Pioggia gelata","pioggia"],67:["Pioggia gelata","pioggia"],71:["Neve","neve"],73:["Neve","neve"],
+ 75:["Neve forte","neve"],77:["Nevischio","neve"],80:["Rovesci","pioggia"],81:["Rovesci","pioggia"],
+ 82:["Rovesci forti","pioggia"],85:["Rovesci di neve","neve"],86:["Rovesci di neve","neve"],
+ 95:["Temporale","temporale"],96:["Temporale e grandine","temporale"],99:["Temporale e grandine","temporale"]};
+const GLIFI={
+ sole:'<circle cx="12" cy="12" r="4.6" fill="#f0b429"/><g stroke="#f0b429" stroke-width="1.7" stroke-linecap="round"><path d="M12 2.4v2.4M12 19.2v2.4M2.4 12h2.4M19.2 12h2.4M5.2 5.2l1.7 1.7M17.1 17.1l1.7 1.7M18.8 5.2l-1.7 1.7M6.9 17.1l-1.7 1.7"/></g>',
+ nuvole:'<circle cx="9" cy="9.5" r="3.6" fill="#f0b429"/><path d="M7.4 18.4a4.1 4.1 0 01-.3-8.2 5.6 5.6 0 0110.7 1.3 3.5 3.5 0 01-.6 6.9z" fill="#cfe3ee"/>',
+ coperto:'<path d="M6.6 19a4.4 4.4 0 01-.3-8.8 6 6 0 0111.5 1.4A3.8 3.8 0 0117.3 19z" fill="#b9cfdd"/>',
+ nebbia:'<path d="M6.8 13.6a4 4 0 01-.3-8 5.5 5.5 0 0110.5 1.3 3.4 3.4 0 01-.5 6.7z" fill="#cfe3ee"/><g stroke="#9fb6c3" stroke-width="1.6" stroke-linecap="round"><path d="M4.6 17h14.8M7 20h10"/></g>',
+ pioggia:'<path d="M6.8 14.6a4 4 0 01-.3-8 5.5 5.5 0 0110.5 1.3 3.4 3.4 0 01-.5 6.7z" fill="#b9cfdd"/><g stroke="#1786bd" stroke-width="1.8" stroke-linecap="round"><path d="M8.6 17.4l-1 3M12.4 17.4l-1 3M16.2 17.4l-1 3"/></g>',
+ neve:'<path d="M6.8 14.6a4 4 0 01-.3-8 5.5 5.5 0 0110.5 1.3 3.4 3.4 0 01-.5 6.7z" fill="#cfe3ee"/><g stroke="#7ea9be" stroke-width="1.6" stroke-linecap="round"><path d="M8.4 18.4v2.6M7.2 19.7h2.4M14.4 18.4v2.6M13.2 19.7h2.4"/></g>',
+ temporale:'<path d="M6.8 14.2a4 4 0 01-.3-8 5.5 5.5 0 0110.5 1.3 3.4 3.4 0 01-.5 6.7z" fill="#9db4c2"/><path d="M12.6 15.4l-3.4 4.6h2.6l-1.2 3.4 4.2-5.2h-2.6z" fill="#f0b429"/>'};
+function icona(code,cls){const g=GLIFI[(WMO[code]||["","coperto"])[1]];
+  return '<svg viewBox="0 0 24 24" '+(cls?'class="'+cls+'"':'')+' aria-hidden="true">'+g+'</svg>';}
+const ROSA=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSO","SO","OSO","O","ONO","NO","NNO"];
+function freccia(d,px){ if(d==null) return "";
+  const s=px||14;
+  return '<svg viewBox="0 0 24 24" style="width:'+s+'px;height:'+s+'px;transform:rotate('+(((d+180)%360)).toFixed(0)+'deg)" aria-hidden="true">'+
+    '<path d="M12 2.6l5.4 9.6h-3.6v8.8h-3.6v-8.8H6.6z" fill="currentColor"/></svg>';}
+const dirTxt=d=>(d==null?"—":ROSA[Math.round(((d%360)+360)%360/22.5)%16]);
+/* Scala Douglas, quella dei bollettini nautici. Le soglie di prima erano a
+   occhio e sbagliate di parecchio — «mosso» comincia a mezzo metro, non a un
+   metro — e sopra i quattro metri la Douglas ha altri cinque gradini che
+   finivano tutti dentro «agitato». Il grado si legge accanto alla parola:
+   e' il numero con cui il mare viene dato per radio. */
+const DOUGLAS=[[0.005,"calmo","#2f9772"],   [0.10,"quasi calmo","#3f9f6a"],
+               [0.50,"poco mosso","#7bb03a"],[1.25,"mosso","#cf8a13"],
+               [2.50,"molto mosso","#e07a2c"],[4,"agitato","#dd5b45"],
+               [6,"molto agitato","#c8402c"], [9,"grosso","#a92d1f"],
+               [14,"molto grosso","#8a1f16"], [Infinity,"tempestoso","#6b140e"]];
+function statoMare(h){
+  if(h==null) return ["—","#9fb6c3",null];
+  const g=DOUGLAS.findIndex(s=>h<s[0]);
+  return [DOUGLAS[g][1],DOUGLAS[g][2],g];
+}
+/* ICON-EU del servizio meteorologico tedesco: maglia di 7 km su tutta l'Europa
+   mediterranea e atlantica, dal Portogallo alla Grecia. Un modello solo per ogni
+   paese, così le previsioni di due spiagge in due stati diversi restano
+   confrontabili; con «automatico» ognuna verrebbe da un modello nazionale. */
+const MODELLO="icon_seamless";
+const LIV_FOLLA=["Molto basso","Basso","Medio","Alto","Molto alto"];
+const AFFOLLAMENTO=v=>LIV_FOLLA[v-1]||"n/c";
+const cacheMeteo=new Map();
+
+/* Il campo daily.weather_code di Open-Meteo è il codice PIÙ SEVERO delle 24 ore:
+   un'ora di foschia all'alba o dieci minuti di pioviggine notturna marchiano tutta la
+   giornata. Qui il codice viene ricalcolato sulle sole ore diurne (8–20) e, se non c'è
+   pioggia vera, dedotto dalla nuvolosità media: è così che lo mostrano gli altri servizi. */
+function codiceDiurno(hr,giorno){
+  if(!hr||!hr.time) return null;
+  const idx=[];
+  for(let i=0;i<hr.time.length;i++){
+    if(hr.time[i].slice(0,10)!==giorno) continue;
+    const ora=+hr.time[i].slice(11,13);
+    if(ora>=8&&ora<=20) idx.push(i);
+  }
+  if(!idx.length) return null;
+  const piove=idx.filter(i=>{
+    const mm=(hr.precipitation&&hr.precipitation[i])||0;
+    const pr=(hr.precipitation_probability&&hr.precipitation_probability[i])||0;
+    const cw=(hr.weather_code&&hr.weather_code[i])||0;
+    return mm>=0.2 || (cw>=51 && pr>=45);
+  });
+  if(piove.length>=2){
+    const conta={};
+    piove.forEach(i=>{const c=hr.weather_code[i]; conta[c]=(conta[c]||0)+1;});
+    return +Object.entries(conta).sort((a,c)=>c[1]-a[1])[0][0];
+  }
+  if(!hr.cloud_cover) return null;
+  const nub=idx.reduce((s,i)=>s+(hr.cloud_cover[i]||0),0)/idx.length;
+  return nub<20?0:nub<50?1:nub<82?2:3;
+}
+function pioggiaDiurna(hr,giorno){
+  if(!hr||!hr.precipitation_probability) return 0;
+  let mx=0;
+  for(let i=0;i<hr.time.length;i++){
+    if(hr.time[i].slice(0,10)!==giorno) continue;
+    const ora=+hr.time[i].slice(11,13);
+    if(ora>=8&&ora<=20) mx=Math.max(mx,hr.precipitation_probability[i]||0);
+  }
+  return mx;
+}
+/* ---- l'andamento della giornata, ora per ora ------------------------------ */
+const ORA_DA=6, ORA_A=22;
+
+function serieGiorno(hr,giorno,campo){
+  const v=[];
+  if(!hr||!hr.time) return v;
+  for(let o=ORA_DA;o<=ORA_A;o++){
+    const t=giorno+"T"+String(o).padStart(2,"0")+":00";
+    const i=hr.time.indexOf(t);
+    v.push(i<0?null:(hr[campo]?hr[campo][i]:null));
+  }
+  return v;
+}
+function estremi(v,minimo){
+  const b=v.filter(x=>x!=null&&!isNaN(x));
+  if(!b.length) return null;
+  let lo=Math.min(...b), hi=Math.max(...b);
+  if(hi-lo<(minimo||1)){ const c=(hi+lo)/2, s=(minimo||1)/2; lo=c-s; hi=c+s; }
+  return [lo,hi];
+}
+
+function andamento(a,m,giorno,oggi){
+  const hrA=a.hourly, hrM=m?m.hourly:null;
+  const T =serieGiorno(hrA,giorno,"temperature_2m");
+  if(!T.some(x=>x!=null)) return "";
+  const CW=serieGiorno(hrA,giorno,"weather_code");
+  const PP=serieGiorno(hrA,giorno,"precipitation_probability");
+  const VV=serieGiorno(hrA,giorno,"wind_speed_10m");
+  const VD=serieGiorno(hrA,giorno,"wind_direction_10m");
+  const OH=hrM?serieGiorno(hrM,giorno,"wave_height"):[];
+  const OD=hrM?serieGiorno(hrM,giorno,"wave_direction"):[];
+  const conOnda=OH.some(x=>x!=null);
+
+  const N=ORA_A-ORA_DA+1, W=700, X0=54, X1=W-16, passo=(X1-X0)/(N-1);
+  const H=conOnda?242:176;
+  const x=i=>X0+i*passo;
+  const ogniDue=i=>(ORA_DA+i)%2===0;
+  const ogniQuattro=i=>(ORA_DA+i)%4===0;
+  const corsia=(y,nome,unita)=>'<text class="g-corsia" x="6" y="'+y+'">'+nome+'</text>'+
+    (unita?'<text class="g-mini" x="6" y="'+(y+11)+'">'+unita+'</text>':'');
+  const frecciaG=(cx,cy,dir,s)=>dir==null?"":
+    '<g transform="translate('+cx.toFixed(1)+','+cy+') rotate('+(((dir+180)%360)).toFixed(0)+
+    ') scale('+s+') translate(-12,-12)"><path class="g-freccia" d="M12 2.6l5.4 9.6h-3.6v8.8h-3.6v-8.8H6.6z"/></g>';
+
+  let o='<svg class="grafico" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" '+
+        'aria-label="Andamento della giornata dalle '+ORA_DA+' alle '+ORA_A+'">';
+
+  /* --- l'ora corrente, se la giornata è quella di oggi --- */
+  if(oggi){
+    const h=new Date().getHours();
+    if(h>=ORA_DA&&h<=ORA_A)
+      o+='<line class="g-adesso" x1="'+x(h-ORA_DA).toFixed(1)+'" y1="26" x2="'+x(h-ORA_DA).toFixed(1)+'" y2="'+(H-16)+'"/>';
+  }
+
+  /* --- pioggia: barre chiare in fondo alla corsia dell'aria --- */
+  const yPio=112, altaPio=40;
+  PP.forEach((p,i)=>{ if(p==null||p<15) return;
+    const h=Math.min(altaPio,p/100*altaPio);
+    o+='<rect class="g-pioggia" x="'+(x(i)-10).toFixed(1)+'" y="'+(yPio-h).toFixed(1)+
+       '" width="20" height="'+h.toFixed(1)+'" rx="2"/>';
+    if(ogniQuattro(i)) o+='<text class="g-mini" x="'+x(i).toFixed(1)+'" y="'+(yPio-h-3).toFixed(1)+
+       '" text-anchor="middle">'+p+'%</text>';
+  });
+
+  /* --- cielo: un glifo ogni due ore --- */
+  CW.forEach((c,i)=>{ if(c==null||!ogniDue(i)) return;
+    o+='<g transform="translate('+(x(i)-9).toFixed(1)+',2) scale(0.75)">'+
+       GLIFI[(WMO[c]||["","coperto"])[1]]+'</g>';
+  });
+
+  /* --- temperatura dell'aria --- */
+  const eT=estremi(T,4), yT0=36, yT1=106;
+  const yT=v=>yT1-(v-eT[0])/(eT[1]-eT[0])*(yT1-yT0);
+  let d="", aperto=false;
+  T.forEach((v,i)=>{ if(v==null){aperto=false;return;}
+    d+=(aperto?"L":"M")+x(i).toFixed(1)+","+yT(v).toFixed(1); aperto=true; });
+  o+='<path class="g-temp" d="'+d+'"/>';
+  T.forEach((v,i)=>{ if(v==null) return;
+    o+='<circle class="g-punto" cx="'+x(i).toFixed(1)+'" cy="'+yT(v).toFixed(1)+'" r="2.4"/>';
+    if(ogniDue(i)) o+='<text class="g-valore" x="'+x(i).toFixed(1)+'" y="'+(yT(v)-8).toFixed(1)+
+      '" text-anchor="middle">'+Math.round(v)+'°</text>';
+  });
+  o+=corsia(70,"aria","°C");
+
+  /* --- vento --- */
+  const yV=140;
+  o+='<line class="g-riga" x1="'+X0+'" y1="122" x2="'+X1+'" y2="122"/>';
+  VV.forEach((v,i)=>{ if(v==null||!ogniDue(i)) return;
+    o+=frecciaG(x(i),yV,VD[i],0.46)+
+       '<text class="g-valore" x="'+x(i).toFixed(1)+'" y="'+(yV+22)+'" text-anchor="middle">'+Math.round(v)+'</text>';
+  });
+  o+=corsia(yV-2,"vento","km/h");
+
+  /* --- onda --- */
+  if(conOnda){
+    const eO=estremi(OH,0.4), yO0=186, yO1=218;
+    const base=Math.min(0,eO[0]);
+    const yO=v=>yO1-(v-base)/(eO[1]-base)*(yO1-yO0);
+    o+='<line class="g-riga" x1="'+X0+'" y1="172" x2="'+X1+'" y2="172"/>';
+    let area="", primo=null, ultimo=null;
+    OH.forEach((v,i)=>{ if(v==null) return;
+      area+=(primo===null?"M":"L")+x(i).toFixed(1)+","+yO(v).toFixed(1);
+      if(primo===null) primo=i; ultimo=i; });
+    if(primo!==null){
+      o+='<path class="g-onda" d="'+area+"L"+x(ultimo).toFixed(1)+","+yO1+"L"+x(primo).toFixed(1)+","+yO1+'Z"/>';
+    }
+    OH.forEach((v,i)=>{ if(v==null||!ogniQuattro(i)) return;
+      o+='<text class="g-valore" x="'+x(i).toFixed(1)+'" y="'+(yO(v)-7).toFixed(1)+
+        '" text-anchor="middle">'+v.toFixed(1)+'</text>'+
+        frecciaG(x(i),yO1-9,OD[i],0.34);
+    });
+    o+=corsia(yO1-14,"onda","m");
+  }
+
+  /* --- le ore --- */
+  for(let i=0;i<N;i++){ if(!ogniDue(i)) continue;
+    o+='<text class="g-ora" x="'+x(i).toFixed(1)+'" y="'+(H-4)+'" text-anchor="middle">'+(ORA_DA+i)+'</text>';
+  }
+  return o+'</svg>';
+}
+function media(v,idx){
+  const b=idx.map(i=>v&&v[i]).filter(x=>x!=null&&!isNaN(x));
+  return b.length? b.reduce((s,x)=>s+x,0)/b.length : null;
+}
+/* Quale giornata mostrare: oggi finché il pomeriggio non è passato, poi domani. */
+function giornoDaMostrare(a){
+  const g=a&&a.daily&&a.daily.time?a.daily.time:null;
+  if(!g||!g.length) return null;
+  const adesso=new Date();
+  const oggi=adesso.getFullYear()+"-"+String(adesso.getMonth()+1).padStart(2,"0")+"-"+String(adesso.getDate()).padStart(2,"0");
+  const i=g.indexOf(oggi);
+  if(i<0) return {giorno:g[0], domani:false};
+  if(adesso.getHours()>=ORA_A && g[i+1]) return {giorno:g[i+1], domani:true};
+  return {giorno:g[i], domani:false};
+}
+
+async function json(u,ms){
+  const ac=new AbortController(),t=setTimeout(()=>ac.abort(),ms||10000);
+  try{const r=await fetch(u,{signal:ac.signal});clearTimeout(t);return r.ok?await r.json():null;}
+  catch(_){clearTimeout(t);return null;}
+}
+function largo(b,kmOff){ // sposta il punto verso il mare aperto
+  const cx=9.05, cy=42.15; let dx=b.lon-cx, dy=b.lat-cy; const n=Math.hypot(dx,dy)||1;
+  return [ (b.lat+(dy/n)*(kmOff/111)).toFixed(4), (b.lon+(dx/n)*(kmOff/82)).toFixed(4) ];
+}
+async function condizioni(b){
+  const key=b.n+"|"+b.com;   // il comune evita che due spiagge omonime condividano il meteo
+  if(cacheMeteo.has(key)) return cacheMeteo.get(key);
+  const aria=json("https://api.open-meteo.com/v1/forecast?latitude="+b.lat.toFixed(4)+"&longitude="+b.lon.toFixed(4)+
+    "&current=temperature_2m,apparent_temperature,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m"+
+    "&hourly=weather_code,cloud_cover,precipitation,precipitation_probability,temperature_2m,apparent_temperature,wind_speed_10m,wind_direction_10m"+
+    "&daily=weather_code,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,wind_direction_10m_dominant,precipitation_probability_max,uv_index_max"+
+    "&timezone=auto&forecast_days=7&models="+MODELLO);
+  const mare=(async()=>{
+    for(const off of [0,4,9,16]){
+      const [la,lo]=largo(b,off);
+      const d=await json("https://marine-api.open-meteo.com/v1/marine?latitude="+la+"&longitude="+lo+
+        "&hourly=wave_height,wave_direction,wave_period,sea_surface_temperature&timezone=auto&forecast_days=7",9000);
+      if(d&&d.hourly&&d.hourly.wave_height&&d.hourly.wave_height.some(v=>v!=null)) return d;
+    }
+    return null;
+  })();
+  const r={aria:await aria, mare:await mare};
+  cacheMeteo.set(key,r); return r;
+}
+function indice(a,m){
+  if(!a||!a.current) return null;
+  const c=a.current, on=m&&m.hourly?valOra(m,"wave_height"):null;
+  let p=0;
+  if(c.temperature_2m>=24) p+=2; else if(c.temperature_2m>=20) p+=1;
+  if(c.wind_speed_10m<12) p+=2; else if(c.wind_speed_10m<22) p+=1; else p-=1;
+  if(on!=null){ if(on<0.4) p+=2; else if(on<0.8) p+=1; else if(on>1.5) p-=2; else p-=1; }
+  const w=(WMO[c.weather_code]||["",""])[1];
+  if(w==="sole") p+=2; else if(w==="nuvole") p+=1; else if(w==="pioggia"||w==="temporale") p-=3;
+  if(p>=7) return ["Giornata da spiaggia ideale","#2f9772"];
+  if(p>=5) return ["Buone condizioni per il bagno","#7bb03a"];
+  if(p>=3) return ["Condizioni discrete","#cf8a13"];
+  return ["Condizioni poco favorevoli","#dd5b45"];
+}
+function valOra(m,campo){
+  const h=m.hourly, t=h.time, ora=new Date();
+  const iso=ora.getFullYear()+"-"+String(ora.getMonth()+1).padStart(2,"0")+"-"+String(ora.getDate()).padStart(2,"0")+"T"+String(ora.getHours()).padStart(2,"0")+":00";
+  let i=t.indexOf(iso); if(i<0) i=0;
+  const v=h[campo]; if(!v) return null;
+  for(let k=0;k<6;k++){ if(v[i+k]!=null) return v[i+k]; }
+  return v.find(x=>x!=null) ?? null;
+}
+function maxGiorno(m,campo,giorno){
+  if(!m||!m.hourly) return null;
+  const t=m.hourly.time, v=m.hourly[campo]; if(!v) return null;
+  let mx=null;
+  for(let i=0;i<t.length;i++) if(t[i].slice(0,10)===giorno && v[i]!=null) mx=(mx==null?v[i]:Math.max(mx,v[i]));
+  return mx;
+}
+const num=(v,d)=> v==null?"—":(d?v.toFixed(d):Math.round(v));
+
+function bloccoLive(b,dati){
+  const a=dati&&dati.aria, m=dati&&dati.mare;
+  const cam=camDella(b);
+  const rigaCam = cam
+    ? '<div class="cam">📹 <a href="'+cam.u+'" target="_blank" rel="noopener">Webcam live · '+cam.n+'</a><span class="dist">'+cam.vista+'</span></div>'
+    : '';
+  if(!a||!a.current){
+    return '<div class="live"><div class="live-testa"><span><i class="pulse"></i>Condizioni</span></div>'+
+      '<div class="live-nota">Dati meteo non disponibili: serve la connessione a internet.</div>'+rigaCam+'</div>';
+  }
+  const c=a.current, d=a.daily||{};
+  const onda=m?valOra(m,"wave_height"):null, tMare=m?valOra(m,"sea_surface_temperature"):null;
+  const [stato,,grado]=statoMare(onda);  // «calmo», «poco mosso»…, col grado Douglas
+  const ind=indice(a,m);
+
+  const quando=giornoDaMostrare(a);
+  const grafico=quando?andamento(a,m,quando.giorno,!quando.domani):"";
+
+  let giorni="";
+  if(d.time){
+    const G=["dom","lun","mar","mer","gio","ven","sab"];
+    d.time.forEach((g,i)=>{
+      const dt=new Date(g+"T12:00:00");
+      const om=maxGiorno(m,"wave_height",g);
+      const dv=d.wind_direction_10m_dominant?d.wind_direction_10m_dominant[i]:null;
+      const cd=codiceDiurno(a.hourly,g);
+      const pp=pioggiaDiurna(a.hourly,g);
+      /* sempre cinque celle: la pioggia sta dentro quella del cielo, non ne aggiunge una */
+      giorni+='<div><b>'+(i===0?"oggi":G[dt.getDay()])+'</b>'+
+        '<span class="ic">'+icona(cd!=null?cd:d.weather_code[i])+(pp>=25?'<i class="pio">'+pp+'%</i>':'')+'</span>'+
+        '<span class="t">'+num(d.temperature_2m_max[i])+'°<i> / '+num(d.temperature_2m_min[i])+'°</i></span>'+
+        '<span class="o">'+(om==null?'—':num(om,1)+' m')+'</span>'+
+        '<span class="vento">'+freccia(dv,10)+'<b>'+num(d.wind_speed_10m_max[i])+'</b><u>km/h</u>'+
+        '<span class="dir">'+dirTxt(dv)+'</span></span></div>';
+    });
+  }
+  return '<div class="live">'+
+    '<div class="live-testa"><span><i class="pulse"></i>'+(quando&&quando.domani?'Domani in spiaggia':'Oggi in spiaggia')+'</span>'+
+      '<span>acqua '+(tMare==null?'—':num(tMare)+'°')+'</span></div>'+
+    '<div class="andamento">'+grafico+'</div>'+
+    (ind?'<div class="sintesi"><span class="pallino" style="background:'+ind[1]+'"></span><b>'+ind[0]+'</b>'+
+      (grado!=null?'<span class="mare-stato">mare '+stato+'<i>Douglas '+grado+'</i></span>':'')+
+      (d.uv_index_max?'<span style="margin-left:auto;font-family:var(--dati);font-size:10px;color:var(--grigio)">UV max '+num(d.uv_index_max[0])+'</span>':'')+'</div>':'')+
+    '<div class="giorni">'+giorni+'</div>'+
+    rigaCam+
+    '<div class="live-nota">Open-Meteo · modello ICON-EU (DWD), maglia 7 km · ogni casella è la media delle sue ore; le direzioni sono mediate come versori · '+
+      'l\'onda è quella del largo: nelle baie chiuse è spesso molto più bassa · lo stato del mare segue la scala Douglas</div>'+
+  '</div>';
+}
+
+/* ======================= VISTA SATELLITARE + GOOGLE ======================= */
+/* Immagine aerea reale della spiaggia da Esri World Imagery (senza chiave),
+   ritagliata e centrata sulle coordinate. Nessuna foto "generica" fuori luogo. */
+const TILE="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/";
+function tessere(b,z){
+  const n=Math.pow(2,z), la=b.lat*Math.PI/180;
+  const cx=((b.lon+180)/360*n)*256;
+  const cy=((1-Math.log(Math.tan(la)+1/Math.cos(la))/Math.PI)/2*n)*256;
+  const W=1024,H=576, x0=cx-W/2, y0=cy-H/2;
+  let out="",k=0;
+  for(let ty=Math.floor(y0/256); ty<=Math.floor((y0+H)/256); ty++)
+    for(let tx=Math.floor(x0/256); tx<=Math.floor((x0+W)/256); tx++){
+      out+='<img data-t="'+(k++)+'" src="'+TILE+z+'/'+ty+'/'+tx+'" alt="" loading="lazy" '+
+        'style="left:'+((tx*256-x0)/W*100).toFixed(4)+'%;top:'+((ty*256-y0)/H*100).toFixed(4)+'%">';
+    }
+  return out;
+}
+/* La ricerca va ancorata al punto della spiaggia: senza, comanda il testo,
+   e il testo portava dentro il comune nella forma italiana — Cattaro, non
+   Kotor — così «Morinj Cattaro Montenegro» apriva il capoluogo. Ora il
+   comune non entra nella ricerca (lo fa il punto) e il nome perde la
+   parentesi, che è la traduzione per noi, non per Google. */
+const qLuogo=b=>encodeURIComponent(b.n.replace(/\s*\([^)]*\)/g,"").trim()+" Corse");
+/* Una forma sola, per tutti: la ricerca parte dal punto della spiaggia.
+   Il place_id resta nei dati ma non guida piu’ il collegamento — e’ una
+   promessa che non possiamo verificare per mille spiagge, e dove e’ falsa
+   porta altrove senza che si veda. La coordinata invece e’ controllata. */
+const gMaps=b=>"https://www.google.com/maps/search/"+qLuogo(b)+"/@"+b.lat+","+b.lon+",16z";
+/* /maps/place/?q=place_id: è il vecchio formato, ora non risolve più: si usa l'API "Maps URLs".
+   Per il panorama, cbll è più tollerante di map_action=pano, che fallisce se non c'è
+   una vista entro 50 m dal punto. */
+const gFoto=b=>gMaps(b);
+/* source=outdoor tiene fuori le panoramiche scattate dentro i locali: senza,
+   Google agganciava la più vicina e capitava di finire dentro un ristorante. */
+/* ---- disponibilità di Street View ----------------------------------------
+   La chiave sta in configurazione.js, una sola per tutte le pagine. */
+const CHIAVE_GOOGLE = window.CHIAVE_GOOGLE || "";
+
+const panoNoti=new Map();
+function chiavePano(b){ return b.lat+","+b.lon; }
+async function panoDisponibile(b){
+  if(!CHIAVE_GOOGLE) return null;                       // senza chiave non si sa
+  const k=chiavePano(b);
+  if(panoNoti.has(k)) return panoNoti.get(k);
+  try{
+    const r=await fetch("https://maps.googleapis.com/maps/api/streetview/metadata?location="
+      +k+"&radius=150&source=outdoor&key="+CHIAVE_GOOGLE);
+    const d=await r.json();
+    /* Oltre al sì o no, la risposta dice quale panoramica e di che mese. Tenerne
+       l'identificativo permette di aprire esattamente quella invece della più
+       vicina, che è il modo sicuro di non finire dentro un locale. */
+    const e = d.status==="OK" ? {c:true, pano:d.pano_id||null, data:d.date||null} : {c:false};
+    panoNoti.set(k,e);
+    return e;
+  }catch(_){ return null; }                             // rete assente: non spegnere nulla
+}
+const MESI=["gennaio","febbraio","marzo","aprile","maggio","giugno","luglio",
+            "agosto","settembre","ottobre","novembre","dicembre"];
+function quando(t){                                     // «2023-06» → «giugno 2023»
+  const m=/^(\d{4})-(\d{2})/.exec(t||"");
+  return m ? MESI[+m[2]-1]+" "+m[1] : null;
+}
+/* Spegne i collegamenti a Street View di una scheda se la panoramica non esiste.
+   Finché la risposta non arriva non si tocca niente, per non far lampeggiare
+   il pulsante a ogni cambio di spiaggia. */
+async function verificaPano(b, dove){
+  const e=await panoDisponibile(b);
+  if(!e || !dove || !dove.isConnected) return;          // non si sa: si lascia com'è
+  if(!e.c){
+    dove.querySelectorAll("[data-pano]").forEach(a=>{
+      const s=document.createElement("span");
+      s.className="spento";
+      s.textContent="Street View non disponibile";
+      s.title="Google non ha panoramiche all'aperto entro 150 metri da questo punto";
+      a.replaceWith(s);
+    });
+    return;
+  }
+  const d=quando(e.data);
+  dove.querySelectorAll("[data-pano]").forEach(a=>{
+    if(e.pano) a.href="https://www.google.com/maps/@?api=1&map_action=pano&pano="+e.pano;
+    if(d) a.title="Panoramica di "+d;
+  });
+  const h5=dove.querySelector(".riquadro h5");          // nella scheda completa la data si vede
+  if(h5 && d && !h5.querySelector(".quando")){
+    const s=document.createElement("span");
+    s.className="quando"; s.textContent=d;
+    h5.insertBefore(s, h5.querySelector("[data-pano]"));
+  }
+}
+
+const gPano=b=>"https://www.google.com/maps?q&layer=c&cbll="+b.lat+","+b.lon+"&cbp=11,0,0,0,0&source=outdoor";
+const gVia=b=>"https://www.google.com/maps/dir/?api=1&destination="+b.lat+","+b.lon+"";
+const embMappa=b=>"https://maps.google.com/maps?q="+b.lat+","+b.lon+"&hl=it&z=16&t=k&output=embed";
+const embPano=b=>"https://maps.google.com/maps?q=&layer=c&cbll="+b.lat+","+b.lon+"&cbp=11,0,0,0,0&source=outdoor&hl=it&output=svembed";
+
+/* ======================= VEDUTA DI RISERVA ======================= */
+function rng(s){return()=>(s=(s*1103515245+12345)&0x7fffffff)/0x7fffffff;}
+function scuro(hex,d){const n=parseInt(hex.slice(1),16),c=[n>>16,(n>>8)&255,n&255].map(v=>Math.max(0,Math.min(255,v+d)));
+  return"#"+c.map(v=>v.toString(16).padStart(2,"0")).join("");}
+function pino(x,base,h){return'<line x1="'+x+'" y1="'+base+'" x2="'+x+'" y2="'+(base-h*.62)+'" stroke="#5a4632" stroke-width="3"/>'+
+  '<ellipse cx="'+x+'" cy="'+(base-h*.72)+'" rx="'+(h*.36).toFixed(0)+'" ry="'+(h*.19).toFixed(0)+'" fill="#43663f"/>'+
+  '<ellipse cx="'+(x-h*.12).toFixed(0)+'" cy="'+(base-h*.82)+'" rx="'+(h*.24).toFixed(0)+'" ry="'+(h*.14).toFixed(0)+'" fill="#547a48"/>';}
+function veduta(b){
+  const [sab,acq,sfo,ext]=b.sc,W=560,H=315,oriz=126,riva=214;
+  const r=rng(b.n.length*7919+b.n.charCodeAt(0)*131+b.n.charCodeAt(b.n.length-1)*17);
+  let o='<defs><linearGradient id="ci" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#bfe0f0"/><stop offset="70%" stop-color="#dff0f7"/><stop offset="100%" stop-color="#f2f8e9"/></linearGradient>'+
+   '<linearGradient id="mr" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+scuro(acq,-38)+'"/><stop offset="55%" stop-color="'+acq+'"/><stop offset="100%" stop-color="'+scuro(acq,50)+'"/></linearGradient>'+
+   '<linearGradient id="sb" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+sab+'"/><stop offset="100%" stop-color="'+scuro(sab,-28)+'"/></linearGradient></defs>'+
+   '<rect width="'+W+'" height="'+H+'" fill="url(#ci)"/>';
+  let m="M0,"+oriz; for(let x=0;x<=W;x+=56) m+=" L"+x+","+(oriz-18-r()*34).toFixed(0); m+=" L"+W+","+oriz+" Z";
+  o+='<path d="'+m+'" fill="#8fb0ae" opacity=".75"/><path d="'+m+'" transform="translate(42,12)" fill="#a9c6c2" opacity=".6"/>';
+  if(ext==="isola") o+='<path d="M392,'+oriz+' q32,-28 66,-3 q15,3 24,3 Z" fill="#8fb0ae"/><rect x="424" y="'+(oriz-34)+'" width="9" height="15" fill="#8fb0ae"/>';
+  if(ext==="baia") o+='<path d="M0,'+oriz+' q64,-42 140,-24 Z" fill="#94b5b1"/><path d="M'+W+','+oriz+' q-64,-42 -140,-24 Z" fill="#94b5b1"/>';
+  o+='<rect y="'+oriz+'" width="'+W+'" height="'+(riva-oriz+18)+'" fill="url(#mr)"/>';
+  for(let i=0;i<14;i++){const y=oriz+9+r()*(riva-oriz-12),x=r()*W,w=20+r()*52;
+    o+='<path d="M'+x.toFixed(0)+','+y.toFixed(0)+' q'+(w/2).toFixed(0)+',-3 '+w.toFixed(0)+',0" stroke="rgba(255,255,255,.5)" stroke-width="1.1" fill="none"/>';}
+  if(ext==="laguna") o+='<rect y="'+(riva-34)+'" width="'+W+'" height="34" fill="'+scuro(acq,68)+'" opacity=".7"/>';
+  if(ext==="barche") for(let i=0;i<3;i++){const x=96+i*140+r()*30,y=oriz+16+r()*22;
+    o+='<path d="M'+x+','+y+' l17,0 l-3,5 l-11,0 Z" fill="#3b6b80"/><line x1="'+(x+8)+'" y1="'+y+'" x2="'+(x+8)+'" y2="'+(y-13)+'" stroke="#3b6b80" stroke-width="1.2"/>';}
+  if(ext==="pontile"){o+='<rect x="356" y="'+(oriz+12)+'" width="164" height="4" fill="#5b7f8f"/>';
+    for(let x=368;x<516;x+=26) o+='<rect x="'+x+'" y="'+(oriz+16)+'" width="3" height="15" fill="#5b7f8f"/>';}
+  let sp="M0,"+(riva+12);
+  for(let x=0;x<=W;x+=44) sp+=" Q"+(x+22)+","+(riva+5+r()*16).toFixed(0)+" "+(x+44)+","+(riva+9+r()*11).toFixed(0);
+  sp+=" L"+W+","+H+" L0,"+H+" Z";
+  o+='<path d="'+sp+'" fill="url(#sb)"/><path d="'+sp+'" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.8"/>';
+  if(sfo==="pini") for(let i=0;i<7;i++){const x=(i<4?10+i*44:W-24-(i-4)*50)+r()*14; o+=pino(x,riva+5,56+r()*42);}
+  if(sfo==="granito"||ext==="massi"||ext==="pini-granito") for(let i=0;i<5;i++){
+    const x=(i<3?8+i*50:W-34-(i-3)*62),y=riva-6+r()*24,w=36+r()*48,h=26+r()*28;
+    o+='<ellipse cx="'+x.toFixed(0)+'" cy="'+y.toFixed(0)+'" rx="'+(w/2).toFixed(0)+'" ry="'+(h/2).toFixed(0)+'" fill="#c98d76" opacity=".9"/>'+
+       '<ellipse cx="'+(x-w/8).toFixed(0)+'" cy="'+(y-h/6).toFixed(0)+'" rx="'+(w/3).toFixed(0)+'" ry="'+(h/4).toFixed(0)+'" fill="#e0ac92" opacity=".65"/>';}
+  if(ext==="pini-granito") o+=pino(76,riva,68)+pino(W-70,riva-4,60);
+  if(sfo==="rocce") for(let i=0;i<6;i++){const x=r()*W,y=riva-4+r()*20,w=30+r()*46;
+    o+='<path d="M'+(x-w/2).toFixed(0)+','+(y+16).toFixed(0)+' L'+x.toFixed(0)+','+(y-18-r()*16).toFixed(0)+' L'+(x+w/2).toFixed(0)+','+(y+16).toFixed(0)+' Z" fill="#8b8a80" opacity=".92"/>';}
+  if(sfo==="macchia"||sfo==="dune") for(let i=0;i<10;i++){const x=r()*W,y=riva+12+r()*28,w=24+r()*38;
+    o+='<ellipse cx="'+x.toFixed(0)+'" cy="'+y.toFixed(0)+'" rx="'+(w/2).toFixed(0)+'" ry="'+(7+r()*7).toFixed(0)+'" fill="#8fa96a" opacity=".55"/>';}
+  if(sfo==="paese") for(let i=0;i<5;i++){const x=14+i*44+r()*10,h=28+r()*26,w=24+r()*14,y=riva-h+2;
+    o+='<rect x="'+x.toFixed(0)+'" y="'+y.toFixed(0)+'" width="'+w.toFixed(0)+'" height="'+h.toFixed(0)+'" fill="#f2e6cd"/>'+
+       '<path d="M'+(x-3)+','+y+' l'+(w/2+3)+',-10 l'+(w/2+3)+',10 Z" fill="#c0705c"/>';}
+  if(ext==="arco") o+='<path d="M'+(W-126)+','+(riva+7)+' q11,-68 66,-68 q55,0 66,68 l-24,0 q-8,-47 -42,-47 q-34,0 -42,47 Z" fill="#c98d76"/>';
+  if(ext==="torre") o+='<path d="M44,'+(riva-4)+' q28,-32 70,-15 l0,19 Z" fill="#7e9a72"/><rect x="62" y="'+(riva-70)+'" width="32" height="50" fill="#e0cda6"/><rect x="58" y="'+(riva-77)+'" width="40" height="9" fill="#cbb489"/>';
+  if(ext==="calette") o+='<path d="M0,'+(riva-12)+' q42,-50 102,-17 l0,42 l-102,0 Z" fill="#c98d76" opacity=".9"/><path d="M'+W+','+(riva-16)+' q-46,-52 -110,-15 l0,44 l110,0 Z" fill="#c98d76" opacity=".9"/>';
+  if(ext==="tronchi") for(let i=0;i<4;i++){const x=32+i*128+r()*40,y=riva+30+r()*32;
+    o+='<path d="M'+x+','+y+' l56,-8 l3,6 l-56,8 Z" fill="#a08a63" opacity=".9"/>';}
+  if(b.sv.lettini>=1) for(let i=0;i<4;i++){const x=66+i*126,y=riva+48+(i%2)*18;
+    o+='<path d="M'+(x-16)+','+y+' a16,10 0 0 1 32,0 Z" fill="#dd5b45"/><line x1="'+x+'" y1="'+y+'" x2="'+x+'" y2="'+(y+17)+'" stroke="#3b6b80" stroke-width="1.4"/>';}
+  return '<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Veduta schematica di '+b.n+'">'+o+'</svg>';
+}
+
+/* ======================= PANNELLO ======================= */
+const scheda=document.getElementById("scheda");
+function gradi(v,ns){const g=Math.floor(Math.abs(v)),p=(Math.abs(v)-g)*60;
+  return g+"°"+String(Math.floor(p)).padStart(2,"0")+"′"+String(Math.round((p%1)*60)).padStart(2,"0")+"″"+ns;}
+function linkMappa(b){return gMaps(b);}
+function vuoto(){ scheda.innerHTML=""; scheda.hidden=true; }
+function corpo(b){
+  const a=ACCESSI[b.acc]||ACCESSI.nc;
+  const chips=SERVIZI.map(([k,et])=>{
+    const v=b.sv[k],cls=(v==null)?"nc":(v>=1?"si":(v>0?"forse":"no")),
+      st=(v==null)?'<span class="st">n/c</span>':((v>0&&v<1)?'<span class="st">stag.</span>':"");
+    return '<span class="sv '+cls+'"><svg viewBox="0 0 20 20">'+ICONE[k]+'</svg><span class="lab">'+et+'</span>'+st+'</span>';}).join("");
+  return '<div class="corpo">'+
+   '<div class="riga-titolo"><div><h2>'+b.n+'</h2>'+
+     '<div class="sotto">'+b.com+' · '+gradi(b.lat,b.lat<0?"S":"N")+' '+gradi(b.lon,b.lon<0?"W":"E")+'</div></div>'+
+     '<div class="zona">'+ZONE[b.z]+'</div></div>'+
+   /* se lì sotto ce n'è più d'una, conviene dirlo: altrimenti sembra che il
+      clic non risponda, mentre sta solo scegliendo la prima */
+   (function(){const g=(typeof grappoloDi==="function")?grappoloDi(SPIAGGE.indexOf(b)):[];
+     return g.length>1 ? '<p class="grappolo">In questo punto ci sono <b>'+g.length+
+       '</b> spiagge: clicca ancora sul segno per passare alla successiva'+
+       (g.length>6?', oppure ingrandisci la carta per separarle':'')+'.</p>' : "";})()+
+   '<div class="badge-accesso" style="background:'+a.col+'14;border:1px solid '+a.col+'4d;color:'+a.col+'">'+
+     '<span class="glifo">'+a.glifo+'</span> '+a.et+'</div>'+
+   '<div id="slotLive"></div>'+
+   '<dl class="dati">'+
+     '<div><dt>Lunghezza</dt><dd>'+(b.lung||'n/c')+'</dd></div>'+
+     '<div><dt>Fondo</dt><dd>'+(b.fondo||'n/c')+'</dd></div>'+
+     '<div><dt>Affollamento</dt><dd>'+AFFOLLAMENTO(b.folla)+'</dd></div>'+
+     '<div><dt>Tratto a piedi</dt><dd>'+(b.camm||'n/c')+'</dd></div>'+
+     '<div style="grid-column:1/-1"><dt>Parcheggio</dt><dd>'+(b.park||'n/c')+'</dd></div>'+
+   '</dl>'+
+   '<p class="titoletto">Servizi in spiaggia</p><div class="servizi">'+chips+'</div>'+
+   '<p class="titoletto">Da sapere</p><p class="nota">'+(b.nota||'Descrizione non ancora disponibile.')+'</p>'+
+   '<div class="tag">'+b.id.map(t=>'<span'+(t==="Bandiera Blu"?' class="bb"':'')+'>'+t+'</span>').join("")+'</div>'+'</div>';
+}
+function vetrinaSat(b,i){
+  const bl=bloccato===i;
+  return '<div class="vetrina" id="vetrina">'+
+    '<div class="tela">'+tessere(b,16)+'</div><div class="mirino"></div>'+
+    '<button type="button" class="lucchetto'+(bl?' on':'')+'" id="btnLucchetto" '+
+      'title="'+(bl?'La scheda resta fissa anche passando su altre spiagge':'Fissa questa scheda')+'">'+
+      (bl?'● Scheda fissata':'○ Fissa scheda')+'</button>'+
+    '<span class="sat-eti">Vista aerea · '+b.n+'</span>'+
+    '<a class="apri-foto" href="'+gFoto(b)+'" target="_blank" rel="noopener" '+
+      'aria-label="Foto e recensioni di '+b.n+' su Google"><span>Foto e recensioni ↗</span></a></div>'+
+   '<div class="azioni">'+
+     '<a class="primaria" href="'+gFoto(b)+'" target="_blank" rel="noopener">Foto e recensioni</a>'+
+     '<a data-pano href="'+gPano(b)+'" target="_blank" rel="noopener">Street View</a>'+
+     '<a href="'+gVia(b)+'" target="_blank" rel="noopener">Indicazioni</a>'+
+     '<button type="button" id="btnScheda">Scheda completa</button>'+
+   '</div>';
+}
+let richiesta=0, corrente=null;
+function mostra(i){
+  const b=SPIAGGE[i], mio=++richiesta; corrente=i;
+  scheda.hidden=false;
+  scheda.innerHTML=vetrinaSat(b,i)+corpo(b);
+  const tela=scheda.querySelector(".tela");
+  let rotte=0;
+  tela.querySelectorAll("img").forEach(t=>t.onerror=()=>{ if(++rotte>=2 && scheda.querySelector("#vetrina"))
+    scheda.querySelector("#vetrina").outerHTML='<a class="vetrina-veduta" href="'+gFoto(b)+'" target="_blank" rel="noopener" aria-label="Foto e recensioni di '+b.n+' su Google">'+veduta(b)+'<span>Foto e recensioni ↗</span></a>'+'<div class="credito">Immagine satellitare non raggiungibile: qui sopra una veduta schematica.</div>'; });
+  scheda.querySelector("#btnScheda").onclick=()=>apriScheda(i);
+  verificaPano(b, scheda);
+  scheda.querySelector("#btnLucchetto").onclick=()=>{ bloccato=(bloccato===i?null:i); mostra(i); attiva(i); };
+  const slot=scheda.querySelector("#slotLive");
+  slot.innerHTML='<div class="live"><div class="live-testa"><span><i class="pulse"></i>Adesso in spiaggia</span></div>'+
+    '<div class="live-nota">Interrogo il modello meteo-marino…</div></div>';
+  condizioni(b).then(d=>{ if(mio===richiesta && slot.isConnected) slot.innerHTML=bloccoLive(b,d); })
+               .catch(()=>{ if(mio===richiesta && slot.isConnected) slot.innerHTML=bloccoLive(b,null); });
+}
+
+/* ======================= SOTTOPAGINA GOOGLE ======================= */
+let veloAperto=null;
+function chiudiScheda(){ if(veloAperto){veloAperto.remove(); veloAperto=null; document.body.style.overflow="";} }
+function apriScheda(i){
+  const b=SPIAGGE[i];
+  chiudiScheda();
+  const v=document.createElement("div"); v.className="velo";
+  v.innerHTML='<div class="foglio" role="dialog" aria-label="Scheda di '+b.n+'">'+
+    '<div class="foglio-testa"><div><h3>'+b.n+'</h3>'+
+      '<div class="sotto">'+b.com+' · '+ZONE[b.z]+' · '+gradi(b.lat,b.lat<0?"S":"N")+' '+gradi(b.lon,b.lon<0?"W":"E")+'</div></div>'+
+      '<button class="chiudi" aria-label="Chiudi">✕</button></div>'+
+    '<div class="riquadri">'+
+      '<div class="riquadro"><h5>Posizione · satellite'+
+        '<a href="'+gMaps(b)+'" target="_blank" rel="noopener">apri ↗</a></h5>'+
+        '<iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Mappa di '+b.n+'" src="'+embMappa(b)+'"></iframe></div>'+
+      '<div class="riquadro"><h5>Street View'+
+        '<a data-pano href="'+gPano(b)+'" target="_blank" rel="noopener">apri ↗</a></h5>'+
+        '<iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Street View di '+b.n+'" src="'+embPano(b)+'"></iframe></div>'+
+    '</div>'+
+    '<div class="azioni">'+
+      '<a class="primaria" href="'+gFoto(b)+'" target="_blank" rel="noopener">Foto e recensioni su Google</a>'+
+      '<a href="'+gVia(b)+'" target="_blank" rel="noopener">Indicazioni stradali</a>'+
+      '<a data-pano href="'+gPano(b)+'" target="_blank" rel="noopener">Street View a schermo intero</a>'+
+    '</div>'+
+    '<div class="foglio-corpo"><div id="liveFoglio"></div>'+
+      '<p class="titoletto">Da sapere</p><p class="nota">'+(b.nota||'Descrizione non ancora disponibile.')+'</p>'+
+      '<div class="tag">'+b.id.map(t=>'<span'+(t==="Bandiera Blu"?' class="bb"':'')+'>'+t+'</span>').join("")+'</div></div>'+
+    '<div class="avviso">Mappa e Street View sono incorporati da Google Maps. Se il riquadro resta vuoto, il browser sta bloccando l\'incorporamento: usa i pulsanti “apri ↗”.</div>'+
+  '</div>';
+  v.addEventListener("click",e=>{ if(e.target===v||e.target.closest(".chiudi")) chiudiScheda(); });
+  document.body.appendChild(v); document.body.style.overflow="hidden"; veloAperto=v;
+  verificaPano(b, v);      // anche i due collegamenti della scheda completa
+  const lf=v.querySelector("#liveFoglio");
+  lf.innerHTML='<div class="live"><div class="live-testa"><span><i class="pulse"></i>Adesso in spiaggia</span></div>'+
+    '<div class="live-nota">Interrogo il modello meteo-marino…</div></div>';
+  condizioni(b).then(d=>{ if(lf.isConnected) lf.innerHTML=bloccoLive(b,d); });
+}
+addEventListener("keydown",e=>{ if(e.key==="Escape") chiudiScheda(); });
+
+/* ======================= INTERAZIONE ======================= */
+let bloccato=null;
+function attiva(i){MARKER.forEach(m=>m.classList.toggle("attivo",+m.dataset.i===i));
+  document.querySelectorAll("#elenco li").forEach(l=>l.classList.toggle("attivo",+l.dataset.i===i));}
+/* Due spiagge a pochi pixel l'una dall'altra: il segno disegnato per ultimo
+   sta sopra e si prende tutti i clic, e alle altre non si arriva. Il clic
+   quindi non guarda più quale segno ha intercettato l'evento: guarda il punto
+   in cui si è cliccato, raccoglie le spiagge che stanno lì attorno e a ogni
+   clic passa alla successiva. */
+const GRAPPOLO_PX=14;
+function raggioGrappolo(){
+  const r=telaio.getBoundingClientRect();
+  const perU=Math.min((r.width||600)/vista.w,(r.height||600)/vista.h)||1;
+  return GRAPPOLO_PX/perU;
+}
+function grappoloDi(i){
+  const b=SPIAGGE[i], X=px(b.lon), Y=py(b.lat), R=raggioGrappolo();
+  return SPIAGGE.map((q,j)=>({j,d:Math.hypot(px(q.lon)-X,py(q.lat)-Y)}))
+    .filter(o=>o.d<=R && !ESCLUSE.has(o.j))
+    .sort((a,b2)=>a.d-b2.d || a.j-b2.j).map(o=>o.j);
+}
+let ultimoGrappolo=[], passoGrappolo=0;
+function scegli(i){
+  const g=grappoloDi(i);
+  if(g.length<2) { ultimoGrappolo=g; passoGrappolo=0; return i; }
+  const stesso=g.length===ultimoGrappolo.length && g.every((x,n)=>x===ultimoGrappolo[n]);
+  passoGrappolo = stesso ? (passoGrappolo+1)%g.length : 0;
+  ultimoGrappolo=g;
+  return g[passoGrappolo];
+}
+MARKER.forEach(m=>{
+  const i=+m.dataset.i;
+  m.addEventListener("mouseenter",()=>{if(bloccato===null&&!trascino){mostra(i);attiva(i);}});
+  /* nessun mouseleave: la scheda resta sullo schermo, così si possono usare i suoi pulsanti */
+  m.addEventListener("focus",()=>{if(bloccato===null){mostra(i);attiva(i);}});
+  m.addEventListener("click",()=>{ if(mosso>6) return;
+    const j=scegli(i);
+    const era=bloccato; bloccato=(bloccato===j?null:j); mostra(j); attiva(j);
+    if(bloccato!==null&&era!==j) portaAllaScheda(); });
+  m.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();m.click();}});
+});
+
+/* ======================= ELENCO E FILTRI ======================= */
+let fAcc=new Set(), fSrv=new Set(), ESCLUSE=new Set();
+const elenco=document.getElementById("elenco"), conta=document.getElementById("conta");
+/* Il segno dell'elenco e' quello della legenda, non un pallino qualunque:
+   stessa taglia, stesso colore per l'accesso, e la forma che sulla carta
+   distingue una lunghezza nota da una ignota. */
+function segnoElenco(b){
+  const c=(ACCESSI[b.acc]||ACCESSI.nc).col;
+  return '<svg class="pt" viewBox="-8 -8 16 16" width="16" height="16" aria-hidden="true">'+
+    (b.lung ? '<circle r="4.6" fill="'+c+'" stroke="#fff" stroke-width="1.4"/>'
+            : '<rect x="-2.9" y="-2.9" width="5.8" height="5.8" rx=".6" fill="'+c+'" stroke="#fff" stroke-width="1.4"/>')+
+    '</svg>';
+}
+function disegnaElenco(filtro){
+  const q=(filtro||"").trim().toLowerCase(); let html="",n=0;
+  Object.entries(ZONE).forEach(([z,et])=>{
+    const voci=SPIAGGE.map((b,i)=>({b,i})).filter(({b,i})=>b.z===z && !ESCLUSE.has(i) &&
+      (!q||(b.n+" "+b.com+" "+b.id.join(" ")).toLowerCase().includes(q)));
+    if(!voci.length) return; n+=voci.length;
+    html+='<h4>'+et+' · '+voci.length+'</h4><ul>'+voci.map(({b,i})=>
+      '<li data-i="'+i+'" tabindex="0">'+segnoElenco(b)+
+      b.n+'<small>'+b.com.split(" · ")[0]+'</small></li>').join("")+'</ul>';
+  });
+  elenco.innerHTML=html||'<h4>Nessun risultato</h4>';
+  conta.textContent=n+" / "+SPIAGGE.length;
+}
+const stretto=()=>window.innerWidth<=960;
+function portaAllaScheda(){ if(stretto()) setTimeout(()=>{
+  try{scheda.scrollIntoView({behavior:"smooth",block:"start"});}catch(_){scheda.scrollIntoView();} },80); }
+elenco.addEventListener("mouseover",e=>{const l=e.target.closest("li");if(l&&bloccato===null&&!stretto()){const i=+l.dataset.i;mostra(i);attiva(i);}});
+elenco.addEventListener("click",e=>{const l=e.target.closest("li");if(!l)return;const i=+l.dataset.i;
+  bloccato=i;mostra(i);attiva(i);if(!zonaAttiva)selezionaZona(SPIAGGE[i].z);portaAllaScheda();});
+elenco.addEventListener("keydown",e=>{const l=e.target.closest("li");if(l&&e.key==="Enter"){e.preventDefault();l.click();}});
+
+const btnElenco=document.getElementById("apriElenco");
+function elencoAperto(v){
+  elenco.classList.toggle("chiuso",!v);
+  btnElenco.setAttribute("aria-expanded",String(v));
+  btnElenco.textContent=v?"▴":"▾";
+}
+btnElenco.onclick=()=>elencoAperto(elenco.classList.contains("chiuso"));
+document.getElementById("cerca").addEventListener("input",e=>{
+  disegnaElenco(e.target.value);
+  if(e.target.value) elencoAperto(true);
+});
+
+const contA=document.getElementById("filtriAccesso");
+contA.innerHTML=Object.entries(ACCESSI).map(([k,a])=>
+  '<button class="f" data-a="'+k+'" aria-pressed="false"><span class="pt" style="background:'+a.col+'"></span>'+a.et+'</button>').join("");
+const SRV_F=[["bb","Bandiera Blu"],["ristorante","Ristorante"],["bar","Bar"],["lettini","Lettini"],["wc","WC"],
+  ["sorveglianza","Sorveglianza"],["cani","Cani ammessi"],["ombra","Ombra naturale"],["sport","Sport acquatici"]];
+const contS=document.getElementById("filtriServizi");
+contS.innerHTML=SRV_F.map(([k,et])=>'<button class="f" data-s="'+k+'" aria-pressed="false">'+et+'</button>').join("");
+function applicaFiltri(){
+  ESCLUSE=new Set();
+  SPIAGGE.forEach((b,i)=>{
+    const ok=(fAcc.size===0||fAcc.has(b.acc)) && [...fSrv].every(k=>b.sv[k]>0);
+    if(!ok) ESCLUSE.add(i);
+    MARKER[i].classList.toggle("spento",!ok);
+  });
+  disegnaElenco(document.getElementById("cerca").value);
+}
+contA.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+  const k=b.dataset.a; fAcc.has(k)?fAcc.delete(k):fAcc.add(k); b.setAttribute("aria-pressed",fAcc.has(k)); applicaFiltri();});
+contS.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+  const k=b.dataset.s; fSrv.has(k)?fSrv.delete(k):fSrv.add(k); b.setAttribute("aria-pressed",fSrv.has(k)); applicaFiltri();});
+document.getElementById("azzera").addEventListener("click",()=>{
+  fAcc.clear();fSrv.clear();
+  document.querySelectorAll(".f").forEach(b=>b.setAttribute("aria-pressed","false"));
+  document.getElementById("cerca").value=""; applicaFiltri();});
+
+
+disegnaElenco(""); vuoto();
+if(stretto()) elencoAperto(false);
+</script>
+</body>
+</html>

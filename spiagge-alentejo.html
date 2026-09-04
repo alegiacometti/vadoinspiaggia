@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="description" content="Le spiagge dell'Alentejo: 31 spiagge in 4 zone costiere, con carta navigabile, meteo, stato del mare, accessi, servizi e parcheggi.">
+<meta name="theme-color" content="#083c5c">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="it_IT">
+<meta property="og:site_name" content="Vado in spiaggia">
+<meta property="og:title" content="Le spiagge dell'Alentejo">
+<meta property="og:description" content="Le spiagge dell'Alentejo: 31 spiagge in 4 zone costiere, con carta navigabile, meteo, stato del mare, accessi, servizi e parcheggi.">
+<title>Le spiagge dell'Alentejo · carta, meteo e mare in tempo reale</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="carte-spiagge.css">
+<script src="configurazione.js"></script>
+<style>/* misure di questa regione — vedi carte-spiagge.css */
+:root{--colonna-carta:640px;--telaio-h:min(46vh,440px)}</style>
+</head>
+<body>
+<div class="guscio">
+
+  <header class="testata">
+    <div>
+      <a class="ritorno" href="index.html#pt">← Tutte le regioni: Portogallo</a>
+      <h1>Le spiagge <em>dell'Alentejo</em> <span class="bandiere"><img class="bandiera" src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag%20of%20Portugal.svg?width=96" width="96" alt="Bandiera: Portogallo" title="Portogallo" loading="lazy" decoding="async" onerror="this.dataset.b?(this.src=this.dataset.b,this.removeAttribute('data-b')):this.remove()"><img class="bandiera" src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag%20of%20Alentejo.svg?width=96" width="96" alt="Bandiera: l'Alentejo" title="l'Alentejo" loading="lazy" decoding="async" onerror="this.dataset.b?(this.src=this.dataset.b,this.removeAttribute('data-b')):this.remove()"></span></h1>
+    </div>
+  </header>
+
+  <div class="strumenti">
+    <div class="gruppo"><span>Filtra per accesso</span><div class="filtri" id="filtriAccesso"></div></div>
+    <div class="gruppo"><span>Filtra per servizi</span><div class="filtri" id="filtriServizi"></div></div>
+    <div class="gruppo"><span>&nbsp;</span><button class="azzera" id="azzera">Azzera i filtri</button></div>
+  </div>
+
+  <div class="impaginato">
+    <div class="colonna-carta">
+      <div class="carta-cont">
+        <div class="zone" id="zone"></div>
+        <div class="telaio" id="telaio" tabindex="0" aria-label="Carta navigabile: due dita per spostare e ingrandire, rotella per zoomare, trascina per spostarti, frecce per muoverti">
+          <svg class="carta" id="carta" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"
+               role="img" aria-label="Carta dell'Alentejo con le spiagge">
+            <g id="gGriglia"></g><g id="gBatim"></g><g id="gVicine"></g><g id="gTerra"></g>
+            <g id="gCime"></g><g id="gPaesi"></g><g id="gMarker"></g><g id="gQui"></g>
+          </svg>
+          <div class="comandi">
+            <button type="button" id="zPiu" aria-label="Ingrandisci" title="Ingrandisci">+</button>
+            <button type="button" id="zMeno" aria-label="Riduci" title="Riduci">−</button>
+            <button type="button" class="fit" id="zFit" aria-label="Tutta la regione" title="Tutta la regione">⤢</button>
+            <button type="button" class="qui" id="zQui" aria-label="La mia posizione" title="La mia posizione">◎</button>
+          </div>
+          <div class="bussola" id="bussola">scala —</div>
+          <div class="avviso-qui" id="avvisoQui" hidden></div>
+        </div>
+        <div class="legenda">
+          <div class="lg-riga" id="lgMisure"></div>
+          <div class="lg-riga lg-colonna" id="lgColori"></div>
+        </div>
+      </div>
+      <div class="cerca">
+        <input id="cerca" type="search" placeholder="Cerca una spiaggia o un comune…" aria-label="Cerca">
+        <span id="conta"></span>
+        <button type="button" class="tendina" id="apriElenco" aria-expanded="true" aria-label="Mostra o nascondi l'elenco">▾</button>
+      </div>
+      <div class="elenco" id="elenco"></div>
+    </div>
+
+    <div class="pannello">
+      <div class="scheda" id="scheda"></div>
+      <p class="avvertenza"><b>Avvertenza</b>
+        Le informazioni riportate — accessi, servizi, parcheggi, condizioni meteo e stato del mare — provengono da fonti pubbliche
+        e da modelli previsionali, sono fornite a puro titolo indicativo e possono essere incomplete, imprecise o non aggiornate.
+        Non si assume alcuna responsabilità per errori, omissioni o per le decisioni prese sulla base di questi dati.
+        Il mare è un ambiente potenzialmente pericoloso: verifica sempre le condizioni sul posto, rispetta le bandiere e le
+        indicazioni dei bagnini e valuta con prudenza le spiagge non sorvegliate e gli accessi fuori strada.
+      </p>
+      <p class="piede">
+        Meteo, vento e onda da <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0), aggiornati al momento dell'apertura della scheda.
+        Sono previsioni da modello, non misure di boa: sotto costa, e soprattutto nelle baie chiuse, l'onda reale può essere molto più bassa di quella indicata.
+L'immagine di apertura è la vista aerea reale del punto (Esri World Imagery — Maxar, Earthstar Geographics), centrata sulle coordinate della spiaggia.
+        Foto, recensioni, mappa e Street View arrivano da Google Maps: le foto non sono scaricabili senza una chiave API a pagamento, quindi i pulsanti aprono direttamente la scheda del luogo,
+        mentre mappa satellitare e Street View sono incorporati nella “scheda completa”.
+        La webcam appare soltanto quando ne esiste una puntata su quella spiaggia o sulla sua baia. Servizi e parcheggi da fonti pubbliche recenti: cambiano ogni stagione.
+        Contorno della regione e confini con Abruzzo, Campania, Lazio e Puglia da dati ISTAT/openpolis (limiti amministrativi); batimetriche calcolate come linee equidistanti dalla costa.
+        Le regioni confinanti sono sfumate per distinguere la costa vera dal confine di terra, disegnato tratteggiato.
+        Le linee azzurre al largo sono equidistanti dalla costa, a scopo grafico: non sono isobate e non indicano la profondità.
+        La voce “cani ammessi” dipende da ordinanze comunali che cambiano ogni stagione: dove non risulta un divieto o un permesso
+        esplicito è segnata come parziale, cioè da verificare sul posto.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ======================= PROIEZIONE ======================= */
+const LON0=-9.023, LAT0=38.685, KX=800.8, KY=1016.2;
+const px=lo=>(lo-LON0)*KX, py=la=>(LAT0-la)*KY;
+const PIENO={"x": -5.0, "y": 23.0, "w": 291.0, "h": 1400.0};
+
+const ACCESSI={
+  auto:    {et:"Auto fino alla spiaggia",     col:"#1786bd", glifo:"AUTO"},
+  sterrato:{et:"Auto + strada sterrata",      col:"#cf8a13", glifo:"STERRATO"},
+  breve:   {et:"Auto + breve tratto a piedi", col:"#2f9772", glifo:"5–15 MIN"},
+  lungo:   {et:"Solo a piedi",                col:"#dd5b45", glifo:"20–60 MIN"},
+  barca:   {et:"Solo in barca",               col:"#6470c4", glifo:"BARCA"},
+  nc:      {et:"Accesso non documentato",    col:"#93a6b3", glifo:"N/C"}
+};
+const ZONE={"troia": "Tróia e la Comporta", "sines": "Sines e Santo André", "milfontes": "Vila Nova de Milfontes e il Mira", "zambujeira": "Da Zambujeira al Carvalhal"};
+const SERVIZI=[["parcheggio","Parcheggio"],["ristorante","Ristorante"],["bar","Bar"],
+  ["lettini","Lettini e ombrelloni"],["docce","Docce"],["wc","WC"],["sorveglianza","Sorveglianza"],
+  ["sport","Sport acquatici"],["cani","Cani ammessi"],["ombra","Ombra naturale"]];
+const ICONE={
+  parcheggio:'<rect x="2.6" y="2.6" width="14.8" height="14.8" rx="3.4"/><path d="M7.6 14.6V5.6h2.9a2.6 2.6 0 010 5.2H7.6"/>',
+  ristorante:'<path d="M5.2 2.6v5.2a1.9 1.9 0 001.9 1.9v7.7"/><path d="M5.2 2.6v3.9M9 2.6v3.9M9 2.6v5.2a1.9 1.9 0 01-1.9 1.9"/><path d="M15.4 2.6c-1.5 1.2-2.1 2.9-2.1 4.7 0 1.3.7 2.1 2.1 2.3v7.8"/>',
+  bar:'<path d="M3.4 3.6h13.2L10 10.4z"/><path d="M10 10.4v5.2M6.6 16.4h6.8"/>',
+  lettini:'<path d="M2.4 9.6a7.6 7.6 0 0115.2 0z"/><path d="M10 9.6v6.6"/><path d="M7.9 16.6a2.1 2.1 0 004.2 0"/>',
+  docce:'<path d="M4.2 3.4h5.4a4 4 0 014 4v1.1"/><path d="M10.6 8.5h6.8"/><path d="M12.4 11.6v1.2M14 14.3v1.2M15.6 11.6v1.2M11 15v1.2M17.2 15v1.2"/>',
+  wc:'<rect x="2.6" y="2.6" width="14.8" height="14.8" rx="3.4"/><path d="M5.2 6.8l1.3 6.4 1.4-4 1.4 4 1.3-6.4"/><path d="M12.6 13.2V6.8h1.9a1.7 1.7 0 010 3.4h-1.9"/>',
+  sorveglianza:'<circle cx="10" cy="10" r="7.5"/><circle cx="10" cy="10" r="3.1"/><path d="M4.7 4.7l3 3M15.3 4.7l-3 3M4.7 15.3l3-3M15.3 15.3l-3-3"/>',
+  sport:'<path d="M1.8 15.2c1.7 0 1.7-1.7 3.4-1.7s1.7 1.7 3.4 1.7 1.7-1.7 3.4-1.7 1.7 1.7 3.4 1.7 1.7-1.7 2.8-1.7"/><path d="M10 11.4V2.8l5.2 8.6z"/>',
+  cani:'<ellipse cx="10" cy="13.4" rx="4.1" ry="3.4"/><circle cx="4.7" cy="9.3" r="1.85"/><circle cx="7.9" cy="5.7" r="1.85"/><circle cx="12.1" cy="5.7" r="1.85"/><circle cx="15.3" cy="9.3" r="1.85"/>',
+  ombra:'<path d="M10 2.4l3.9 5.8h-2.3l3 4.6H5.4l3-4.6H6.1z"/><path d="M10 12.8v4.8"/>'
+};
+
+const SPIAGGE=[{"sid": "lisboa-088", "n": "Tróia - Mar", "com": "Grândola", "z": "troia", "lat": 38.49193, "lon": -8.906541, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf", "Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio. Rientra nel programma Praia Acessível. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 3500 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCU9C"}, {"sid": "lisboa-089", "n": "Tróia - Galé", "com": "Grândola", "z": "troia", "lat": 38.484632, "lon": -8.904023, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 1300 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCP3E"}, {"sid": "lisboa-090", "n": "Tróia - Bico das Lulas", "com": "Grândola", "z": "troia", "lat": 38.481016, "lon": -8.898272, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 1900 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCN9M"}, {"sid": "lisboa-091", "n": "Camarinhas", "com": "Grândola", "z": "troia", "lat": 38.463108, "lon": -8.879013, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 0, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 1100 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCH9J"}, {"sid": "lisboa-092", "n": "Atlântica", "com": "Grândola", "z": "troia", "lat": 38.452452, "lon": -8.862373, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf", "Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio. Rientra nel programma Praia Acessível. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 2000 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCP3X"}, {"sid": "lisboa-093", "n": "Comporta", "com": "Grândola", "z": "troia", "lat": 38.381442, "lon": -8.802598, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf", "Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio. Rientra nel programma Praia Acessível. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 2000 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCV7K"}, {"sid": "lisboa-094", "n": "Carvalhal", "com": "Grândola", "z": "troia", "lat": 38.305804, "lon": -8.778507, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf", "Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio. Rientra nel programma Praia Acessível. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 2000 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCN8T"}, {"sid": "lisboa-095", "n": "Pego", "com": "Grândola", "z": "troia", "lat": 38.292578, "lon": -8.777506, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf", "Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio. Rientra nel programma Praia Acessível. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 2000 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCD8F"}, {"sid": "lisboa-096", "n": "Galé - Fontaínhas", "com": "Grândola", "z": "troia", "lat": 38.204233, "lon": -8.776487, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 1000 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCH3F"}, {"sid": "lisboa-097", "n": "Aberta Nova", "com": "Grândola", "z": "troia", "lat": 38.177447, "lon": -8.780517, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 1700 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCK8F"}, {"sid": "lisboa-098", "n": "Melides", "com": "Grândola", "z": "troia", "lat": 38.128955, "lon": -8.791731, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf", "Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio. Rientra nel programma Praia Acessível. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 2000 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCU7H"}, {"sid": "lisboa-099", "n": "Costa de Santo André", "com": "Santiago Do Cacém", "z": "sines", "lat": 38.11407, "lon": -8.796455, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf", "Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio. Rientra nel programma Praia Acessível. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 2500 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCU7M"}, {"sid": "lisboa-100", "n": "Monte Velho\\Porto das Carretas", "com": "Santiago Do Cacém", "z": "sines", "lat": 38.08185, "lon": -8.811468, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCP3W"}, {"sid": "lisboa-101", "n": "Fonte do Cortiço", "com": "Santiago Do Cacém", "z": "sines", "lat": 38.055291, "lon": -8.820566, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 400 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCL3D"}, {"sid": "lisboa-102", "n": "Vasco da Gama", "com": "Sines", "z": "sines", "lat": 37.953364, "lon": -8.864912, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio. Rientra nel programma Praia Acessível. Capacità di carico stimata in 2000 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCU2V"}, {"sid": "lisboa-103", "n": "São Torpes", "com": "Sines", "z": "sines", "lat": 37.925464, "lon": -8.806458, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 2000 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCX3M"}, {"sid": "lisboa-104", "n": "Morgavel", "com": "Sines", "z": "sines", "lat": 37.907431, "lon": -8.798503, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 400 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCP2C"}, {"sid": "lisboa-105", "n": "Vieirinha - Vale de Figueiros", "com": "Sines", "z": "sines", "lat": 37.895564, "lon": -8.796734, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 1300 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCH7F"}, {"sid": "lisboa-106", "n": "Grande de Porto Covo", "com": "Sines", "z": "sines", "lat": 37.855819, "lon": -8.79344, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 400 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCD9C"}, {"sid": "lisboa-107", "n": "Ilha do Pessegueiro", "com": "Sines", "z": "sines", "lat": 37.829026, "lon": -8.790938, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 700 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCF7C"}, {"sid": "alentejo-001", "n": "Malhão Norte", "com": "Odemira", "z": "milfontes", "lat": 37.783864, "lon": -8.801333, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 1000 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCE7Q"}, {"sid": "alentejo-002", "n": "Malhão Sul", "com": "Odemira", "z": "milfontes", "lat": 37.78025, "lon": -8.801778, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 600 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCE7Q"}, {"sid": "alentejo-003", "n": "Franquia", "com": "Odemira", "z": "milfontes", "lat": 37.722724, "lon": -8.787634, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Surf", "Laguna"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 1400 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCP3F"}, {"sid": "alentejo-004", "n": "Farol", "com": "Odemira", "z": "milfontes", "lat": 37.720274, "lon": -8.78879, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Laguna"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, parcheggio. Capacità di carico stimata in 700 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCU7J"}, {"sid": "alentejo-005", "n": "Furnas Rio", "com": "Odemira", "z": "milfontes", "lat": 37.71905, "lon": -8.783595, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf", "Accessibile", "Laguna"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, parcheggio. Rientra nel programma Praia Acessível. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 1000 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCW9Q"}, {"sid": "alentejo-006", "n": "Furnas Mar", "com": "Odemira", "z": "milfontes", "lat": 37.716319, "lon": -8.784175, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf", "Accessibile", "Laguna"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, parcheggio. Rientra nel programma Praia Acessível. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 1500 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCQ7K"}, {"sid": "alentejo-007", "n": "Almograve Norte", "com": "Odemira", "z": "milfontes", "lat": 37.652347, "lon": -8.80195, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, docce, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 400 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCE8D"}, {"sid": "alentejo-008", "n": "Almograve Sul", "com": "Odemira", "z": "zambujeira", "lat": 37.648622, "lon": -8.804853, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 100 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCE8D"}, {"sid": "alentejo-009", "n": "Zambujeira do Mar", "com": "Odemira", "z": "zambujeira", "lat": 37.523043, "lon": -8.786685, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf", "Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, docce, parcheggio. Rientra nel programma Praia Acessível. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 900 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCK7T"}, {"sid": "alentejo-010", "n": "Alteirinhos", "com": "Odemira", "z": "zambujeira", "lat": 37.518636, "lon": -8.787103, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, docce, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 100 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCU7Q"}, {"sid": "alentejo-011", "n": "Carvalhal (Odemira)", "com": "Odemira", "z": "zambujeira", "lat": 37.499891, "lon": -8.790684, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf", "Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio. Rientra nel programma Praia Acessível. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 300 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCF8X"}];
+const WEBCAM=[];
+const camDella=b=>WEBCAM.find(c=>c.sp.includes(b.n))||null;
+
+/* ======================= GEOMETRIA ======================= */
+const TERRA="M1051.4,1637.4L1060.7,1634.8L1070.7,1623.0L1085.4,1619.6L1094.1,1608.6L1106.1,1608.6L1116.8,1594.2L1126.0,1592.3L1126.0,1594.7L1124.8,1597.6L1114.1,1606.9L1078.1,1634.0L1028.1,1666.2L1024.4,1664.9L1025.1,1663.4L1038.0,1656.0L1052.4,1640.3L1051.4,1637.4ZM1120.1,1591.7L1116.8,1591.7L1115.1,1587.8L1122.1,1582.3L1117.4,1584.9L1106.1,1583.2L1114.1,1584.9L1114.1,1587.4L1111.8,1587.0L1115.1,1591.2L1106.8,1605.2L1104.1,1607.8L1089.4,1608.6L1075.4,1621.3L1070.1,1622.2L1050.7,1636.5L1046.7,1645.9L1036.0,1653.5L1037.4,1644.2L1033.4,1658.5L1023.3,1651.7L1028.4,1657.3L1022.7,1665.4L1018.0,1663.7L1014.0,1667.9L997.3,1673.8L986.0,1673.8L969.9,1683.1L965.3,1680.6L951.3,1684.8L948.6,1688.2L937.9,1687.4L935.9,1692.4L929.3,1691.6L928.0,1688.2L916.6,1689.9L910.9,1693.7L910.6,1700.9L905.2,1698.4L901.9,1702.6L898.5,1702.6L894.6,1698.4L887.2,1698.4L880.9,1706.4L882.2,1709.8L876.6,1712.7L872.9,1712.3L868.9,1703.9L878.5,1706.0L878.2,1703.9L867.9,1699.2L859.9,1688.2L861.5,1695.4L853.8,1702.6L846.5,1706.0L837.8,1702.6L838.1,1706.5L835.2,1706.8L831.5,1704.7L828.8,1695.4L831.5,1690.3L831.2,1678.9L824.5,1679.8L823.1,1675.5L824.8,1683.6L821.8,1685.7L816.5,1683.1L815.5,1692.9L813.2,1693.2L795.1,1678.0L809.2,1692.4L849.9,1721.2L859.9,1732.2L851.9,1728.8L819.2,1700.9L747.8,1649.2L727.1,1638.2L701.7,1631.4L673.7,1619.6L634.3,1626.3L617.7,1623.0L608.3,1630.6L591.7,1637.4L577.6,1638.2L544.9,1615.3L530.9,1610.3L516.9,1610.3L498.2,1620.4L464.8,1625.5L432.8,1611.1L402.8,1605.2L400.4,1581.9L394.5,1570.0L404.5,1565.0L401.8,1563.3L403.5,1557.7L392.4,1569.2L391.7,1578.5L397.2,1585.3L394.1,1595.0L374.1,1590.7L360.1,1595.0L350.1,1589.1L324.7,1587.4L324.1,1584.0L340.0,1581.5L342.4,1568.4L339.7,1568.4L340.1,1578.1L330.7,1579.8L322.4,1571.8L322.1,1568.0L320.4,1576.0L312.4,1586.1L321.4,1584.9L321.4,1588.3L300.0,1594.2L283.7,1609.0L287.0,1625.9L285.4,1630.6L269.3,1625.5L237.3,1625.5L216.6,1637.4L192.5,1643.3L187.9,1649.2L169.9,1645.9L147.2,1650.1L134.5,1656.0L125.9,1669.6L119.9,1665.3L107.8,1670.4L102.5,1669.5L93.1,1688.2L81.1,1690.7L74.1,1700.4L78.8,1703.8L73.1,1711.0L69.8,1707.7L63.1,1710.2L61.1,1718.7L56.8,1713.1L60.1,1706.4L46.4,1686.5L33.1,1684.8L31.1,1692.4L28.4,1689.0L25.7,1691.6L22.1,1689.4L27.4,1680.1L26.8,1675.9L34.1,1666.6L31.4,1664.0L33.4,1656.4L42.4,1643.3L48.1,1639.5L50.7,1617.5L58.5,1612.0L76.1,1585.3L81.5,1567.5L94.8,1543.8L87.4,1526.0L89.5,1519.2L81.4,1511.6L94.4,1508.6L100.8,1503.2L127.5,1444.8L129.5,1434.5L124.2,1424.4L126.2,1414.2L117.5,1411.7L119.5,1394.7L116.2,1385.4L122.5,1382.5L136.9,1360.9L150.2,1331.3L158.9,1318.5L172.2,1285.5L171.6,1277.0L178.2,1262.7L180.2,1247.4L178.9,1224.5L182.2,1216.1L179.5,1212.7L182.2,1210.2L180.9,1203.4L184.2,1198.3L182.9,1192.3L187.6,1166.9L181.6,1150.0L182.9,1142.4L167.6,1118.7L168.2,1114.4L162.2,1102.6L168.2,1089.0L172.2,1053.5L181.6,1025.5L182.9,1004.4L180.9,996.8L187.6,987.4L188.6,980.2L195.3,979.4L201.3,973.5L213.6,971.3L197.9,972.6L183.9,981.1L178.2,963.7L169.9,958.2L166.9,952.7L173.6,931.5L174.3,901.9L182.9,874.8L181.6,865.5L184.2,860.4L178.2,845.2L182.2,835.0L179.6,821.5L180.9,810.5L171.6,772.3L158.6,762.6L139.2,755.8L123.2,743.1L112.5,745.7L107.5,739.3L113.2,728.7L119.2,727.1L126.9,715.6L144.2,678.3L158.9,639.4L184.2,554.7L194.2,507.3L193.6,492.9L196.9,479.3L190.3,375.1L180.9,335.4L159.5,277.8L124.5,236.7L108.5,222.4L100.5,207.1L86.8,194.8L91.1,197.7L91.8,194.3L97.8,194.3L107.2,197.7L106.5,202.0L99.5,198.2L106.2,203.3L110.5,215.6L112.2,212.6L109.2,200.3L133.9,232.5L154.5,244.3L160.9,265.9L176.2,288.8L176.2,298.1L182.5,307.9L177.5,297.2L177.5,282.0L170.2,276.1L171.2,272.3L179.6,273.6L166.9,268.5L167.2,264.7L171.9,268.1L177.6,265.1L171.2,266.4L157.9,240.9L165.2,243.5L168.5,241.8L166.5,249.4L171.8,244.3L183.9,246.0L190.2,251.5L190.2,255.0L185.6,258.3L189.2,264.7L193.6,254.1L192.6,249.4L205.9,252.0L206.9,254.9L197.3,267.2L203.3,261.2L205.9,262.1L211.3,254.5L214.6,254.5L231.9,270.6L249.3,272.3L262.0,268.9L292.0,285.8L309.4,285.0L314.4,281.1L288.7,281.6L249.3,248.5L244.6,246.0L243.3,251.1L236.3,247.3L237.6,243.0L234.3,236.3L236.0,235.0L239.0,228.7L235.0,222.7L235.0,219.4L238.3,217.6L233.3,218.1L232.3,215.1L238.3,210.1L240.3,204.1L233.9,211.3L236.3,188.0L233.6,174.4L235.3,172.4L239.3,174.9L245.3,173.2L252.3,167.7L242.6,170.6L237.9,165.6L232.6,169.8L225.6,164.3L222.9,149.9L225.6,141.4L223.6,128.7L220.9,127.9L227.3,119.0L238.0,114.8L227.3,117.3L217.6,124.5L220.9,133.0L220.6,135.9L216.3,134.7L217.9,149.5L203.9,162.2L193.3,161.3L188.6,173.2L174.2,180.4L186.6,176.6L197.9,165.6L204.9,168.5L194.9,177.0L196.6,179.1L202.6,170.6L207.3,171.5L210.3,176.1L212.9,187.2L207.6,191.4L214.9,190.6L213.6,199.9L205.9,208.7L200.6,207.9L198.0,200.3L197.6,206.6L202.3,211.7L189.9,220.6L171.9,214.7L170.2,211.7L174.2,210.9L171.2,207.1L168.5,209.6L159.2,204.5L123.8,174.1L108.5,167.3L100.5,167.3L81.1,177.4L74.1,187.2L71.1,201.1L61.7,205.4L44.4,204.5L39.8,209.6L32.4,210.4L21.1,226.5L4.4,234.2L-6.3,242.6L-17.0,242.6L-24.3,248.6L-33.0,249.4L-35.7,254.5L-69.7,248.5L-75.4,250.7L-76.3,257.0L-88.4,257.9L-93.1,261.3L-118.4,257.9L-125.7,267.2L-132.4,270.6L-136.4,278.2L-147.1,280.7L-162.1,277.7L-156.8,258.3L-132.7,207.5L-130.8,149.9L-160.8,64.4L-180.5,37.7L-205.2,20.0L-208.8,13.6L-195.1,13.1L-196.8,17.0L-193.1,18.2L-177.2,14.0L-167.7,8.1L-130.4,5.5L-106.4,-3.8L-99.7,-3.8L-98.1,-1.7L-104.1,10.2L-99.7,17.4L-95.7,14.8L-89.7,25.9L-65.4,33.0L-77.0,39.4L-83.7,31.8L-89.7,30.9L-92.4,36.8L-100.7,41.5L-97.4,42.4L-97.4,47.5L-93.7,41.9L-85.7,41.1L-74.3,47.9L-69.6,61.4L-70.0,44.1L-63.0,34.3L-49.7,38.5L-45.7,36.0L-43.3,39.8L-46.4,43.6L-53.7,42.8L-54.7,49.1L-45.6,49.5L-47.0,53.8L-37.0,56.3L-40.7,71.2L-39.0,73.3L-38.6,67.8L-35.6,65.6L-24.3,84.3L-26.6,56.8L-32.3,49.5L-36.7,50.0L-35.3,34.8L-49.7,34.3L-50.0,27.9L-57.7,28.4L-57.7,23.3L-17.0,3.8L-18.6,15.2L-16.4,20.7L-12.7,19.5L-13.0,24.2L-9.6,14.0L9.7,21.6L13.1,27.5L15.7,27.5L12.7,25.4L12.7,17.8L5.4,11.9L11.7,-4.6L15.1,-5.5L19.1,3.0L21.4,1.7L19.1,-4.6L23.1,-6.4L31.1,-3.8L33.7,4.7L34.1,-7.6L38.4,-13.9L46.4,-12.3L50.5,-5.5L47.8,-13.1L33.1,-15.7L32.4,-18.2L10.4,-19.1L-11.0,-16.5L-19.0,-6.3L-25.3,-5.9L-22.7,-32.2L-19.0,-36.0L11.7,-48.7L12.4,-51.2L5.8,-47.8L5.4,-50.8L15.1,-58.0L36.4,-66.4L42.8,-72.0L43.8,-77.5L61.1,-80.8L77.1,-75.8L79.5,-80.4L72.8,-94.8L69.4,-123.6L59.8,-135.0L50.5,-141.0L46.8,-148.2L47.4,-153.3L58.8,-164.3L50.5,-159.6L43.1,-149.5L36.7,-151.6L29.4,-168.5L30.1,-181.2L34.7,-188.0L34.1,-197.3L21.4,-210.0L26.1,-226.9L23.4,-254.8L36.4,-277.3L52.4,-287.5L61.5,-299.8L61.8,-317.1L51.4,-294.7L33.1,-279.0L17.4,-254.9L1.4,-221.8L0.0,-204.9L-13.0,-190.1L-35.3,-171.9L-52.0,-136.3L-58.0,-96.5L-58.7,-59.2L-62.0,-50.0L-79.7,-25.8L-98.4,-18.2L-110.4,-17.4L-155.1,-3.0L-167.1,-10.6L-207.8,-10.6L-241.2,13.2L-262.6,5.5L-278.6,-5.5L-283.9,-5.5L-299.3,-13.9L-314.6,-12.2L-320.6,-2.1L-327.3,-3.0L-334.6,-9.7L-350.0,-9.7L-373.0,-22.8L-373.7,-27.1L-361.6,-55.9L-363.6,-66.9L-372.0,-78.3L-376.3,-79.6L-382.3,-99.9L-352.9,-160.9L-315.6,-267.6L-316.9,-277.8L-320.3,-282.0L-320.9,-299.7L-318.3,-309.1L-321.6,-312.5L-324.3,-325.2L-320.3,-336.2L-321.6,-344.7L-318.3,-360.7L-314.9,-366.7L-314.9,-387.0L-319.0,-399.7L-299.6,-435.2L-294.9,-458.1L-279.6,-477.6L-276.2,-490.3L-270.2,-498.8L-268.9,-510.6L-260.2,-527.6L-253.6,-554.7L-254.9,-571.6L-250.2,-589.4L-250.2,-608.9L-255.6,-615.6L-254.2,-621.5L-260.2,-641.9L-272.3,-653.8L-269.6,-659.6L-272.9,-676.6L-281.2,-685.5L-283.9,-682.1L-295.2,-682.1L-308.6,-688.9L-308.9,-692.7L-300.6,-700.7L-285.2,-699.9L-284.6,-708.3L-278.2,-701.1L-277.9,-694.0L-270.6,-690.6L-261.2,-692.3L-254.2,-697.8L-255.2,-707.5L-250.5,-703.3L-242.5,-704.2L-219.2,-717.7L-191.8,-739.7L-169.8,-762.6L-166.8,-762.1L-168.4,-757.5L-160.8,-757.1L-158.1,-744.4L-151.4,-736.7L-160.8,-732.5L-154.1,-729.1L-160.8,-723.2L-161.1,-718.5L-154.4,-725.3L-146.4,-723.6L-144.4,-726.1L-140.5,-716.8L-136.8,-720.6L-140.1,-732.5L-128.1,-733.3L-133.1,-739.7L-142.5,-735.4L-145.7,-752.4L-151.8,-757.5L-161.1,-759.2L-166.1,-765.5L-151.4,-786.7L-144.1,-807.0L-139.1,-807.4L-133.1,-815.9L-130.0,-817.0L1126.0,-817.0L1126.0,1587.8L1120.1,1591.7ZM905.5,-438.1L881.5,-401.4L873.7,-395.2L869.9,-385.0L831.2,-348.9L830.8,-345.5L845.9,-346.1L870.2,-359.1L866.6,-363.9L867.0,-371.5L876.4,-381.1L914.4,-394.1L926.2,-392.4L926.2,-394.3L907.3,-399.4L902.9,-404.2L903.1,-412.7L912.9,-426.2L921.5,-451.6L905.5,-438.1ZM-30.0,-174.4L-12.3,-185.0L-4.3,-193.5L-6.6,-183.7L-14.0,-172.7L-16.7,-159.2L-43.6,-130.8L-49.3,-128.7L-48.0,-140.6L-38.6,-154.1L-30.0,-174.4Z";
+const COSTA=["M1051.4,1637.4L1060.7,1634.8L1070.7,1623.0L1085.4,1619.6L1094.1,1608.6L1106.1,1608.6L1116.8,1594.2L1126.0,1592.3L1126.0,1594.7L1124.8,1597.6L1114.1,1606.9L1078.1,1634.0L1028.1,1666.2L1024.4,1664.9L1025.1,1663.4L1038.0,1656.0L1052.4,1640.3L1051.4,1637.4Z", "M1120.1,1591.7L1116.8,1591.7L1115.1,1587.8L1122.1,1582.3L1117.4,1584.9L1106.1,1583.2L1114.1,1584.9L1114.1,1587.4L1111.8,1587.0L1115.1,1591.2L1106.8,1605.2L1104.1,1607.8L1089.4,1608.6L1075.4,1621.3L1070.1,1622.2L1050.7,1636.5L1046.7,1645.9L1036.0,1653.5L1037.4,1644.2L1033.4,1658.5L1023.3,1651.7L1028.4,1657.3L1022.7,1665.4L1018.0,1663.7L1014.0,1667.9L997.3,1673.8L986.0,1673.8L969.9,1683.1L965.3,1680.6L951.3,1684.8L948.6,1688.2L937.9,1687.4L935.9,1692.4L929.3,1691.6L928.0,1688.2L916.6,1689.9L910.9,1693.7L910.6,1700.9L905.2,1698.4L901.9,1702.6L898.5,1702.6L894.6,1698.4L887.2,1698.4L880.9,1706.4L882.2,1709.8L876.6,1712.7L872.9,1712.3L868.9,1703.9L878.5,1706.0L878.2,1703.9L867.9,1699.2L859.9,1688.2L861.5,1695.4L853.8,1702.6L846.5,1706.0L837.8,1702.6L838.1,1706.5L835.2,1706.8L831.5,1704.7L828.8,1695.4L831.5,1690.3L831.2,1678.9L824.5,1679.8L823.1,1675.5L824.8,1683.6L821.8,1685.7L816.5,1683.1L815.5,1692.9L813.2,1693.2L795.1,1678.0L809.2,1692.4L849.9,1721.2L859.9,1732.2L851.9,1728.8L819.2,1700.9L747.8,1649.2L727.1,1638.2L701.7,1631.4L673.7,1619.6L634.3,1626.3L617.7,1623.0L608.3,1630.6L591.7,1637.4L577.6,1638.2L544.9,1615.3L530.9,1610.3L516.9,1610.3L498.2,1620.4L464.8,1625.5L432.8,1611.1L402.8,1605.2L400.4,1581.9L394.5,1570.0L404.5,1565.0L401.8,1563.3L403.5,1557.7L392.4,1569.2L391.7,1578.5L397.2,1585.3L394.1,1595.0L374.1,1590.7L360.1,1595.0L350.1,1589.1L324.7,1587.4L324.1,1584.0L340.0,1581.5L342.4,1568.4L339.7,1568.4L340.1,1578.1L330.7,1579.8L322.4,1571.8L322.1,1568.0L320.4,1576.0L312.4,1586.1L321.4,1584.9L321.4,1588.3L300.0,1594.2L283.7,1609.0L287.0,1625.9L285.4,1630.6L269.3,1625.5L237.3,1625.5L216.6,1637.4L192.5,1643.3L187.9,1649.2L169.9,1645.9L147.2,1650.1L134.5,1656.0L125.9,1669.6L119.9,1665.3L107.8,1670.4L102.5,1669.5L93.1,1688.2L81.1,1690.7L74.1,1700.4L78.8,1703.8L73.1,1711.0L69.8,1707.7L63.1,1710.2L61.1,1718.7L56.8,1713.1L60.1,1706.4L46.4,1686.5L33.1,1684.8L31.1,1692.4L28.4,1689.0L25.7,1691.6L22.1,1689.4L27.4,1680.1L26.8,1675.9L34.1,1666.6L31.4,1664.0L33.4,1656.4L42.4,1643.3L48.1,1639.5L50.7,1617.5L58.5,1612.0L76.1,1585.3L81.5,1567.5L94.8,1543.8L87.4,1526.0L89.5,1519.2L81.4,1511.6L94.4,1508.6L100.8,1503.2L127.5,1444.8L129.5,1434.5L124.2,1424.4L126.2,1414.2L117.5,1411.7L119.5,1394.7L116.2,1385.4L122.5,1382.5L136.9,1360.9L150.2,1331.3L158.9,1318.5L172.2,1285.5L171.6,1277.0L178.2,1262.7L180.2,1247.4L178.9,1224.5L182.2,1216.1L179.5,1212.7L182.2,1210.2L180.9,1203.4L184.2,1198.3L182.9,1192.3L187.6,1166.9L181.6,1150.0L182.9,1142.4L167.6,1118.7L168.2,1114.4L162.2,1102.6L168.2,1089.0L172.2,1053.5L181.6,1025.5L182.9,1004.4L180.9,996.8L187.6,987.4L188.6,980.2L195.3,979.4L201.3,973.5L213.6,971.3L197.9,972.6L183.9,981.1L178.2,963.7L169.9,958.2L166.9,952.7L173.6,931.5L174.3,901.9L182.9,874.8L181.6,865.5L184.2,860.4L178.2,845.2L182.2,835.0L179.6,821.5L180.9,810.5L171.6,772.3L158.6,762.6L139.2,755.8L123.2,743.1L112.5,745.7L107.5,739.3L113.2,728.7L119.2,727.1L126.9,715.6L144.2,678.3L158.9,639.4L184.2,554.7L194.2,507.3L193.6,492.9L196.9,479.3L190.3,375.1L180.9,335.4L159.5,277.8L124.5,236.7L108.5,222.4L100.5,207.1L86.8,194.8L91.1,197.7L91.8,194.3L97.8,194.3L107.2,197.7L106.5,202.0L99.5,198.2L106.2,203.3L110.5,215.6L112.2,212.6L109.2,200.3L133.9,232.5L154.5,244.3L160.9,265.9L176.2,288.8L176.2,298.1L182.5,307.9L177.5,297.2L177.5,282.0L170.2,276.1L171.2,272.3L179.6,273.6L166.9,268.5L167.2,264.7L171.9,268.1L177.6,265.1L171.2,266.4L157.9,240.9L165.2,243.5L168.5,241.8L166.5,249.4L171.8,244.3L183.9,246.0L190.2,251.5L190.2,255.0L185.6,258.3L189.2,264.7L193.6,254.1L192.6,249.4L205.9,252.0L206.9,254.9L197.3,267.2L203.3,261.2L205.9,262.1L211.3,254.5L214.6,254.5L231.9,270.6L249.3,272.3L262.0,268.9L292.0,285.8L309.4,285.0L314.4,281.1L288.7,281.6L249.3,248.5L244.6,246.0L243.3,251.1L236.3,247.3L237.6,243.0L234.3,236.3L236.0,235.0L239.0,228.7L235.0,222.7L235.0,219.4L238.3,217.6L233.3,218.1L232.3,215.1L238.3,210.1L240.3,204.1L233.9,211.3L236.3,188.0L233.6,174.4L235.3,172.4L239.3,174.9L245.3,173.2L252.3,167.7L242.6,170.6L237.9,165.6L232.6,169.8L225.6,164.3L222.9,149.9L225.6,141.4L223.6,128.7L220.9,127.9L227.3,119.0L238.0,114.8L227.3,117.3L217.6,124.5L220.9,133.0L220.6,135.9L216.3,134.7L217.9,149.5L203.9,162.2L193.3,161.3L188.6,173.2L174.2,180.4L186.6,176.6L197.9,165.6L204.9,168.5L194.9,177.0L196.6,179.1L202.6,170.6L207.3,171.5L210.3,176.1L212.9,187.2L207.6,191.4L214.9,190.6L213.6,199.9L205.9,208.7L200.6,207.9L198.0,200.3L197.6,206.6L202.3,211.7L189.9,220.6L171.9,214.7L170.2,211.7L174.2,210.9L171.2,207.1L168.5,209.6L159.2,204.5L123.8,174.1L108.5,167.3L100.5,167.3L81.1,177.4L74.1,187.2L71.1,201.1L61.7,205.4L44.4,204.5L39.8,209.6L32.4,210.4L21.1,226.5L4.4,234.2L-6.3,242.6L-17.0,242.6L-24.3,248.6L-33.0,249.4L-35.7,254.5L-69.7,248.5L-75.4,250.7L-76.3,257.0L-88.4,257.9L-93.1,261.3L-118.4,257.9L-125.7,267.2L-132.4,270.6L-136.4,278.2L-147.1,280.7L-162.1,277.7L-156.8,258.3L-132.7,207.5L-130.8,149.9L-160.8,64.4L-180.5,37.7L-205.2,20.0L-208.8,13.6L-195.1,13.1L-196.8,17.0L-193.1,18.2L-177.2,14.0L-167.7,8.1L-130.4,5.5L-106.4,-3.8L-99.7,-3.8L-98.1,-1.7L-104.1,10.2L-99.7,17.4L-95.7,14.8L-89.7,25.9L-65.4,33.0L-77.0,39.4L-83.7,31.8L-89.7,30.9L-92.4,36.8L-100.7,41.5L-97.4,42.4L-97.4,47.5L-93.7,41.9L-85.7,41.1L-74.3,47.9L-69.6,61.4L-70.0,44.1L-63.0,34.3L-49.7,38.5L-45.7,36.0L-43.3,39.8L-46.4,43.6L-53.7,42.8L-54.7,49.1L-45.6,49.5L-47.0,53.8L-37.0,56.3L-40.7,71.2L-39.0,73.3L-38.6,67.8L-35.6,65.6L-24.3,84.3L-26.6,56.8L-32.3,49.5L-36.7,50.0L-35.3,34.8L-49.7,34.3L-50.0,27.9L-57.7,28.4L-57.7,23.3L-17.0,3.8L-18.6,15.2L-16.4,20.7L-12.7,19.5L-13.0,24.2L-9.6,14.0L9.7,21.6L13.1,27.5L15.7,27.5L12.7,25.4L12.7,17.8L5.4,11.9L11.7,-4.6L15.1,-5.5L19.1,3.0L21.4,1.7L19.1,-4.6L23.1,-6.4L31.1,-3.8L33.7,4.7L34.1,-7.6L38.4,-13.9L46.4,-12.3L50.5,-5.5L47.8,-13.1L33.1,-15.7L32.4,-18.2L10.4,-19.1L-11.0,-16.5L-19.0,-6.3L-25.3,-5.9L-22.7,-32.2L-19.0,-36.0L11.7,-48.7L12.4,-51.2L5.8,-47.8L5.4,-50.8L15.1,-58.0L36.4,-66.4L42.8,-72.0L43.8,-77.5L61.1,-80.8L77.1,-75.8L79.5,-80.4L72.8,-94.8L69.4,-123.6L59.8,-135.0L50.5,-141.0L46.8,-148.2L47.4,-153.3L58.8,-164.3L50.5,-159.6L43.1,-149.5L36.7,-151.6L29.4,-168.5L30.1,-181.2L34.7,-188.0L34.1,-197.3L21.4,-210.0L26.1,-226.9L23.4,-254.8L36.4,-277.3L52.4,-287.5L61.5,-299.8L61.8,-317.1L51.4,-294.7L33.1,-279.0L17.4,-254.9L1.4,-221.8L0.0,-204.9L-13.0,-190.1L-35.3,-171.9L-52.0,-136.3L-58.0,-96.5L-58.7,-59.2L-62.0,-50.0L-79.7,-25.8L-98.4,-18.2L-110.4,-17.4L-155.1,-3.0L-167.1,-10.6L-207.8,-10.6L-241.2,13.2L-262.6,5.5L-278.6,-5.5L-283.9,-5.5L-299.3,-13.9L-314.6,-12.2L-320.6,-2.1L-327.3,-3.0L-334.6,-9.7L-350.0,-9.7L-373.0,-22.8L-373.7,-27.1L-361.6,-55.9L-363.6,-66.9L-372.0,-78.3L-376.3,-79.6L-382.3,-99.9L-352.9,-160.9L-315.6,-267.6L-316.9,-277.8L-320.3,-282.0L-320.9,-299.7L-318.3,-309.1L-321.6,-312.5L-324.3,-325.2L-320.3,-336.2L-321.6,-344.7L-318.3,-360.7L-314.9,-366.7L-314.9,-387.0L-319.0,-399.7L-299.6,-435.2L-294.9,-458.1L-279.6,-477.6L-276.2,-490.3L-270.2,-498.8L-268.9,-510.6L-260.2,-527.6L-253.6,-554.7L-254.9,-571.6L-250.2,-589.4L-250.2,-608.9L-255.6,-615.6L-254.2,-621.5L-260.2,-641.9L-272.3,-653.8L-269.6,-659.6L-272.9,-676.6L-281.2,-685.5L-283.9,-682.1L-295.2,-682.1L-308.6,-688.9L-308.9,-692.7L-300.6,-700.7L-285.2,-699.9L-284.6,-708.3L-278.2,-701.1L-277.9,-694.0L-270.6,-690.6L-261.2,-692.3L-254.2,-697.8L-255.2,-707.5L-250.5,-703.3L-242.5,-704.2L-219.2,-717.7L-191.8,-739.7L-169.8,-762.6L-166.8,-762.1L-168.4,-757.5L-160.8,-757.1L-158.1,-744.4L-151.4,-736.7L-160.8,-732.5L-154.1,-729.1L-160.8,-723.2L-161.1,-718.5L-154.4,-725.3L-146.4,-723.6L-144.4,-726.1L-140.5,-716.8L-136.8,-720.6L-140.1,-732.5L-128.1,-733.3L-133.1,-739.7L-142.5,-735.4L-145.7,-752.4L-151.8,-757.5L-161.1,-759.2L-166.1,-765.5L-151.4,-786.7L-144.1,-807.0L-139.1,-807.4L-133.1,-815.9L-130.0,-817.0L1126.0,-817.0L1126.0,1587.8L1120.1,1591.7Z", "M905.5,-438.1L881.5,-401.4L873.7,-395.2L869.9,-385.0L831.2,-348.9L830.8,-345.5L845.9,-346.1L870.2,-359.1L866.6,-363.9L867.0,-371.5L876.4,-381.1L914.4,-394.1L926.2,-392.4L926.2,-394.3L907.3,-399.4L902.9,-404.2L903.1,-412.7L912.9,-426.2L921.5,-451.6L905.5,-438.1Z", "M-30.0,-174.4L-12.3,-185.0L-4.3,-193.5L-6.6,-183.7L-14.0,-172.7L-16.7,-159.2L-43.6,-130.8L-49.3,-128.7L-48.0,-140.6L-38.6,-154.1L-30.0,-174.4Z"];
+const CONFINE=["M689.5,363.7L697.4,361.4L699.7,363.6L705.4,376.0L714.2,378.1L723.5,376.1L729.9,371.2L735.0,370.5L750.8,370.8L757.2,368.6L761.6,372.6L765.4,371.6L775.1,362.4L777.8,365.5L784.3,364.7L795.3,382.9L802.8,390.3L808.7,390.0L811.0,388.4L811.5,391.7L822.7,388.7L824.0,382.8L833.3,375.0L834.1,372.8L840.3,374.8L854.0,384.0L864.8,386.0L875.2,395.6L892.9,404.5L890.2,406.9L893.6,412.2L895.0,409.2L899.1,406.8L907.4,414.6L911.3,415.2L918.9,420.4L924.5,427.8L926.0,428.5L928.4,426.1L933.0,428.3L936.1,432.5L943.0,434.4L948.1,440.4L949.9,439.1L956.1,439.6L959.2,437.6L962.6,440.4L965.1,447.5L975.8,446.2L977.6,442.3L981.7,442.6L986.9,437.2L995.1,443.5L1012.1,445.5L1020.9,453.2L1032.1,458.9L1033.4,460.3L1032.7,462.5L1049.0,477.6L1057.3,480.9L1064.6,481.3L1070.9,485.8L1073.9,485.4L1076.0,487.0L1075.6,488.3L1079.6,489.4L1083.8,492.6L1103.8,487.8L1104.7,485.6L1107.0,485.9L1111.5,483.2L1126.0,486.4L1126.0,1211.6L1123.0,1214.6L1120.9,1211.4L1114.8,1209.6L1110.0,1204.1L1105.6,1204.3L1101.0,1210.1L1099.1,1206.6L1096.5,1206.2L1099.0,1203.1L1098.5,1201.8L1093.1,1203.9L1091.8,1200.1L1089.6,1198.3L1083.7,1201.8L1079.1,1198.1L1076.5,1201.7L1069.6,1201.2L1068.0,1202.7L1061.0,1202.8L1059.0,1204.7L1054.4,1205.6L1049.0,1202.4L1046.3,1207.5L1044.3,1207.0L1043.4,1210.2L1040.6,1212.0L1038.7,1211.0L1038.9,1208.3L1034.3,1207.3L1032.4,1213.7L1029.4,1214.5L1027.3,1212.5L1024.5,1213.0L1023.4,1215.4L1026.1,1217.1L1023.6,1217.7L1021.6,1221.1L1016.1,1224.7L1011.4,1219.9L1010.9,1217.7L1006.8,1216.8L1007.4,1221.5L1010.1,1223.2L1008.8,1225.4L1004.5,1223.8L1001.2,1224.9L998.1,1227.9L997.2,1231.9L989.3,1236.2L984.2,1233.4L982.5,1238.3L979.9,1239.5L979.0,1242.1L971.9,1245.7L970.8,1248.3L965.1,1251.6L962.6,1252.3L960.8,1250.7L962.9,1243.8L960.9,1242.5L958.5,1245.0L958.6,1251.2L953.4,1256.6L947.8,1255.7L944.3,1257.4L940.8,1255.5L937.4,1255.7L933.7,1259.8L934.5,1268.0L931.9,1267.6L929.1,1269.5L925.3,1265.1L921.4,1266.9L918.1,1273.1L905.7,1270.8L904.9,1275.4L901.9,1279.6L903.7,1281.8L904.9,1278.7L906.3,1279.4L906.1,1283.6L908.7,1290.3L900.9,1287.3L897.8,1287.8L896.7,1289.6L897.9,1292.6L893.1,1301.5L891.0,1300.5L891.7,1294.9L889.0,1294.9L882.1,1298.2L882.5,1293.3L880.0,1291.9L875.2,1299.1L866.0,1302.3L865.0,1301.0L867.4,1297.5L866.1,1295.2L855.8,1301.9L854.0,1300.1L853.4,1295.9L849.6,1295.5L847.0,1296.7L841.6,1303.5L838.6,1302.8L836.6,1299.4L832.5,1298.9L831.4,1300.8L833.9,1305.2L832.0,1308.9L827.3,1310.0L819.2,1307.9L819.1,1312.9L815.3,1320.0L816.3,1321.2L819.4,1321.0L819.8,1323.5L813.9,1328.0L815.2,1330.8L816.7,1329.3L818.5,1330.2L819.4,1337.9L822.4,1334.8L824.6,1334.7L822.9,1339.3L823.8,1340.4L826.9,1339.8L826.8,1343.4L824.5,1344.3L820.6,1342.0L817.8,1346.2L817.8,1348.7L814.4,1347.2L816.1,1344.7L814.6,1343.2L813.4,1345.8L810.7,1345.5L809.6,1347.3L806.8,1346.0L804.5,1348.6L806.6,1351.7L803.8,1351.3L803.0,1354.0L796.8,1352.2L794.8,1354.3L796.8,1355.6L796.7,1357.5L792.7,1356.7L792.1,1358.8L788.8,1359.7L791.0,1363.4L792.9,1363.9L792.0,1365.4L790.1,1363.2L788.9,1363.8L791.6,1368.5L789.1,1369.4L785.2,1366.1L784.6,1370.0L780.2,1369.5L779.2,1370.5L782.6,1371.9L781.8,1373.0L783.0,1374.3L781.9,1375.3L780.8,1374.3L775.5,1379.2L773.0,1384.0L768.4,1382.6L769.4,1383.7L766.5,1388.2L758.9,1383.2L758.1,1380.6L752.8,1378.1L747.4,1380.0L742.4,1378.1L736.1,1380.7L733.5,1380.3L733.2,1377.8L728.8,1378.9L720.9,1375.2L715.4,1376.5L712.7,1374.5L700.5,1375.1L696.4,1372.5L692.7,1373.3L684.1,1369.0L680.7,1369.6L679.3,1366.5L675.3,1366.0L673.0,1364.0L669.3,1365.7L665.4,1363.4L658.2,1355.8L660.2,1353.4L659.7,1352.2L652.8,1352.0L645.7,1346.9L638.3,1337.5L634.4,1338.7L632.5,1335.7L627.6,1332.6L627.1,1329.9L622.2,1328.4L620.1,1321.3L611.6,1318.0L608.8,1318.9L608.0,1321.8L605.6,1322.1L602.8,1318.1L598.5,1318.9L598.5,1312.8L600.3,1311.2L598.4,1303.1L607.3,1297.7L596.3,1291.8L596.7,1289.0L595.3,1287.6L596.7,1285.4L595.7,1283.4L596.7,1279.9L588.8,1273.4L586.4,1273.5L585.4,1275.4L582.4,1274.2L582.3,1271.9L577.4,1271.0L576.7,1273.6L571.1,1273.7L570.4,1272.1L568.2,1271.9L567.9,1268.5L564.9,1265.8L563.2,1266.0L561.9,1276.2L556.6,1280.0L555.7,1282.2L553.8,1281.5L553.4,1276.1L550.9,1274.5L549.8,1271.9L544.6,1279.7L541.9,1279.2L538.9,1276.1L532.9,1276.7L533.1,1272.5L527.5,1275.1L525.6,1273.5L524.2,1277.3L521.8,1279.1L516.6,1278.1L514.9,1279.9L510.5,1276.8L509.4,1280.5L503.5,1277.9L502.8,1279.7L498.5,1279.2L497.9,1281.3L493.4,1281.1L492.4,1286.4L485.0,1285.7L482.8,1290.4L484.3,1294.2L483.3,1296.3L478.8,1295.4L480.3,1298.0L479.5,1300.2L481.6,1310.6L480.3,1315.3L478.2,1315.5L474.7,1322.7L466.1,1319.7L465.4,1317.7L463.1,1324.0L461.4,1319.6L459.9,1323.0L458.2,1323.0L458.1,1329.5L455.2,1332.5L437.1,1325.0L433.9,1321.9L430.1,1323.3L423.5,1320.0L416.7,1321.5L412.9,1320.5L410.5,1322.1L409.4,1326.4L406.7,1327.4L405.3,1324.7L402.2,1324.4L392.3,1316.8L389.9,1316.6L386.1,1311.8L370.3,1299.3L360.2,1293.6L357.3,1295.6L357.5,1298.0L350.9,1302.2L349.3,1301.1L347.1,1303.4L339.5,1303.0L336.5,1305.1L330.5,1302.9L322.0,1304.7L318.8,1308.5L316.4,1316.3L311.6,1319.5L309.5,1328.3L307.0,1330.8L303.5,1330.2L303.2,1326.7L300.0,1326.7L301.7,1322.7L298.0,1320.5L295.4,1321.6L295.3,1316.7L291.0,1309.8L291.3,1307.9L287.5,1305.1L282.5,1307.4L281.2,1303.9L278.8,1306.8L278.5,1304.0L277.0,1303.0L275.7,1307.1L273.2,1308.7L273.0,1306.0L271.5,1305.1L268.5,1310.4L260.6,1306.2L258.8,1306.7L258.3,1308.7L254.0,1309.1L253.3,1305.4L247.4,1309.1L245.8,1306.3L242.5,1307.6L241.6,1304.3L240.0,1304.6L240.5,1307.7L239.0,1309.1L236.8,1307.9L237.1,1304.8L236.0,1303.9L234.8,1305.1L235.5,1307.9L231.8,1310.7L230.2,1305.5L227.9,1303.7L229.6,1295.5L227.1,1293.4L227.4,1291.1L224.2,1289.4L221.4,1290.7L219.2,1288.5L219.4,1285.0L223.3,1281.4L221.3,1280.1L219.6,1282.6L216.7,1281.6L217.6,1277.7L219.6,1275.8L218.9,1273.4L216.1,1273.4L216.1,1274.9L212.3,1276.3L210.8,1274.4L209.1,1274.7L210.1,1272.0L204.2,1270.7L203.6,1268.7L193.8,1271.4L189.7,1269.3L187.6,1271.1L181.5,1265.1L181.5,1262.2L178.8,1262.2L180.3,1260.9L178.2,1261.1L176.7,1258.2L178.6,1257.9L177.3,1253.4L179.0,1253.2L178.0,1250.4L180.1,1247.4L179.8,1244.8L178.0,1243.4L179.3,1242.8L178.6,1241.4L180.6,1242.0L181.1,1240.8L178.5,1237.6L179.9,1236.0L177.5,1230.4L180.0,1231.2L179.0,1227.6L180.3,1227.2L178.5,1224.9L180.6,1225.0L183.0,1221.9L181.5,1219.8L182.7,1218.7L182.1,1215.3L180.2,1214.8L179.3,1212.9L181.9,1213.7L183.5,1212.3L181.1,1205.5L182.7,1205.9L181.8,1203.1L184.9,1203.3L183.3,1201.2L185.3,1200.2L185.9,1197.4L182.7,1193.6L186.6,1189.8L186.2,1186.9L188.6,1185.7L186.0,1182.4L189.1,1181.9L189.3,1179.9L187.5,1178.7L188.0,1176.7L186.0,1176.0L189.3,1174.3L190.1,1170.9L189.5,1167.5L187.6,1165.9L187.5,1160.5L185.8,1159.9L186.6,1157.5L183.2,1153.3L185.0,1151.8L182.3,1148.6L182.1,1147.1L183.6,1147.1L182.9,1145.2L185.1,1144.2L181.9,1142.9L182.4,1141.7L180.2,1139.4L181.2,1136.6L178.0,1136.2L178.0,1133.0L174.8,1129.0L176.1,1127.4L168.6,1122.0L167.8,1118.4L169.9,1118.0L168.7,1115.3L167.4,1115.3L168.1,1113.8L165.3,1110.7L164.4,1107.5L165.3,1106.7L162.9,1103.3L164.7,1103.2L163.6,1099.8L164.8,1101.1L166.5,1099.3L164.7,1095.3L166.4,1096.5L166.2,1094.8L169.1,1092.4L169.5,1086.0L168.3,1084.1L170.6,1081.5L169.6,1079.4L171.1,1078.1L169.1,1071.8L171.2,1071.3L171.6,1068.9L170.2,1066.9L171.2,1067.6L172.4,1066.0L171.5,1064.2L172.7,1064.0L173.7,1053.0L176.2,1052.2L177.0,1045.5L178.6,1044.3L176.3,1040.1L177.7,1039.4L177.5,1036.9L182.0,1027.1L181.7,1017.0L183.6,1015.3L185.1,1006.8L184.9,1003.3L182.6,1002.0L183.1,999.4L181.6,996.9L185.0,995.3L186.4,990.5L189.8,986.7L188.7,982.8L183.9,980.5L184.6,976.6L180.9,968.6L180.9,964.0L177.3,963.4L175.4,960.3L170.5,958.6L168.9,955.9L169.9,952.2L168.6,951.3L172.8,947.6L171.6,944.5L173.5,940.4L172.5,935.6L175.0,931.1L173.3,929.6L174.8,929.6L172.8,927.3L173.0,923.7L176.3,921.9L177.0,919.2L177.2,903.9L184.2,879.5L184.5,865.2L186.6,861.0L184.2,856.5L184.6,852.6L182.7,852.5L183.9,849.7L181.7,848.7L181.7,846.4L183.7,843.4L182.8,842.0L184.6,840.8L183.1,840.4L183.8,838.9L182.5,838.0L184.6,832.6L181.5,818.8L180.5,803.2L178.9,801.0L178.4,789.7L172.6,772.6L171.4,771.0L170.5,772.5L169.6,771.9L171.0,769.7L167.7,769.1L167.8,767.3L165.6,765.5L165.3,759.0L131.8,752.3L129.2,750.5L127.3,747.2L119.5,745.4L114.1,747.9L114.0,746.5L112.7,746.4L111.9,748.4L111.3,748.2L111.1,745.7L108.2,744.9L108.1,747.6L106.4,747.3L108.8,743.1L107.8,739.2L112.4,732.9L111.5,731.4L113.5,732.2L115.2,731.0L115.5,728.4L120.8,727.6L134.0,704.0L163.0,633.1L180.6,575.2L194.3,509.9L197.9,471.4L198.1,449.2L196.2,412.9L191.5,369.1L187.4,348.4L178.8,318.7L169.0,292.6L158.0,269.9L152.1,261.3L141.8,250.2L126.5,234.8L98.5,211.0L94.6,204.7L90.2,201.2L88.2,185.5L83.9,177.0L78.7,181.2L75.3,179.5L77.7,182.9L76.4,186.3L71.2,175.7L69.7,170.0L69.6,164.1L70.2,160.2L71.5,156.5L74.4,151.8L78.2,148.3L82.7,146.5L85.8,146.1L88.9,146.6L91.9,147.9L132.0,170.3L176.9,216.4L193.4,237.1L234.7,232.7L240.9,229.6L234.3,225.2L231.0,221.0L229.4,217.6L218.7,179.6L218.2,173.7L218.7,169.8L229.4,140.0L232.1,134.9L255.3,108.8L259.4,105.5L262.4,104.3L297.0,94.3L300.1,109.4L306.0,119.4L307.4,137.7L314.3,137.3L326.2,134.0L336.5,138.4L346.8,145.2L354.7,142.8L358.6,139.3L360.7,155.9L392.9,159.4L395.8,176.7L403.2,175.2L406.0,172.7L409.5,172.9L409.1,171.3L413.8,168.4L413.3,161.1L402.6,144.4L415.2,139.7L420.8,138.4L422.8,140.0L424.5,158.3L434.8,154.3L438.1,171.0L445.0,170.4L450.8,164.9L458.5,163.6L462.5,160.1L465.1,165.4L480.4,166.7L490.6,162.5L499.1,149.8L515.6,142.1L523.6,141.5L531.0,157.6L531.1,161.4L540.3,169.0L550.2,180.9L555.9,200.0L560.4,204.6L564.3,216.7L566.1,232.8L559.7,236.5L561.2,242.0L559.0,243.1L558.6,245.6L560.5,252.2L565.5,249.7L568.1,250.6L570.0,270.4L589.7,278.9L584.8,282.2L583.9,284.9L577.9,289.9L574.6,298.0L568.4,304.8L560.9,317.9L578.5,314.5L597.2,318.5L603.3,331.8L603.6,336.7L612.3,337.1L621.5,342.2L629.0,344.2L654.5,345.8L660.9,348.0L666.1,355.0L682.9,371.5L687.6,371.1L691.5,369.9L689.5,363.7Z", "M567.3,553.3L570.6,555.7L577.4,557.0L586.1,555.2L585.6,540.0L589.3,532.3L587.1,523.0L591.5,506.5L594.4,505.3L598.7,506.8L605.8,513.1L616.1,510.8L619.9,513.7L627.1,513.8L629.1,510.3L630.9,509.7L630.8,505.7L632.8,504.9L635.3,495.9L639.7,494.0L642.6,490.4L656.6,492.1L670.2,486.4L672.8,484.9L674.3,481.5L679.2,478.9L664.2,477.7L620.7,482.5L600.2,494.3L575.7,521.2L555.3,540.8L567.9,550.1L567.3,553.3Z", "M554.3,851.5L550.0,833.7L552.3,828.5L553.6,829.1L570.1,816.2L568.9,806.1L579.5,798.6L572.3,790.7L573.8,792.3L571.6,793.4L546.4,834.0L543.8,836.8L539.2,839.4L531.8,841.2L531.5,840.5L532.7,844.2L554.3,851.5Z", "M324.9,950.7L326.6,948.5L319.6,948.0L319.0,945.4L320.1,950.2L324.9,950.7Z", "M271.9,946.9L276.3,944.4L273.5,942.8L265.5,935.7L266.5,941.4L271.9,946.9Z", "M181.2,864.6L180.3,866.9L178.7,864.5L180.6,863.4L181.2,864.6Z"];
+const ISOLE=[];
+const BATIM=[["M-333.6,-279.6L-337.6,-327.5L-328.3,-372.1L-331.8,-404.8L-272.5,-534.9L-263.6,-592.1L-271.5,-631.4L-284.9,-648.2L-284.5,-665.1L-299.0,-665.7L-317.1,-675.7L-321.8,-685.8L-321.2,-699.6L-307.6,-715.2L-288.1,-724.8L-278.9,-723.8L-268.1,-712.3L-259.8,-723.5L-246.0,-720.9L-225.6,-732.7L-175.3,-778.1L-155.0,-817.0L1126.0,-817.0L1126.0,1617.2L1032.9,1682.1L988.9,1690.8L938.6,1709.1L923.2,1706.8L914.9,1717.0L893.7,1718.5L873.2,1729.4L870.1,1743.4L860.9,1749.2L845.5,1743.8L741.8,1664.5L672.4,1637.0L634.8,1643.4L620.6,1640.8L594.6,1654.0L577.0,1655.2L529.1,1627.3L464.0,1642.5L429.5,1627.7L398.1,1621.2L390.3,1611.5L374.6,1608.1L359.4,1612.1L325.5,1604.5L298.9,1616.1L299.3,1632.7L288.8,1647.1L240.2,1642.5L190.9,1665.8L169.9,1663.1L142.6,1670.3L131.0,1685.3L109.5,1687.3L81.6,1724.2L63.7,1735.4L54.8,1733.7L47.2,1725.2L40.8,1704.1L29.6,1709.3L12.2,1701.0L9.0,1685.5L21.7,1648.0L35.8,1628.4L39.3,1608.5L64.4,1576.5L79.1,1542.5L68.8,1517.4L69.2,1504.6L75.4,1496.4L90.8,1491.2L114.9,1438.3L104.5,1415.9L104.0,1378.2L125.8,1351.1L147.7,1308.9L166.7,1246.6L166.1,1211.5L173.5,1168.7L168.4,1146.8L155.8,1126.8L148.8,1102.3L168.3,1021.4L170.8,985.5L153.4,952.9L160.2,928.0L161.1,898.4L169.0,873.0L164.8,846.1L167.2,811.7L160.3,783.7L120.5,761.1L106.1,760.6L94.1,739.2L132.3,670.3L171.4,549.4L183.3,477.4L177.0,378.3L168.3,341.4L148.5,288.1L81.9,211.3L65.0,221.9L38.9,226.8L26.9,241.9L-32.1,270.9L-65.2,266.5L-91.7,278.2L-113.4,275.7L-130.2,293.3L-146.1,297.7L-172.1,289.2L-175.5,277.0L-169.5,252.7L-146.0,202.4L-144.3,153.2L-172.1,73.9L-188.9,51.2L-214.1,32.7L-221.6,18.8L-242.3,30.1L-301.5,3.4L-316.5,14.1L-330.0,13.7L-339.0,7.3L-355.5,5.8L-379.7,-8.0L-385.9,-18.1L-386.5,-32.0L-375.8,-58.3L-388.4,-72.1L-395.3,-104.1L-364.8,-168.8L-329.5,-269.7L-333.6,-279.6Z", "M141.7,218.3L160.8,224.3L123.0,194.0L141.7,218.3Z", "M199.3,233.5L221.1,239.6L218.9,216.8L199.3,233.5Z", "M-85.0,-5.7L-81.6,10.7L-69.1,14.4L-38.6,-4.0L-35.4,-37.5L-27.5,-49.2L30.5,-82.0L37.9,-92.8L58.9,-97.6L56.8,-115.2L25.0,-143.4L16.1,-166.4L19.0,-190.7L12.2,-197.6L-6.1,-148.7L-41.7,-113.8L-45.4,-57.1L-49.8,-42.9L-70.9,-13.0L-85.0,-5.7Z"], ["M-398.9,-52.8L-411.2,-86.2L-412.8,-105.6L-380.3,-179.1L-349.2,-268.2L-355.2,-326.6L-345.8,-378.4L-348.4,-411.6L-288.4,-544.4L-281.5,-594.3L-286.4,-618.0L-302.1,-643.9L-322.9,-654.2L-334.4,-667.2L-339.4,-685.7L-338.2,-704.9L-319.3,-731.9L-295.7,-744.9L-246.4,-745.0L-233.9,-752.2L-186.4,-795.6L-174.5,-817.0L1126.0,-817.0L1126.0,1643.5L1039.1,1702.8L900.0,1741.8L887.7,1749.2L876.4,1765.4L862.2,1771.3L837.1,1763.2L734.1,1684.5L670.8,1659.7L624.4,1664.0L598.5,1675.6L576.2,1677.3L526.6,1649.5L504.8,1658.7L462.8,1664.6L395.0,1643.1L380.1,1631.8L358.4,1634.2L327.1,1626.8L317.7,1629.4L310.7,1653.1L296.2,1667.3L244.0,1664.7L194.9,1687.4L154.8,1688.2L137.6,1705.8L119.8,1708.0L90.2,1743.7L67.2,1757.1L49.2,1754.9L29.5,1731.5L1.6,1718.7L-8.4,1695.6L-6.0,1673.1L6.6,1637.0L19.6,1616.9L24.5,1596.8L49.1,1565.1L58.8,1540.5L50.6,1513.9L54.7,1492.1L64.9,1478.5L79.2,1472.3L94.8,1438.2L86.9,1417.5L87.1,1372.3L111.5,1338.3L133.1,1296.4L149.2,1245.6L148.7,1209.9L155.1,1170.9L139.1,1133.8L131.3,1102.0L151.6,1009.3L150.6,988.9L139.8,971.6L136.0,953.1L151.0,870.4L147.4,847.2L149.3,813.4L145.7,798.8L92.7,775.8L80.2,757.6L76.6,739.1L81.9,717.4L101.9,692.2L116.9,659.9L154.8,542.6L165.7,474.9L159.7,382.4L134.2,301.4L80.0,238.7L54.2,244.2L7.5,277.7L-30.5,293.1L-59.6,289.9L-89.9,300.3L-107.5,298.7L-124.9,314.6L-144.9,319.8L-178.1,311.3L-190.0,294.5L-192.7,272.3L-184.8,241.7L-163.2,195.8L-161.9,157.4L-186.9,86.3L-199.8,68.9L-226.9,47.8L-246.6,51.7L-300.8,27.9L-314.2,36.2L-333.6,35.4L-359.6,27.5L-388.3,11.2L-399.0,-1.6L-403.4,-15.5L-403.9,-34.8L-398.9,-52.8Z", "M-27.5,-73.7L18.8,-100.5L29.5,-112.2L15.4,-123.2L8.2,-136.1L-26.3,-98.4L-27.5,-73.7Z"], ["M-419.7,-52.6L-430.1,-90.4L-429.2,-114.9L-395.8,-189.5L-367.6,-270.0L-372.6,-327.4L-364.4,-378.9L-365.0,-418.3L-302.6,-561.0L-300.3,-592.5L-303.4,-606.9L-315.4,-626.3L-346.0,-650.0L-356.8,-683.9L-356.1,-706.0L-348.3,-728.2L-317.4,-758.3L-287.9,-769.5L-248.4,-768.2L-220.2,-789.5L-194.8,-817.0L1126.0,-817.0L1126.0,1669.3L1045.3,1723.5L905.1,1763.8L881.6,1787.1L863.4,1793.4L828.7,1782.6L726.4,1704.4L669.1,1682.3L575.4,1699.4L558.2,1694.4L525.8,1672.2L508.5,1680.4L461.7,1686.7L390.6,1664.6L373.5,1654.0L357.5,1656.3L331.6,1649.3L318.6,1675.1L302.3,1688.0L283.3,1691.9L247.7,1686.8L198.8,1709.0L162.7,1709.2L148.7,1723.7L127.9,1730.8L95.9,1765.1L70.6,1778.8L42.5,1775.3L19.6,1752.4L-10.0,1735.3L-24.7,1705.0L-23.6,1669.4L9.6,1585.2L33.9,1553.8L38.5,1539.6L33.5,1503.3L39.5,1481.0L51.7,1463.2L68.0,1452.7L74.2,1439.0L67.9,1388.3L72.4,1359.4L97.1,1325.6L118.5,1283.9L131.5,1242.6L131.3,1208.4L136.8,1173.0L117.3,1125.2L113.9,1101.6L133.9,1011.1L118.5,953.4L133.2,867.2L131.4,816.7L81.6,792.9L64.8,768.0L59.2,739.0L65.0,710.1L89.5,675.2L101.5,649.5L138.2,535.8L148.0,472.3L142.5,386.5L119.8,314.8L73.6,264.8L57.7,266.6L46.2,279.0L15.3,297.5L-27.5,315.0L-56.4,312.8L-102.3,321.7L-118.3,335.1L-143.7,341.9L-187.1,330.2L-203.6,309.3L-210.4,281.1L-200.6,232.3L-180.5,189.2L-179.5,161.7L-201.6,98.8L-229.8,72.7L-249.7,73.5L-299.1,52.7L-315.5,58.9L-337.1,57.1L-365.0,48.6L-397.0,30.5L-417.9,-0.0L-421.8,-21.5L-419.7,-52.6Z"]];
+const VICINE=[[0.5, "M-327.8,-306.0L-332.4,-325.6L-323.0,-369.9L-326.6,-402.8L-307.0,-439.6L-301.7,-463.6L-277.8,-503.3L-261.8,-555.7L-262.9,-572.8L-258.2,-591.0L-267.0,-635.6L-279.9,-650.4L-280.1,-670.9L-312.4,-679.8L-316.2,-696.8L-304.8,-709.4L-292.4,-710.5L-286.7,-718.2L-279.8,-716.6L-269.7,-701.1L-262.9,-703.0L-258.7,-716.7L-244.6,-714.2L-223.0,-726.7L-172.1,-772.4L-146.2,-816.9L1126.0,-817.0L1126.0,1608.9L1030.1,1676.1L987.7,1684.0L937.5,1702.5L919.0,1699.8L913.9,1710.2L898.4,1712.8L890.6,1708.6L887.3,1717.7L877.5,1722.9L868.0,1720.4L861.5,1708.1L854.8,1713.1L868.0,1732.5L860.5,1742.4L848.0,1737.8L744.2,1658.4L673.0,1630.1L634.6,1636.6L619.5,1633.7L594.1,1647.1L577.2,1648.4L529.8,1620.5L464.3,1635.7L430.8,1621.1L400.0,1614.8L394.6,1605.2L374.4,1601.2L359.6,1605.2L348.1,1599.2L324.7,1597.6L303.4,1603.8L292.8,1613.3L294.8,1628.2L287.4,1640.5L239.1,1635.7L189.7,1659.2L149.2,1660.0L139.4,1664.6L128.9,1679.0L106.5,1680.5L97.9,1696.4L86.3,1700.0L85.9,1708.7L78.2,1718.9L69.2,1720.0L63.5,1728.5L50.5,1719.6L50.1,1707.4L42.5,1696.2L31.0,1702.6L16.2,1696.4L14.7,1685.2L26.4,1651.3L40.8,1632.8L43.9,1612.1L69.1,1580.0L85.4,1543.0L73.9,1515.1L74.5,1506.5L94.8,1496.0L119.9,1440.9L116.4,1421.9L109.7,1414.2L108.9,1381.1L130.2,1355.0L152.1,1312.8L164.0,1283.5L172.1,1246.9L171.5,1212.0L179.1,1168.0L174.2,1145.0L160.5,1123.5L154.2,1102.5L173.6,1023.1L172.9,995.2L177.2,986.7L158.8,952.8L165.5,929.4L166.4,899.8L174.5,873.7L170.2,845.7L172.7,811.2L164.8,779.1L121.6,753.9L109.3,755.1L99.5,739.3L107.0,722.2L120.3,709.6L137.1,673.5L176.5,551.5L188.8,478.2L182.3,377.0L173.4,339.0L152.9,284.0L79.8,199.8L74.6,210.4L36.3,220.3L24.6,235.8L-33.5,264.4L-68.5,259.1L-73.5,266.5L-91.4,271.3L-115.4,268.5L-135.0,288.3L-147.4,290.9L-168.1,284.6L-170.1,276.3L-164.1,254.0L-140.7,204.4L-138.9,151.9L-167.6,70.1L-185.5,45.8L-211.2,26.8L-216.8,14.9L-213.1,4.9L-241.8,23.3L-300.6,-3.5L-310.3,-2.5L-319.8,8.0L-351.7,0.3L-380.8,-20.0L-381.1,-31.0L-370.2,-57.3L-383.2,-74.2L-390.1,-102.4L-360.1,-165.7L-323.9,-268.9L-328.3,-280.6L-327.8,-306.0Z"], [0.5, "M88.4,184.8L111.5,189.1L138.6,224.0L153.4,232.5L169.4,231.6L216.3,244.5L234.8,260.6L250.2,261.6L240.0,260.5L228.8,251.2L224.2,215.2L228.1,188.7L217.0,162.8L213.9,165.6L223.0,189.5L220.8,204.4L191.0,230.8L168.4,223.9L120.2,183.3L102.1,177.5L88.4,184.8Z"], [0.5, "M-212.1,4.2L-188.9,6.7L-172.5,-0.3L-205.7,-0.4L-212.1,4.2Z"], [0.5, "M-92.4,-8.9L-92.2,5.6L-84.8,16.8L-65.7,22.4L-61.3,14.2L-31.9,0.0L-30.5,-34.4L-23.5,-44.5L32.9,-75.8L41.0,-87.1L65.7,-89.9L61.9,-118.6L31.2,-144.2L22.0,-164.4L22.1,-182.8L26.4,-191.4L13.6,-207.6L17.2,-235.0L-9.8,-153.8L-46.4,-119.2L-50.7,-58.0L-55.1,-44.8L-75.0,-17.5L-92.4,-8.9Z"], [0.5, "M-10.3,-1.9L-8.9,3.8L-1.5,6.5L4.1,-8.0L-10.3,-1.9Z"], [0.5, "M896.2,-398.4L894.8,-405.8L888.2,-395.7L896.2,-398.4Z"], [0.34, "M-381.8,-58.6L-392.0,-69.8L-399.6,-103.1L-368.4,-171.2L-334.3,-268.8L-341.7,-326.0L-332.4,-373.7L-335.6,-406.4L-276.2,-537.1L-267.6,-593.0L-274.8,-628.2L-287.3,-642.6L-289.0,-659.9L-319.7,-671.7L-325.4,-682.7L-325.5,-699.6L-309.8,-719.6L-289.2,-729.7L-278.9,-729.3L-269.3,-720.7L-261.2,-728.3L-246.2,-726.4L-227.5,-737.2L-177.7,-782.3L-159.7,-817.0L1126.0,-817.0L1126.0,1623.4L1034.3,1686.9L895.4,1724.3L877.3,1734.8L872.0,1748.3L861.2,1754.3L843.5,1748.3L740.1,1669.1L672.1,1642.2L621.5,1646.2L595.5,1659.0L576.8,1660.3L528.5,1632.4L463.7,1647.6L428.5,1632.7L396.7,1626.0L387.6,1616.1L359.1,1617.2L325.9,1609.6L303.5,1618.3L300.6,1641.4L289.8,1652.0L241.1,1647.6L191.8,1670.8L169.9,1668.2L145.1,1674.6L132.5,1690.0L111.9,1691.9L84.2,1728.2L64.5,1740.4L50.0,1735.8L41.4,1723.6L39.4,1711.9L23.3,1713.5L10.5,1706.0L4.8,1686.4L17.5,1647.4L32.1,1625.4L35.9,1605.8L60.9,1573.9L74.4,1542.1L64.5,1517.1L65.5,1502.5L73.6,1491.8L87.7,1487.6L110.4,1438.0L100.6,1417.1L100.4,1376.1L122.5,1348.1L144.3,1306.0L162.7,1246.3L162.1,1211.1L169.2,1169.2L144.8,1102.3L165.2,1007.2L166.2,984.8L152.5,965.2L149.4,952.9L156.2,926.9L157.2,897.3L164.8,872.4L160.8,846.3L163.0,812.1L156.9,787.1L119.7,766.5L104.1,765.1L92.9,751.5L90.1,739.2L98.7,716.3L112.6,702.7L128.8,667.9L167.6,547.9L179.3,476.8L173.0,379.2L164.6,343.3L145.2,291.1L82.4,218.0L40.8,231.7L28.6,246.5L-31.0,275.8L-63.5,272.0L-91.3,283.3L-111.9,281.0L-128.3,297.8L-145.8,302.8L-171.2,296.7L-177.9,287.2L-179.1,272.5L-172.6,248.9L-150.0,200.9L-148.4,154.2L-175.5,76.8L-191.4,55.3L-215.4,38.0L-223.3,25.8L-244.3,35.0L-302.2,8.6L-315.3,19.0L-329.0,19.1L-355.4,11.3L-381.7,-3.6L-388.5,-12.7L-391.1,-27.2L-381.8,-58.6Z"], [0.34, "M217.1,232.6L216.9,225.9L211.1,230.8L217.1,232.6Z"], [0.34, "M-79.2,6.2L-70.8,8.7L-42.7,-7.6L-39.3,-39.1L-28.7,-54.4L27.7,-86.2L36.2,-97.4L54.3,-101.9L53.1,-112.7L21.4,-140.9L12.4,-163.7L13.0,-190.1L-3.0,-145.5L-38.2,-109.8L-42.8,-50.1L-66.9,-10.7L-80.6,-2.1L-79.2,6.2Z"], [0.21, "M-398.4,-53.3L-410.6,-86.5L-412.2,-105.5L-379.7,-178.8L-348.4,-268.2L-354.5,-326.6L-345.1,-378.2L-347.7,-411.3L-287.8,-544.0L-280.7,-594.4L-285.7,-618.4L-301.6,-644.6L-322.6,-654.9L-333.8,-667.7L-338.8,-685.8L-337.6,-704.7L-318.9,-731.2L-295.5,-744.1L-246.3,-744.1L-233.6,-751.5L-186.0,-794.9L-173.7,-817.0L1126.0,-817.0L1126.0,1642.5L1038.8,1702.0L899.8,1741.0L887.3,1748.5L876.1,1764.6L862.1,1770.5L837.4,1762.5L734.4,1683.7L670.8,1658.8L624.3,1663.1L598.3,1674.8L576.2,1676.5L526.7,1648.6L504.6,1657.9L462.9,1663.8L392.3,1641.2L380.4,1631.0L358.5,1633.3L327.1,1625.9L317.1,1628.7L308.2,1655.6L293.1,1667.7L243.8,1663.8L194.7,1686.6L152.8,1688.3L137.4,1705.0L119.5,1707.0L92.2,1740.7L67.0,1756.3L49.5,1754.1L29.9,1730.7L2.0,1718.1L-7.2,1699.1L-6.5,1676.9L7.2,1637.4L20.2,1617.3L25.1,1597.3L49.7,1565.6L59.5,1540.6L51.6,1517.5L53.9,1495.8L65.3,1479.2L79.7,1473.1L95.6,1438.1L87.6,1417.3L87.7,1372.6L112.0,1338.8L133.6,1296.9L149.8,1245.6L149.4,1210.0L155.8,1170.8L139.7,1133.5L132.0,1102.0L152.3,1009.2L151.4,988.5L140.4,971.1L136.7,953.1L151.6,870.5L148.1,847.2L150.0,813.3L146.2,798.1L93.2,775.2L80.8,757.2L77.3,739.1L82.5,717.8L102.3,692.9L117.5,660.3L155.4,542.9L166.3,475.0L160.4,382.2L134.7,300.9L80.3,237.7L54.1,243.4L7.2,277.0L-30.6,292.3L-59.8,289.0L-90.0,299.4L-107.7,297.9L-125.1,313.8L-144.9,319.0L-177.8,310.5L-189.4,294.2L-192.0,272.4L-184.2,242.1L-162.6,196.1L-161.2,157.3L-186.3,85.9L-199.4,68.2L-226.7,46.8L-246.5,50.9L-300.9,26.9L-314.4,35.4L-333.4,34.6L-359.4,26.7L-388.0,10.5L-396.7,0.9L-402.7,-15.6L-403.7,-31.0L-398.4,-53.3Z"], [0.21, "M-28.2,-72.5L19.2,-99.8L30.7,-112.0L15.9,-123.9L8.3,-137.7L-26.9,-98.9L-28.2,-72.5Z"], [0.12, "M-418.5,-53.3L-428.7,-90.7L-426.5,-120.2L-394.6,-188.7L-366.2,-269.8L-371.3,-327.3L-363.0,-378.9L-363.7,-417.8L-301.3,-560.9L-298.9,-592.5L-302.1,-607.8L-314.4,-627.6L-345.0,-651.1L-355.5,-684.0L-354.8,-705.6L-347.2,-727.2L-316.9,-756.7L-287.8,-767.8L-248.2,-766.4L-219.4,-788.1L-193.0,-817.0L1126.0,-817.0L1126.0,1667.3L1044.8,1721.9L904.7,1762.1L881.0,1785.5L863.3,1791.7L829.3,1781.1L727.0,1702.8L669.2,1680.6L575.4,1697.7L558.8,1692.8L525.7,1670.4L508.2,1678.7L461.8,1685.0L391.0,1662.9L373.8,1652.2L357.6,1654.6L330.7,1647.5L321.0,1669.5L301.8,1686.4L283.4,1690.2L247.5,1685.1L198.5,1707.3L162.0,1707.6L148.0,1722.2L127.3,1729.1L99.2,1760.7L70.3,1777.2L43.1,1773.7L20.3,1750.8L-9.1,1734.0L-23.4,1704.5L-22.4,1670.0L10.8,1586.1L35.0,1554.6L40.0,1539.6L34.9,1503.6L40.7,1481.9L52.6,1464.6L68.9,1454.1L75.8,1439.0L69.2,1388.2L73.6,1360.2L98.2,1326.6L119.6,1284.9L132.8,1243.0L132.7,1208.5L138.2,1172.8L118.5,1124.6L115.2,1101.6L135.3,1011.2L119.9,953.4L134.6,867.2L132.9,815.5L82.5,791.6L65.9,767.2L60.5,739.0L66.2,710.9L90.5,676.5L102.7,650.3L139.4,536.3L149.3,472.5L143.8,386.2L120.9,313.7L74.0,262.9L57.0,265.0L45.5,277.5L14.7,296.0L-27.8,313.3L-56.6,311.0L-88.3,320.6L-102.9,319.9L-118.8,333.5L-143.8,340.2L-186.5,328.7L-202.4,308.4L-209.0,281.0L-199.4,233.0L-179.2,189.7L-178.2,161.3L-200.5,97.8L-229.6,70.9L-249.5,71.9L-299.2,50.9L-315.6,57.2L-336.8,55.4L-364.6,47.0L-396.3,29.0L-409.9,14.1L-418.1,-6.1L-418.5,-53.3Z"], [0.055, "M-439.3,-49.9L-448.6,-86.7L-448.7,-112.3L-442.8,-136.8L-412.5,-200.6L-387.0,-273.4L-391.4,-328.3L-383.9,-378.7L-382.9,-425.5L-361.6,-471.2L-354.9,-496.4L-337.7,-524.3L-321.7,-563.8L-320.6,-594.8L-328.4,-607.1L-356.0,-628.6L-370.9,-657.0L-375.6,-681.9L-374.4,-711.1L-359.4,-748.7L-323.9,-780.6L-295.8,-792.3L-251.6,-792.5L-223.4,-817.0L1126.0,-817.0L1126.0,1697.0L1052.0,1745.8L911.4,1786.9L890.1,1808.4L864.8,1817.2L825.1,1806.9L718.1,1725.8L667.3,1706.7L574.5,1723.3L550.7,1716.2L524.9,1698.6L460.5,1710.5L369.8,1679.3L341.6,1676.9L326.5,1698.0L302.5,1713.0L282.5,1715.7L251.8,1710.7L203.1,1732.2L171.2,1732.2L157.5,1744.7L136.0,1753.7L104.7,1786.2L74.2,1802.2L54.5,1803.5L35.3,1797.3L-22.5,1753.1L-35.2,1734.0L-42.9,1711.0L-45.0,1686.2L-41.4,1661.6L-6.3,1572.6L17.4,1541.5L14.9,1500.1L23.2,1469.1L35.3,1449.8L52.9,1434.6L49.1,1381.2L55.4,1349.3L66.1,1328.7L81.6,1311.9L102.8,1270.5L112.3,1237.3L117.2,1175.1L99.8,1134.0L95.1,1101.2L114.4,1008.4L102.9,978.3L99.7,953.7L113.2,866.2L111.8,833.5L80.4,820.5L59.8,799.3L45.4,771.5L40.4,738.9L48.5,698.7L84.9,638.2L120.2,528.4L129.0,470.0L123.9,390.9L104.4,329.1L67.9,290.1L18.0,322.1L-17.7,336.6L-54.1,337.3L-96.2,346.3L-111.3,357.2L-134.8,364.5L-172.5,361.9L-196.9,350.6L-219.7,321.6L-228.5,290.6L-225.5,249.8L-199.1,182.1L-198.5,166.2L-217.5,112.1L-233.2,97.7L-259.4,95.1L-298.0,78.0L-320.4,83.1L-340.9,80.5L-370.9,71.3L-406.3,51.2L-425.7,30.0L-435.4,8.8L-440.5,-19.3L-439.3,-49.9Z"]];
+const CIME=[];
+const PAESI=[];
+const svg=document.getElementById("carta"), telaio=document.getElementById("telaio");
+/* questa regione non è un'isola: le regioni confinanti fanno da fondo,
+   e il tratto di costa vera è disegnato in modo diverso dal confine di terra */
+document.getElementById("gVicine").innerHTML=VICINE.map(([op,d])=>
+  '<path class="vicina" d="'+d+'" opacity="'+Math.min(.78,op*1.45).toFixed(3)+'"/>').join("");
+document.getElementById("gTerra").innerHTML=
+  '<path class="terra nudo" d="'+TERRA+'"/>'+
+  ISOLE.map(d=>'<path class="isolotto" d="'+d+'"/>').join("")+
+  CONFINE.map(d=>'<path class="confine" d="'+d+'"/>').join("")+
+  COSTA.map(d=>'<path class="costa" d="'+d+'"/>').join("");
+/* linee equidistanti dalla costa: calcolate solo al largo, mai oltre il confine di terra */
+document.getElementById("gBatim").innerHTML=BATIM.map((liv,i)=>
+  liv.map(d=>'<path class="batim" d="'+d+'" opacity="'+(0.5-i*0.1).toFixed(2)+'"/>').join("")).join("");
+(function(){
+  let g="";
+  for(let la=38.6;la>=37.4;la-=0.2){const y=py(la).toFixed(1),gr=Math.floor(la+1e-9),pr=Math.round((la-gr)*60);
+    g+='<line class="griglia" x1="'+(PIENO.x-10)+'" y1="'+y+'" x2="'+(PIENO.x+PIENO.w)+'" y2="'+y+'"/>';
+    g+='<text x="'+(PIENO.x+PIENO.w-16)+'" y="'+(+y-4)+'" text-anchor="end" class="grado-lat" font-family="IBM Plex Mono,monospace" font-size="9" fill="#7ea9be" opacity=".8">'+gr+"°"+String(pr).padStart(2,"0")+"′N</text>";}
+  for(let lo=-9.0;lo<=-8.8;lo+=0.2) g+='<line class="griglia" x1="'+px(lo).toFixed(1)+'" y1="'+(PIENO.y-10)+'" x2="'+px(lo).toFixed(1)+'" y2="'+(PIENO.y+PIENO.h)+'"/>';
+  document.getElementById("gGriglia").innerHTML=g;
+})();
+document.getElementById("gCime").innerHTML=CIME.map(c=>{const x=px(c.lon),y=py(c.lat);
+  return '<g class="segno" data-x="'+x.toFixed(1)+'" data-y="'+y.toFixed(1)+'" transform="translate('+x.toFixed(1)+','+y.toFixed(1)+')">'+
+   '<path class="cima" d="M-8,6 L0,-7 L8,6"/>'+
+   '<text class="eti-cima" y="17" text-anchor="middle" font-size="8">'+c.h+'</text></g>';}).join("");
+document.getElementById("gPaesi").innerHTML=PAESI.map(p=>{const x=px(p.lon),y=py(p.lat);
+  return '<g class="segno" data-x="'+x.toFixed(1)+'" data-y="'+y.toFixed(1)+'" transform="translate('+x.toFixed(1)+','+y.toFixed(1)+')">'+
+   '<rect class="paese-pt" x="-2" y="-2" width="4" height="4"/>'+
+   '<text class="eti-paese" y="-6" text-anchor="middle" font-size="8.5">'+p.n+'</text></g>';}).join("");
+
+const raggio=b=>{const v=parseFloat(String(b.lung).replace(/[^0-9,\.]/g,"").replace(",",".")||"1");
+  const k=/km/.test(b.lung)?v:v/1000; return Math.max(3,Math.min(6.4,3+Math.sqrt(k||.3)*1.6));};
+/* Bandiera Blu: una bandierina che sventola sull'asta, sotto il segno della
+   spiaggia. Il disegno è fermo: con centosessanta segni per pagina, farla
+   sventolare davvero costerebbe più di quel che vale. */
+const BANDIERA='M-0.42,0.9L-0.42,-9.2L0.42,-9.2L0.42,0.9Z'
+  +'M0.42,-8.85C2.15,-9.9 3.6,-7.8 5.35,-8.75L5.35,-5.75C3.6,-4.8 2.15,-6.9 0.42,-5.85Z';
+/* Dodici posizioni: le prime quattro accostate al segno, le altre otto
+   piu’ lontane — e quelle vogliono il filo che le lega al segno. */
+const posEti={W:[-10,3.5,"end"],E:[10,3.5,"start"],N:[0,-11,"middle"],S:[0,17,"middle"]};
+const SCALE=[["E",10,3.5,"start",0],["W",-10,3.5,"end",0],["N",0,-11,"middle",0],["S",0,17,"middle",0],["NE",17,-10,"start",1],["NW",-17,-10,"end",1],["SE",17,17,"start",1],["SW",-17,17,"end",1],["E2",30,3.5,"start",1],["W2",-30,3.5,"end",1],["N2",0,-25,"middle",1],["S2",0,31,"middle",1]];
+document.getElementById("gMarker").innerHTML=SPIAGGE.map((b,i)=>{
+  const A=ACCESSI[b.acc]||ACCESSI.nc,c=A.col,p=posEti[b.lato]||posEti.E;
+  /* La forma dice quel che sappiamo: cerchio dimensionato se la lunghezza è nota,
+     quadratino fisso se non lo è. Il colore dice l'accesso, grigio se ignoto. */
+  const noto=!!b.lung,r=noto?raggio(b):2.9;
+  return '<g class="marker" data-i="'+i+'" tabindex="0" role="button" aria-label="'+b.n+', '+b.com+'" '+
+   'transform="translate('+px(b.lon).toFixed(1)+','+py(b.lat).toFixed(1)+')">'+
+   '<circle r="9" fill="transparent"/>'+
+   (noto ? '<circle class="alone" r="'+(r+3).toFixed(1)+'" stroke="'+c+'"/>'
+         + '<circle class="cuore" r="'+r.toFixed(1)+'" fill="'+c+'"/>'
+         : '<rect class="alone-q" x="'+(-r-2.2).toFixed(1)+'" y="'+(-r-2.2).toFixed(1)+'" width="'+((r+2.2)*2).toFixed(1)+'" height="'+((r+2.2)*2).toFixed(1)+'" rx="1" stroke="'+c+'"/>'
+         + '<rect class="cuore-q" x="'+(-r).toFixed(1)+'" y="'+(-r).toFixed(1)+'" width="'+(r*2).toFixed(1)+'" height="'+(r*2).toFixed(1)+'" rx=".6" fill="'+c+'"/>')+
+   (b.sv.bb?'<g class="banda"><path class="bandierina" d="'+BANDIERA+'"/></g>':'')+
+   '<g class="etim"><line class="guida" x1="0" y1="0" x2="0" y2="0"/><text class="nome" x="'+p[0]+'" y="'+p[1]+'" text-anchor="'+p[2]+'">'+b.n+'</text></g></g>';}).join("");
+const MARKER=[...document.querySelectorAll(".marker")];
+
+/* Le due legende nascono dagli stessi dati della carta: le misure passano per
+   raggio(), i colori vengono da ACCESSI. Se domani si cambia la formula o si
+   aggiunge un modo d'accesso, la legenda si aggiorna da sola. */
+(function legende(){
+  const cerchio=(r,riemp,bordo)=>'<svg viewBox="-8 -8 16 16" width="16" height="16" aria-hidden="true">'
+    +'<circle r="'+r.toFixed(1)+'" fill="'+riemp+'" stroke="'+bordo+'" stroke-width="1.4"/></svg>';
+  const voce=(dis,et)=>'<span class="lg-voce">'+dis+'<i>'+et+'</i></span>';
+
+  document.getElementById("lgMisure").innerHTML =
+    [["≈100 m","100 m"],["≈500 m","500 m"],["≈1 km","1 km"],["≈2 km","2 km"],["≈4 km","4 km"]]
+      .map(([lung,et])=>voce(cerchio(raggio({lung}),"#fff","#5f849c"),et)).join("")
+    + (SPIAGGE.some(b=>!b.lung)?voce('<svg viewBox="-8 -8 16 16" width="16" height="16" aria-hidden="true">'
+        +'<rect x="-2.9" y="-2.9" width="5.8" height="5.8" rx=".6" fill="#fff" stroke="#5f849c" stroke-width="1.4"/></svg>',"lunghezza non nota"):"");
+
+  document.getElementById("lgColori").innerHTML =
+    Object.values(ACCESSI).map(a=>voce(cerchio(4.6,a.col,"#fff"),a.et)).join("")+(SPIAGGE.some(b=>b.sv.bb)?voce('<svg viewBox="-8 -8 16 16" width="16" height="16" aria-hidden="true">'
+      +'<circle r="3.4" cy="-2.2" fill="#9ed4ea" stroke="#fff" stroke-width="1.1"/>'
+      +'<path transform="translate(0,-1.4) scale(.62)" fill="#1786bd" d="'+BANDIERA+'"/></svg>',"Bandiera Blu 2026"):"");
+})();
+
+
+/* ---------------- scritte a dimensione costante ----------------
+   Le etichette vivono nel sistema della carta, quindi crescono con
+   l'ingrandimento. Qui vengono rimpicciolite della stessa quantità, così a
+   video restano sempre della stessa taglia; e quando due si toccano si
+   nasconde la meno importante (l'ordine è quello in cui sono elencate). */
+const SEGNI=[...document.querySelectorAll("#gPaesi .segno, #gCime .segno")];
+const GRADI=[...document.querySelectorAll("#gGriglia .grado-lat")];
+const ETIM=MARKER.map(m=>m.querySelector(".etim"));
+const BANDE=MARKER.map(m=>m.querySelector(".banda"));
+let ultimoF="";
+const urtano=(r,m)=>!(r.x+r.w<m.x||m.x+m.w<r.x||r.y+r.h<m.y||m.y+m.h<r.y);
+
+/* quanti pixel deve misurare a video ciascuna scritta */
+/* quanti pixel deve misurare a video: le scritte in altezza,
+   il segno della spiaggia in raggio */
+const TAGLIA={nome:15, citta:12, quota:11, grado:12, segno:6.6, bandiera:17};
+/* il raggio tipico che raggio() restituisce, in unità di carta:
+   serve a convertire la misura a video in un fattore di scala */
+const SEGNO_BASE=4.4;
+/* l'altezza del disegno della bandierina in unità di carta */
+const BANDIERA_ALTA=10.1;
+/* Quanto spazio c'è, in media, fra una spiaggia e la sua vicina: si misura
+   una volta sola perché non dipende dall'ingrandimento. Primo quartile, così
+   tre spiagge su quattro stanno più comode di così. */
+const PASSO=(function(){
+  if(SPIAGGE.length<2) return 60;
+  const X=SPIAGGE.map(b=>px(b.lon)), Y=SPIAGGE.map(b=>py(b.lat)), d=[];
+  for(let i=0;i<X.length;i++){
+    let m=Infinity;
+    for(let j=0;j<X.length;j++){ if(i===j) continue;
+      const q=(X[i]-X[j])*(X[i]-X[j])+(Y[i]-Y[j])*(Y[i]-Y[j]);
+      if(q<m) m=q; }
+    d.push(Math.sqrt(m));
+  }
+  d.sort((a,b)=>a-b);
+  return d[Math.floor(d.length*0.25)]||60;
+})();
+function adattaTesti(v,s){
+  const r=telaio.getBoundingClientRect();
+  const perUnita=Math.min((r.width||600)/v.w,(r.height||600)/v.h) || 1;
+  /* fattore che porta un carattere da N unità di carta a TAGLIA pixel */
+  const q=x=>Math.max(.02,Math.min(24,x/perUnita));
+  const fCitta=q(TAGLIA.citta)/8.5, fGrado=q(TAGLIA.grado)/9;
+  SEGNI.forEach(g=>g.setAttribute("transform",
+    "translate("+g.dataset.x+","+g.dataset.y+") scale("+fCitta.toFixed(3)+")"));
+  GRADI.forEach(t=>{t.setAttribute("x",(v.x+v.w-16*fGrado).toFixed(1));
+    t.setAttribute("font-size",q(TAGLIA.grado).toFixed(2));});
+  /* il segno della spiaggia ha una sua scala: l'etichetta la annulla e
+     riparte dalla misura a video */
+  const fNome=q(TAGLIA.nome)/11;
+  const k=fNome/(s||1);
+  ETIM.forEach(g=>{ if(g) g.setAttribute("transform","scale("+k.toFixed(3)+")"); });
+  /* la bandierina non segue il segno: ha la sua misura a video, e resta
+     piantata con la base dell'asta al centro del cerchietto */
+  const kb=((TAGLIA.bandiera/perUnita)/BANDIERA_ALTA)/(s||1);
+  BANDE.forEach(g=>{ if(g) g.setAttribute("transform","scale("+kb.toFixed(3)+")"); });
+  const f=fCitta;
+
+  /* la sovrapposizione dipende anche da dove si guarda, non solo da quanto:
+     spostandosi alla stessa distanza le etichette restavano quelle di prima */
+  const firma=f.toFixed(3)+"|"+v.x.toFixed(0)+"|"+v.y.toFixed(0);
+  if(firma===ultimoF) return;
+  ultimoF=firma;
+  const messi=[];
+  /* dentro davvero: prima bastava che l'etichetta sfiorasse l'inquadratura, e
+     i nomi sul bordo restavano scritti a metà, tagliati dalla cornice */
+  const dentro=r=>r.x>=v.x && r.y>=v.y && r.x+r.w<=v.x+v.w && r.y+r.h<=v.y+v.h;
+
+  /* I segni occupano il posto per primi: una scritta sotto un pallino non si
+     legge, e il pallino non si può spostare. Ogni nome però può sfiorare il
+     proprio segno — è a quello che si riferisce. */
+  const ing=(s||1)*3.4;
+  const bolle=MARKER.map((m,i)=>{
+    if(m.classList.contains("spento")||m.style.display==="none") return null;
+    const b=SPIAGGE[i];
+    return {x:px(b.lon)-ing, y:py(b.lat)-ing, w:ing*2, h:ing*2};
+  });
+  const liberoDa=(r,mio)=>!bolle.some((q,j)=>q&&j!==mio&&urtano(r,q));
+
+  /* Prima le città: sono poche e danno l'ossatura alla carta. Se cedessero il
+     posto ai nomi delle spiagge — che sono cento volte tanti — resterebbe un
+     pulviscolo di nomi senza un riferimento per orientarsi. */
+  SEGNI.forEach(g=>{
+    g.style.display="";
+    const t=g.querySelector("text"); if(!t) return;
+    const b=t.getBBox(), x=+g.dataset.x, y=+g.dataset.y;
+    const r={x:x+b.x*f-1, y:y+b.y*f-1, w:b.width*f+2, h:b.height*f+2};
+    if(!dentro(r)||!liberoDa(r,-1)) { g.style.display="none"; return; }
+    if(messi.some(q=>urtano(r,q))) g.style.display="none"; else messi.push(r);
+  });
+
+  /* Poi i nomi delle spiagge, nello spazio rimasto. Il nome sta a destra del
+     segno; se a destra sborda, passa a sinistra. */
+  MARKER.forEach((m,i)=>{
+    const g=ETIM[i]; if(!g) return;
+    g.style.display="";
+    if(m.classList.contains("spento")||m.style.display==="none") return;
+    const t=g.querySelector("text"); if(!t) return;
+    const b=SPIAGGE[i], x=px(b.lon), y=py(b.lat);
+    const gu=g.querySelector(".guida");
+    /* La spiaggia sa da che parte ha il mare: se il nome sta a ponente si
+       prova prima a ponente. Il resto della scaletta e' sempre lo stesso. */
+    const ord=(b.lato==="W")
+      ? SCALE.slice().sort((a,c)=>(a[1]>0)-(c[1]>0))
+      : SCALE;
+    let messo=false;
+    for(const [,dx,dy,anc,filo] of ord){
+      t.setAttribute("x",dx); t.setAttribute("y",dy); t.setAttribute("text-anchor",anc);
+      if(gu) gu.setAttribute("x2","0"), gu.setAttribute("y2","0");
+      let bb; try{ bb=t.getBBox(); }catch(e){ return; }
+      const r={x:x+bb.x*fNome-1,y:y+bb.y*fNome-1,w:bb.width*fNome+2,h:bb.height*fNome+2};
+      if(!dentro(r)||!liberoDa(r,i)) continue;
+      if(messi.some(q=>urtano(r,q))) continue;
+      /* il filo parte dal bordo del segno e si ferma appena prima della
+         scritta: attaccato al pallino sarebbe una macchia, dentro la
+         scritta la sporcherebbe */
+      if(gu){
+        if(filo){
+          const L=Math.hypot(dx,dy), ux=dx/L, uy=dy/L;
+          gu.setAttribute("x1",(ux*7).toFixed(1)); gu.setAttribute("y1",(uy*7).toFixed(1));
+          gu.setAttribute("x2",(dx-ux*4).toFixed(1)); gu.setAttribute("y2",(dy-uy*4-2).toFixed(1));
+        }else{
+          gu.setAttribute("x1","0"); gu.setAttribute("y1","0");
+          gu.setAttribute("x2","0"); gu.setAttribute("y2","0");
+        }
+      }
+      messi.push(r); messo=true; break;
+    }
+    if(!messo) g.style.display="none";
+  });
+}
+
+/* ======================= ZOOM ======================= */
+let vista={...PIENO}, zonaAttiva=null, anim=null;
+function aspetta(bb){const r=telaio.getBoundingClientRect(),ar=(r.width||400)/(r.height||700);
+  let{x,y,w,h}=bb; if(w/h<ar){const nw=h*ar;x-=(nw-w)/2;w=nw;}else{const nh=w/ar;y-=(nh-h)/2;h=nh;} return{x,y,w,h};}
+function applicaVista(v){
+  svg.setAttribute("viewBox",v.x.toFixed(1)+" "+v.y.toFixed(1)+" "+v.w.toFixed(1)+" "+v.h.toFixed(1));
+  /* Il segno cresce appena appena quando ci si avvicina: abbastanza per
+     restare comodo da toccare, non tanto da coprire la spiaggia. */
+  /* Il segno ha la taglia che gli lascia la vicina più prossima: mai così
+     piccolo da non poterlo cliccare, mai così grande da coprire la costa. */
+  const rt=telaio.getBoundingClientRect();
+  const perU=Math.min((rt.width||600)/v.w,(rt.height||600)/v.h)||1;
+  const rPx=Math.max(3.5,Math.min(TAGLIA.segno, 0.58*PASSO*perU));
+  const s=Math.max(.02,Math.min(8,(rPx/perU)/SEGNO_BASE));
+  MARKER.forEach((m,i)=>{const b=SPIAGGE[i];
+    m.setAttribute("transform","translate("+px(b.lon).toFixed(1)+","+py(b.lat).toFixed(1)+") scale("+s.toFixed(3)+")");});
+  /* I nomi compaiono quando la carta è abbastanza vicina da farceli stare: sotto
+     il 55% della larghezza totale. Prima dipendevano dall'aver scelto una zona,
+     e la stessa spiaggia mostrava o nascondeva il nome senza un motivo visibile. */
+  svg.classList.add("nomi");
+  adattaTesti(v,s);
+  if(typeof disegnaQui==="function") disegnaQui();
+}
+function vaiA(bb){
+  const t=aspetta(bb),d={...vista},rid=!!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  if(anim) cancelAnimationFrame(anim);
+  if(rid){vista=t;applicaVista(t);aggiornaScala();return;}
+  const t0=performance.now(),dur=520;
+  (function passo(now){const k=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-k,3);
+    vista={x:d.x+(t.x-d.x)*e,y:d.y+(t.y-d.y)*e,w:d.w+(t.w-d.w)*e,h:d.h+(t.h-d.h)*e};
+    applicaVista(vista); aggiornaScala(); if(k<1) anim=requestAnimationFrame(passo);})(t0);
+}
+function bboxZona(z){const m=SPIAGGE.filter(b=>b.z===z),xs=m.map(b=>px(b.lon)),ys=m.map(b=>py(b.lat)),pad=52;
+  const x=Math.min(...xs)-pad,y=Math.min(...ys)-pad;
+  return{x,y,w:Math.max(...xs)-x+pad,h:Math.max(...ys)-y+pad};}
+function selezionaZona(z){zonaAttiva=z;
+  document.querySelectorAll("#zone button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.z===(z||"")));
+  MARKER.forEach((m,i)=>m.classList.toggle("eti",!!z&&SPIAGGE[i].z===z));
+  vaiA(z?bboxZona(z):PIENO);}
+document.getElementById("zone").innerHTML='<button data-z="" aria-pressed="true">Tutta la regione</button>'+
+  Object.entries(ZONE).map(([k,v])=>'<button data-z="'+k+'" aria-pressed="false">'+v+'</button>').join("");
+document.getElementById("zone").addEventListener("click",e=>{const b=e.target.closest("button");if(b)selezionaZona(b.dataset.z||null);});
+/* --- navigazione: rotella, trascinamento, pizzico, tastiera, pulsanti --- */
+const ZMIN=PIENO.w/70, ZMAX=PIENO.w*1.35;
+const bussola=document.getElementById("bussola");
+function aggiornaScala(){
+  const r=svg.getBoundingClientRect(); if(!r.width) return;
+  const kmPerUnita=1/KY*111;                      // 1 unità SVG ≈ km
+  const largKm=vista.w*kmPerUnita;
+  bussola.textContent=largKm>=100? Math.round(largKm)+" km" : largKm.toFixed(largKm<10?1:0)+" km";
+}
+/* Il centro dell'inquadratura non esce dal rettangolo della regione: si può
+   arrivare a mettere il bordo della carta in mezzo allo schermo, non a
+   perderla del tutto. Senza questo, un trascinamento lungo lasciava sullo
+   schermo mare vuoto e nessun indizio su come tornare. */
+function dentroLaCarta(v){
+  const cx=Math.max(PIENO.x, Math.min(PIENO.x+PIENO.w, v.x+v.w/2)),
+        cy=Math.max(PIENO.y, Math.min(PIENO.y+PIENO.h, v.y+v.h/2));
+  return {x:cx-v.w/2, y:cy-v.h/2, w:v.w, h:v.h};
+}
+function fissa(v){
+  vista=dentroLaCarta(v);
+  applicaVista(vista); aggiornaScala();
+}
+function zoomA(f,fx,fy){
+  if(anim) cancelAnimationFrame(anim);
+  const nw=Math.max(ZMIN,Math.min(ZMAX,vista.w*f)), k=nw/vista.w;
+  fissa({x:fx-(fx-vista.x)*k, y:fy-(fy-vista.y)*k, w:nw, h:vista.h*k});
+}
+function centroVista(){ return [vista.x+vista.w/2, vista.y+vista.h/2]; }
+function puntoUtente(cx,cy){
+  const r=svg.getBoundingClientRect();
+  return [vista.x+(cx-r.left)/r.width*vista.w, vista.y+(cy-r.top)/r.height*vista.h];
+}
+svg.addEventListener("wheel",e=>{
+  e.preventDefault();
+  const d=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?400:1);
+  const [fx,fy]=puntoUtente(e.clientX,e.clientY);
+  zoomA(Math.pow(1.0018,d),fx,fy);
+},{passive:false});
+
+let trascino=null, mosso=0, pizzico=null;
+svg.addEventListener("pointerdown",e=>{
+  if(e.pointerType==="mouse"&&e.button!==0) return;
+  if(anim) cancelAnimationFrame(anim);
+  trascino={cx:e.clientX,cy:e.clientY,vx:vista.x,vy:vista.y}; mosso=0;
+});
+/* niente setPointerCapture: catturerebbe il mouseup e il click non arriverebbe più al marker.
+   Gli ascoltatori stanno sulla finestra, così il trascinamento continua anche fuori dalla carta. */
+addEventListener("pointermove",e=>{
+  if(!trascino) return;
+  const r=svg.getBoundingClientRect();
+  const dx=(e.clientX-trascino.cx)/r.width*vista.w, dy=(e.clientY-trascino.cy)/r.height*vista.h;
+  mosso=Math.max(mosso,Math.abs(e.clientX-trascino.cx)+Math.abs(e.clientY-trascino.cy));
+  if(mosso<4) return;                       // sotto soglia resta un clic, non un trascinamento
+  svg.classList.add("trascino");
+  fissa({x:trascino.vx-dx, y:trascino.vy-dy, w:vista.w, h:vista.h});
+});
+["pointerup","pointercancel"].forEach(t=>addEventListener(t,()=>{
+  trascino=null; svg.classList.remove("trascino");
+}));
+const distanza=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+const medio=t=>[(t[0].clientX+t[1].clientX)/2,(t[0].clientY+t[1].clientY)/2];
+svg.addEventListener("touchstart",e=>{ if(e.touches.length===2){ trascino=null;
+  const [cx,cy]=medio(e.touches); pizzico={d:distanza(e.touches),cx,cy}; } },{passive:true});
+/* Due dita fanno due cose insieme: il punto di mezzo che si sposta trascina la carta,
+   le dita che si allontanano la ingrandiscono. Prima si poteva solo ingrandire, e per
+   spostarsi bisognava uscire e rientrare dallo zoom. */
+svg.addEventListener("touchmove",e=>{
+  if(!pizzico||e.touches.length!==2) return;
+  e.preventDefault();
+  const d=distanza(e.touches), [cx,cy]=medio(e.touches);
+  const r=svg.getBoundingClientRect();
+  if(r.width){                                   // prima lo spostamento, alla vista corrente
+    const dx=(cx-pizzico.cx)/r.width*vista.w, dy=(cy-pizzico.cy)/r.height*vista.h;
+    if(dx||dy) fissa({x:vista.x-dx, y:vista.y-dy, w:vista.w, h:vista.h});
+  }
+  if(d>4){                                       // poi l'ingrandimento, centrato fra le dita
+    const [fx,fy]=puntoUtente(cx,cy);
+    zoomA(pizzico.d/d,fx,fy);
+  }
+  pizzico={d,cx,cy};
+},{passive:false});
+svg.addEventListener("touchend",()=>{pizzico=null;});
+
+document.getElementById("zPiu").onclick=()=>{const[c,d]=centroVista();zoomA(1/1.6,c,d);};
+document.getElementById("zMeno").onclick=()=>{const[c,d]=centroVista();zoomA(1.6,c,d);};
+document.getElementById("zFit").onclick=()=>selezionaZona(null);
+telaio.addEventListener("keydown",e=>{
+  const passo=vista.w*0.16;
+  const mosse={ArrowLeft:[-passo,0],ArrowRight:[passo,0],ArrowUp:[0,-passo*(vista.h/vista.w)],ArrowDown:[0,passo*(vista.h/vista.w)]};
+  if(mosse[e.key]){ e.preventDefault(); if(anim)cancelAnimationFrame(anim);
+    fissa({x:vista.x+mosse[e.key][0], y:vista.y+mosse[e.key][1], w:vista.w, h:vista.h}); return; }
+  const[c,d]=centroVista();
+  if(e.key==="+"||e.key==="="){e.preventDefault();zoomA(1/1.6,c,d);}
+  if(e.key==="-"||e.key==="_"){e.preventDefault();zoomA(1.6,c,d);}
+  if(e.key==="0"){e.preventDefault();selezionaZona(null);}
+});
+
+/* ---- dove sono ------------------------------------------------------------
+   La posizione non viene chiesta all'apertura: solo quando si preme il pulsante.
+   Il cerchio chiaro attorno al punto è il margine d'errore dichiarato dal
+   dispositivo, che nelle città può essere di poche decine di metri e in campagna
+   di qualche chilometro: disegnarlo evita di far credere a una precisione
+   che non c'è. */
+let posizione=null;
+const gQui=document.getElementById("gQui");
+const avvisoQui=document.getElementById("avvisoQui");
+let timerAvviso=null;
+
+function avvisa(t,ms,storto){
+  if(!avvisoQui) return;
+  avvisoQui.innerHTML=t; avvisoQui.hidden=false;
+  avvisoQui.classList.toggle("storto",!!storto);
+  clearTimeout(timerAvviso);
+  if(ms) timerAvviso=setTimeout(()=>{avvisoQui.hidden=true;},ms);
+}
+const scappa=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+/* «distanza» è già presa dal pizzico a due dita: qui serve un altro nome. */
+const kmScritti=k=>k<1?Math.round(k*1000)+" m":k<10?k.toFixed(1)+" km":Math.round(k)+" km";
+function kmFra(la1,lo1,la2,lo2){          // formula dell'emisenoverso
+  const R=6371, r=Math.PI/180;
+  const dla=(la2-la1)*r, dlo=(lo2-lo1)*r;
+  const s=Math.sin(dla/2)**2+Math.cos(la1*r)*Math.cos(la2*r)*Math.sin(dlo/2)**2;
+  return 2*R*Math.asin(Math.min(1,Math.sqrt(s)));
+}
+function piuVicina(la,lo){
+  let b=null,d=Infinity;
+  SPIAGGE.forEach(s=>{const k=kmFra(la,lo,s.lat,s.lon); if(k<d){d=k;b=s;}});
+  return b?{spiaggia:b,km:d}:null;
+}
+function disegnaQui(){
+  if(!posizione){ gQui.innerHTML=""; return; }
+  const {lat,lon,acc}=posizione;
+  const s=Math.max(.26,Math.min(1,vista.w/PIENO.w));
+  /* il raggio d'errore è in metri e va convertito nelle unità della carta,
+     dove un'unità vale 111/KY chilometri */
+  const rAcc=Math.max(4,(acc/1000)/(111/KY));
+  gQui.innerHTML='<g class="qui-segno" transform="translate('+px(lon).toFixed(1)+','+py(lat).toFixed(1)+')">'+
+    '<circle class="qui-alone" r="'+rAcc.toFixed(1)+'"/>'+
+    '<g transform="scale('+s.toFixed(3)+')">'+
+      '<circle class="qui-bordo" r="7"/><circle class="qui-punto" r="4"/></g></g>';
+}
+function vaiAllaPosizione(){
+  if(!navigator.geolocation){ avvisa("Questo browser non sa dire dove sei.",6000,true); return; }
+  if(!window.isSecureContext){
+    avvisa("La posizione funziona solo su un indirizzo <b>https</b>, non aprendo il file dal telefono.",8000,true);
+    return;
+  }
+  avvisa("Cerco la posizione…");
+  navigator.geolocation.getCurrentPosition(p=>{
+    const lat=p.coords.latitude, lon=p.coords.longitude, acc=p.coords.accuracy||0;
+    posizione={lat,lon,acc};
+    disegnaQui();
+    const vic=piuVicina(lat,lon);
+    const x=px(lon), y=py(lat);
+    const dentro = x>=PIENO.x && x<=PIENO.x+PIENO.w && y>=PIENO.y && y<=PIENO.y+PIENO.h;
+    if(dentro){
+      const l=Math.max(ZMIN,PIENO.w*0.16);
+      vaiA({x:x-l/2, y:y-l*0.5*(PIENO.h/PIENO.w), w:l, h:l*(PIENO.h/PIENO.w)});
+      avvisa(vic ? "Sei qui. La spiaggia più vicina è <b>"+scappa(vic.spiaggia.n)+"</b>, a "+kmScritti(vic.km)
+           : "Sei qui.", 9000);
+    } else {
+      avvisa(vic ? "Sei fuori da questa carta. La più vicina fra le spiagge segnate è <b>"+
+             scappa(vic.spiaggia.n)+"</b>, a "+kmScritti(vic.km)
+           : "Sei fuori da questa carta.", 10000, true);
+    }
+  }, e=>{
+    const m = e.code===1 ? "Permesso negato: la posizione si concede dalle impostazioni del browser."
+            : e.code===2 ? "Posizione non disponibile in questo momento."
+            : "La ricerca della posizione è durata troppo.";
+    avvisa(m,8000,true);
+  }, {enableHighAccuracy:true, timeout:12000, maximumAge:60000});
+}
+document.getElementById("zQui").addEventListener("click",vaiAllaPosizione);
+addEventListener("resize",()=>{applicaVista(vista=aspetta(zonaAttiva?bboxZona(zonaAttiva):PIENO));aggiornaScala();});
+applicaVista(vista=aspetta(PIENO)); aggiornaScala();
+
+/* ======================= METEO E MARE ======================= */
+const WMO={0:["Sereno","sole"],1:["Poco nuvoloso","sole"],2:["Parz. nuvoloso","nuvole"],3:["Coperto","coperto"],
+ 45:["Nebbia","nebbia"],48:["Nebbia gelata","nebbia"],51:["Pioviggine","pioggia"],53:["Pioviggine","pioggia"],
+ 55:["Pioviggine forte","pioggia"],56:["Pioviggine gelata","pioggia"],57:["Pioviggine gelata","pioggia"],
+ 61:["Pioggia debole","pioggia"],63:["Pioggia","pioggia"],65:["Pioggia forte","pioggia"],
+ 66:["Pioggia gelata","pioggia"],67:["Pioggia gelata","pioggia"],71:["Neve","neve"],73:["Neve","neve"],
+ 75:["Neve forte","neve"],77:["Nevischio","neve"],80:["Rovesci","pioggia"],81:["Rovesci","pioggia"],
+ 82:["Rovesci forti","pioggia"],85:["Rovesci di neve","neve"],86:["Rovesci di neve","neve"],
+ 95:["Temporale","temporale"],96:["Temporale e grandine","temporale"],99:["Temporale e grandine","temporale"]};
+const GLIFI={
+ sole:'<circle cx="12" cy="12" r="4.6" fill="#f0b429"/><g stroke="#f0b429" stroke-width="1.7" stroke-linecap="round"><path d="M12 2.4v2.4M12 19.2v2.4M2.4 12h2.4M19.2 12h2.4M5.2 5.2l1.7 1.7M17.1 17.1l1.7 1.7M18.8 5.2l-1.7 1.7M6.9 17.1l-1.7 1.7"/></g>',
+ nuvole:'<circle cx="9" cy="9.5" r="3.6" fill="#f0b429"/><path d="M7.4 18.4a4.1 4.1 0 01-.3-8.2 5.6 5.6 0 0110.7 1.3 3.5 3.5 0 01-.6 6.9z" fill="#cfe3ee"/>',
+ coperto:'<path d="M6.6 19a4.4 4.4 0 01-.3-8.8 6 6 0 0111.5 1.4A3.8 3.8 0 0117.3 19z" fill="#b9cfdd"/>',
+ nebbia:'<path d="M6.8 13.6a4 4 0 01-.3-8 5.5 5.5 0 0110.5 1.3 3.4 3.4 0 01-.5 6.7z" fill="#cfe3ee"/><g stroke="#9fb6c3" stroke-width="1.6" stroke-linecap="round"><path d="M4.6 17h14.8M7 20h10"/></g>',
+ pioggia:'<path d="M6.8 14.6a4 4 0 01-.3-8 5.5 5.5 0 0110.5 1.3 3.4 3.4 0 01-.5 6.7z" fill="#b9cfdd"/><g stroke="#1786bd" stroke-width="1.8" stroke-linecap="round"><path d="M8.6 17.4l-1 3M12.4 17.4l-1 3M16.2 17.4l-1 3"/></g>',
+ neve:'<path d="M6.8 14.6a4 4 0 01-.3-8 5.5 5.5 0 0110.5 1.3 3.4 3.4 0 01-.5 6.7z" fill="#cfe3ee"/><g stroke="#7ea9be" stroke-width="1.6" stroke-linecap="round"><path d="M8.4 18.4v2.6M7.2 19.7h2.4M14.4 18.4v2.6M13.2 19.7h2.4"/></g>',
+ temporale:'<path d="M6.8 14.2a4 4 0 01-.3-8 5.5 5.5 0 0110.5 1.3 3.4 3.4 0 01-.5 6.7z" fill="#9db4c2"/><path d="M12.6 15.4l-3.4 4.6h2.6l-1.2 3.4 4.2-5.2h-2.6z" fill="#f0b429"/>'};
+function icona(code,cls){const g=GLIFI[(WMO[code]||["","coperto"])[1]];
+  return '<svg viewBox="0 0 24 24" '+(cls?'class="'+cls+'"':'')+' aria-hidden="true">'+g+'</svg>';}
+const ROSA=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSO","SO","OSO","O","ONO","NO","NNO"];
+function freccia(d,px){ if(d==null) return "";
+  const s=px||14;
+  return '<svg viewBox="0 0 24 24" style="width:'+s+'px;height:'+s+'px;transform:rotate('+(((d+180)%360)).toFixed(0)+'deg)" aria-hidden="true">'+
+    '<path d="M12 2.6l5.4 9.6h-3.6v8.8h-3.6v-8.8H6.6z" fill="currentColor"/></svg>';}
+const dirTxt=d=>(d==null?"—":ROSA[Math.round(((d%360)+360)%360/22.5)%16]);
+/* Scala Douglas, quella dei bollettini nautici. Le soglie di prima erano a
+   occhio e sbagliate di parecchio — «mosso» comincia a mezzo metro, non a un
+   metro — e sopra i quattro metri la Douglas ha altri cinque gradini che
+   finivano tutti dentro «agitato». Il grado si legge accanto alla parola:
+   e' il numero con cui il mare viene dato per radio. */
+const DOUGLAS=[[0.005,"calmo","#2f9772"],   [0.10,"quasi calmo","#3f9f6a"],
+               [0.50,"poco mosso","#7bb03a"],[1.25,"mosso","#cf8a13"],
+               [2.50,"molto mosso","#e07a2c"],[4,"agitato","#dd5b45"],
+               [6,"molto agitato","#c8402c"], [9,"grosso","#a92d1f"],
+               [14,"molto grosso","#8a1f16"], [Infinity,"tempestoso","#6b140e"]];
+function statoMare(h){
+  if(h==null) return ["—","#9fb6c3",null];
+  const g=DOUGLAS.findIndex(s=>h<s[0]);
+  return [DOUGLAS[g][1],DOUGLAS[g][2],g];
+}
+/* ICON-EU del servizio meteorologico tedesco: maglia di 7 km su tutta l'Europa
+   mediterranea e atlantica, dal Portogallo alla Grecia. Un modello solo per ogni
+   paese, così le previsioni di due spiagge in due stati diversi restano
+   confrontabili; con «automatico» ognuna verrebbe da un modello nazionale. */
+const MODELLO="icon_seamless";
+const LIV_FOLLA=["Molto basso","Basso","Medio","Alto","Molto alto"];
+const AFFOLLAMENTO=v=>LIV_FOLLA[v-1]||"n/c";
+const cacheMeteo=new Map();
+
+/* Il campo daily.weather_code di Open-Meteo è il codice PIÙ SEVERO delle 24 ore:
+   un'ora di foschia all'alba o dieci minuti di pioviggine notturna marchiano tutta la
+   giornata. Qui il codice viene ricalcolato sulle sole ore diurne (8–20) e, se non c'è
+   pioggia vera, dedotto dalla nuvolosità media: è così che lo mostrano gli altri servizi. */
+function codiceDiurno(hr,giorno){
+  if(!hr||!hr.time) return null;
+  const idx=[];
+  for(let i=0;i<hr.time.length;i++){
+    if(hr.time[i].slice(0,10)!==giorno) continue;
+    const ora=+hr.time[i].slice(11,13);
+    if(ora>=8&&ora<=20) idx.push(i);
+  }
+  if(!idx.length) return null;
+  const piove=idx.filter(i=>{
+    const mm=(hr.precipitation&&hr.precipitation[i])||0;
+    const pr=(hr.precipitation_probability&&hr.precipitation_probability[i])||0;
+    const cw=(hr.weather_code&&hr.weather_code[i])||0;
+    return mm>=0.2 || (cw>=51 && pr>=45);
+  });
+  if(piove.length>=2){
+    const conta={};
+    piove.forEach(i=>{const c=hr.weather_code[i]; conta[c]=(conta[c]||0)+1;});
+    return +Object.entries(conta).sort((a,c)=>c[1]-a[1])[0][0];
+  }
+  if(!hr.cloud_cover) return null;
+  const nub=idx.reduce((s,i)=>s+(hr.cloud_cover[i]||0),0)/idx.length;
+  return nub<20?0:nub<50?1:nub<82?2:3;
+}
+function pioggiaDiurna(hr,giorno){
+  if(!hr||!hr.precipitation_probability) return 0;
+  let mx=0;
+  for(let i=0;i<hr.time.length;i++){
+    if(hr.time[i].slice(0,10)!==giorno) continue;
+    const ora=+hr.time[i].slice(11,13);
+    if(ora>=8&&ora<=20) mx=Math.max(mx,hr.precipitation_probability[i]||0);
+  }
+  return mx;
+}
+/* ---- l'andamento della giornata, ora per ora ------------------------------ */
+const ORA_DA=6, ORA_A=22;
+
+function serieGiorno(hr,giorno,campo){
+  const v=[];
+  if(!hr||!hr.time) return v;
+  for(let o=ORA_DA;o<=ORA_A;o++){
+    const t=giorno+"T"+String(o).padStart(2,"0")+":00";
+    const i=hr.time.indexOf(t);
+    v.push(i<0?null:(hr[campo]?hr[campo][i]:null));
+  }
+  return v;
+}
+function estremi(v,minimo){
+  const b=v.filter(x=>x!=null&&!isNaN(x));
+  if(!b.length) return null;
+  let lo=Math.min(...b), hi=Math.max(...b);
+  if(hi-lo<(minimo||1)){ const c=(hi+lo)/2, s=(minimo||1)/2; lo=c-s; hi=c+s; }
+  return [lo,hi];
+}
+
+function andamento(a,m,giorno,oggi){
+  const hrA=a.hourly, hrM=m?m.hourly:null;
+  const T =serieGiorno(hrA,giorno,"temperature_2m");
+  if(!T.some(x=>x!=null)) return "";
+  const CW=serieGiorno(hrA,giorno,"weather_code");
+  const PP=serieGiorno(hrA,giorno,"precipitation_probability");
+  const VV=serieGiorno(hrA,giorno,"wind_speed_10m");
+  const VD=serieGiorno(hrA,giorno,"wind_direction_10m");
+  const OH=hrM?serieGiorno(hrM,giorno,"wave_height"):[];
+  const OD=hrM?serieGiorno(hrM,giorno,"wave_direction"):[];
+  const conOnda=OH.some(x=>x!=null);
+
+  const N=ORA_A-ORA_DA+1, W=700, X0=54, X1=W-16, passo=(X1-X0)/(N-1);
+  const H=conOnda?242:176;
+  const x=i=>X0+i*passo;
+  const ogniDue=i=>(ORA_DA+i)%2===0;
+  const ogniQuattro=i=>(ORA_DA+i)%4===0;
+  const corsia=(y,nome,unita)=>'<text class="g-corsia" x="6" y="'+y+'">'+nome+'</text>'+
+    (unita?'<text class="g-mini" x="6" y="'+(y+11)+'">'+unita+'</text>':'');
+  const frecciaG=(cx,cy,dir,s)=>dir==null?"":
+    '<g transform="translate('+cx.toFixed(1)+','+cy+') rotate('+(((dir+180)%360)).toFixed(0)+
+    ') scale('+s+') translate(-12,-12)"><path class="g-freccia" d="M12 2.6l5.4 9.6h-3.6v8.8h-3.6v-8.8H6.6z"/></g>';
+
+  let o='<svg class="grafico" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" '+
+        'aria-label="Andamento della giornata dalle '+ORA_DA+' alle '+ORA_A+'">';
+
+  /* --- l'ora corrente, se la giornata è quella di oggi --- */
+  if(oggi){
+    const h=new Date().getHours();
+    if(h>=ORA_DA&&h<=ORA_A)
+      o+='<line class="g-adesso" x1="'+x(h-ORA_DA).toFixed(1)+'" y1="26" x2="'+x(h-ORA_DA).toFixed(1)+'" y2="'+(H-16)+'"/>';
+  }
+
+  /* --- pioggia: barre chiare in fondo alla corsia dell'aria --- */
+  const yPio=112, altaPio=40;
+  PP.forEach((p,i)=>{ if(p==null||p<15) return;
+    const h=Math.min(altaPio,p/100*altaPio);
+    o+='<rect class="g-pioggia" x="'+(x(i)-10).toFixed(1)+'" y="'+(yPio-h).toFixed(1)+
+       '" width="20" height="'+h.toFixed(1)+'" rx="2"/>';
+    if(ogniQuattro(i)) o+='<text class="g-mini" x="'+x(i).toFixed(1)+'" y="'+(yPio-h-3).toFixed(1)+
+       '" text-anchor="middle">'+p+'%</text>';
+  });
+
+  /* --- cielo: un glifo ogni due ore --- */
+  CW.forEach((c,i)=>{ if(c==null||!ogniDue(i)) return;
+    o+='<g transform="translate('+(x(i)-9).toFixed(1)+',2) scale(0.75)">'+
+       GLIFI[(WMO[c]||["","coperto"])[1]]+'</g>';
+  });
+
+  /* --- temperatura dell'aria --- */
+  const eT=estremi(T,4), yT0=36, yT1=106;
+  const yT=v=>yT1-(v-eT[0])/(eT[1]-eT[0])*(yT1-yT0);
+  let d="", aperto=false;
+  T.forEach((v,i)=>{ if(v==null){aperto=false;return;}
+    d+=(aperto?"L":"M")+x(i).toFixed(1)+","+yT(v).toFixed(1); aperto=true; });
+  o+='<path class="g-temp" d="'+d+'"/>';
+  T.forEach((v,i)=>{ if(v==null) return;
+    o+='<circle class="g-punto" cx="'+x(i).toFixed(1)+'" cy="'+yT(v).toFixed(1)+'" r="2.4"/>';
+    if(ogniDue(i)) o+='<text class="g-valore" x="'+x(i).toFixed(1)+'" y="'+(yT(v)-8).toFixed(1)+
+      '" text-anchor="middle">'+Math.round(v)+'°</text>';
+  });
+  o+=corsia(70,"aria","°C");
+
+  /* --- vento --- */
+  const yV=140;
+  o+='<line class="g-riga" x1="'+X0+'" y1="122" x2="'+X1+'" y2="122"/>';
+  VV.forEach((v,i)=>{ if(v==null||!ogniDue(i)) return;
+    o+=frecciaG(x(i),yV,VD[i],0.46)+
+       '<text class="g-valore" x="'+x(i).toFixed(1)+'" y="'+(yV+22)+'" text-anchor="middle">'+Math.round(v)+'</text>';
+  });
+  o+=corsia(yV-2,"vento","km/h");
+
+  /* --- onda --- */
+  if(conOnda){
+    const eO=estremi(OH,0.4), yO0=186, yO1=218;
+    const base=Math.min(0,eO[0]);
+    const yO=v=>yO1-(v-base)/(eO[1]-base)*(yO1-yO0);
+    o+='<line class="g-riga" x1="'+X0+'" y1="172" x2="'+X1+'" y2="172"/>';
+    let area="", primo=null, ultimo=null;
+    OH.forEach((v,i)=>{ if(v==null) return;
+      area+=(primo===null?"M":"L")+x(i).toFixed(1)+","+yO(v).toFixed(1);
+      if(primo===null) primo=i; ultimo=i; });
+    if(primo!==null){
+      o+='<path class="g-onda" d="'+area+"L"+x(ultimo).toFixed(1)+","+yO1+"L"+x(primo).toFixed(1)+","+yO1+'Z"/>';
+    }
+    OH.forEach((v,i)=>{ if(v==null||!ogniQuattro(i)) return;
+      o+='<text class="g-valore" x="'+x(i).toFixed(1)+'" y="'+(yO(v)-7).toFixed(1)+
+        '" text-anchor="middle">'+v.toFixed(1)+'</text>'+
+        frecciaG(x(i),yO1-9,OD[i],0.34);
+    });
+    o+=corsia(yO1-14,"onda","m");
+  }
+
+  /* --- le ore --- */
+  for(let i=0;i<N;i++){ if(!ogniDue(i)) continue;
+    o+='<text class="g-ora" x="'+x(i).toFixed(1)+'" y="'+(H-4)+'" text-anchor="middle">'+(ORA_DA+i)+'</text>';
+  }
+  return o+'</svg>';
+}
+function media(v,idx){
+  const b=idx.map(i=>v&&v[i]).filter(x=>x!=null&&!isNaN(x));
+  return b.length? b.reduce((s,x)=>s+x,0)/b.length : null;
+}
+/* Quale giornata mostrare: oggi finché il pomeriggio non è passato, poi domani. */
+function giornoDaMostrare(a){
+  const g=a&&a.daily&&a.daily.time?a.daily.time:null;
+  if(!g||!g.length) return null;
+  const adesso=new Date();
+  const oggi=adesso.getFullYear()+"-"+String(adesso.getMonth()+1).padStart(2,"0")+"-"+String(adesso.getDate()).padStart(2,"0");
+  const i=g.indexOf(oggi);
+  if(i<0) return {giorno:g[0], domani:false};
+  if(adesso.getHours()>=ORA_A && g[i+1]) return {giorno:g[i+1], domani:true};
+  return {giorno:g[i], domani:false};
+}
+
+async function json(u,ms){
+  const ac=new AbortController(),t=setTimeout(()=>ac.abort(),ms||10000);
+  try{const r=await fetch(u,{signal:ac.signal});clearTimeout(t);return r.ok?await r.json():null;}
+  catch(_){clearTimeout(t);return null;}
+}
+function largo(b,kmOff){ // sposta il punto verso il largo dell'Adriatico
+  const EST=0.31, NORD=0.95;          // versore NNE, perpendicolare alla costa molisana
+  return [ (b.lat+NORD*(kmOff/111)).toFixed(4), (b.lon+EST*(kmOff/83)).toFixed(4) ];
+}
+async function condizioni(b){
+  const key=b.n+"|"+b.com;   // il comune evita che due spiagge omonime condividano il meteo
+  if(cacheMeteo.has(key)) return cacheMeteo.get(key);
+  const aria=json("https://api.open-meteo.com/v1/forecast?latitude="+b.lat.toFixed(4)+"&longitude="+b.lon.toFixed(4)+
+    "&current=temperature_2m,apparent_temperature,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m"+
+    "&hourly=weather_code,cloud_cover,precipitation,precipitation_probability,temperature_2m,apparent_temperature,wind_speed_10m,wind_direction_10m"+
+    "&daily=weather_code,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,wind_direction_10m_dominant,precipitation_probability_max,uv_index_max"+
+    "&timezone=auto&forecast_days=7&models="+MODELLO);
+  const mare=(async()=>{
+    for(const off of [0,4,9,16]){
+      const [la,lo]=largo(b,off);
+      const d=await json("https://marine-api.open-meteo.com/v1/marine?latitude="+la+"&longitude="+lo+
+        "&hourly=wave_height,wave_direction,wave_period,sea_surface_temperature&timezone=auto&forecast_days=7",9000);
+      if(d&&d.hourly&&d.hourly.wave_height&&d.hourly.wave_height.some(v=>v!=null)) return d;
+    }
+    return null;
+  })();
+  const r={aria:await aria, mare:await mare};
+  cacheMeteo.set(key,r); return r;
+}
+function indice(a,m){
+  if(!a||!a.current) return null;
+  const c=a.current, on=m&&m.hourly?valOra(m,"wave_height"):null;
+  let p=0;
+  if(c.temperature_2m>=24) p+=2; else if(c.temperature_2m>=20) p+=1;
+  if(c.wind_speed_10m<12) p+=2; else if(c.wind_speed_10m<22) p+=1; else p-=1;
+  if(on!=null){ if(on<0.4) p+=2; else if(on<0.8) p+=1; else if(on>1.5) p-=2; else p-=1; }
+  const w=(WMO[c.weather_code]||["",""])[1];
+  if(w==="sole") p+=2; else if(w==="nuvole") p+=1; else if(w==="pioggia"||w==="temporale") p-=3;
+  if(p>=7) return ["Giornata da spiaggia ideale","#2f9772"];
+  if(p>=5) return ["Buone condizioni per il bagno","#7bb03a"];
+  if(p>=3) return ["Condizioni discrete","#cf8a13"];
+  return ["Condizioni poco favorevoli","#dd5b45"];
+}
+function valOra(m,campo){
+  const h=m.hourly, t=h.time, ora=new Date();
+  const iso=ora.getFullYear()+"-"+String(ora.getMonth()+1).padStart(2,"0")+"-"+String(ora.getDate()).padStart(2,"0")+"T"+String(ora.getHours()).padStart(2,"0")+":00";
+  let i=t.indexOf(iso); if(i<0) i=0;
+  const v=h[campo]; if(!v) return null;
+  for(let k=0;k<6;k++){ if(v[i+k]!=null) return v[i+k]; }
+  return v.find(x=>x!=null) ?? null;
+}
+function maxGiorno(m,campo,giorno){
+  if(!m||!m.hourly) return null;
+  const t=m.hourly.time, v=m.hourly[campo]; if(!v) return null;
+  let mx=null;
+  for(let i=0;i<t.length;i++) if(t[i].slice(0,10)===giorno && v[i]!=null) mx=(mx==null?v[i]:Math.max(mx,v[i]));
+  return mx;
+}
+const num=(v,d)=> v==null?"—":(d?v.toFixed(d):Math.round(v));
+
+function bloccoLive(b,dati){
+  const a=dati&&dati.aria, m=dati&&dati.mare;
+  const cam=camDella(b);
+  const rigaCam = cam
+    ? '<div class="cam">📹 <a href="'+cam.u+'" target="_blank" rel="noopener">Webcam live · '+cam.n+'</a><span class="dist">'+cam.vista+'</span></div>'
+    : '';
+  if(!a||!a.current){
+    return '<div class="live"><div class="live-testa"><span><i class="pulse"></i>Condizioni</span></div>'+
+      '<div class="live-nota">Dati meteo non disponibili: serve la connessione a internet.</div>'+rigaCam+'</div>';
+  }
+  const c=a.current, d=a.daily||{};
+  const onda=m?valOra(m,"wave_height"):null, tMare=m?valOra(m,"sea_surface_temperature"):null;
+  const [stato,,grado]=statoMare(onda);  // «calmo», «poco mosso»…, col grado Douglas
+  const ind=indice(a,m);
+
+  const quando=giornoDaMostrare(a);
+  const grafico=quando?andamento(a,m,quando.giorno,!quando.domani):"";
+
+  let giorni="";
+  if(d.time){
+    const G=["dom","lun","mar","mer","gio","ven","sab"];
+    d.time.forEach((g,i)=>{
+      const dt=new Date(g+"T12:00:00");
+      const om=maxGiorno(m,"wave_height",g);
+      const dv=d.wind_direction_10m_dominant?d.wind_direction_10m_dominant[i]:null;
+      const cd=codiceDiurno(a.hourly,g);
+      const pp=pioggiaDiurna(a.hourly,g);
+      /* sempre cinque celle: la pioggia sta dentro quella del cielo, non ne aggiunge una */
+      giorni+='<div><b>'+(i===0?"oggi":G[dt.getDay()])+'</b>'+
+        '<span class="ic">'+icona(cd!=null?cd:d.weather_code[i])+(pp>=25?'<i class="pio">'+pp+'%</i>':'')+'</span>'+
+        '<span class="t">'+num(d.temperature_2m_max[i])+'°<i> / '+num(d.temperature_2m_min[i])+'°</i></span>'+
+        '<span class="o">'+(om==null?'—':num(om,1)+' m')+'</span>'+
+        '<span class="vento">'+freccia(dv,10)+'<b>'+num(d.wind_speed_10m_max[i])+'</b><u>km/h</u>'+
+        '<span class="dir">'+dirTxt(dv)+'</span></span></div>';
+    });
+  }
+  return '<div class="live">'+
+    '<div class="live-testa"><span><i class="pulse"></i>'+(quando&&quando.domani?'Domani in spiaggia':'Oggi in spiaggia')+'</span>'+
+      '<span>acqua '+(tMare==null?'—':num(tMare)+'°')+'</span></div>'+
+    '<div class="andamento">'+grafico+'</div>'+
+    (ind?'<div class="sintesi"><span class="pallino" style="background:'+ind[1]+'"></span><b>'+ind[0]+'</b>'+
+      (grado!=null?'<span class="mare-stato">mare '+stato+'<i>Douglas '+grado+'</i></span>':'')+
+      (d.uv_index_max?'<span style="margin-left:auto;font-family:var(--dati);font-size:10px;color:var(--grigio)">UV max '+num(d.uv_index_max[0])+'</span>':'')+'</div>':'')+
+    '<div class="giorni">'+giorni+'</div>'+
+    rigaCam+
+    '<div class="live-nota">Open-Meteo · modello ICON-EU (DWD), maglia 7 km · ogni casella è la media delle sue ore; le direzioni sono mediate come versori · '+
+      'l\'onda è quella del largo: nelle baie chiuse è spesso molto più bassa · lo stato del mare segue la scala Douglas</div>'+
+  '</div>';
+}
+
+/* ======================= VISTA SATELLITARE + GOOGLE ======================= */
+/* Immagine aerea reale della spiaggia da Esri World Imagery (senza chiave),
+   ritagliata e centrata sulle coordinate. Nessuna foto "generica" fuori luogo. */
+const TILE="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/";
+function tessere(b,z){
+  const n=Math.pow(2,z), la=b.lat*Math.PI/180;
+  const cx=((b.lon+180)/360*n)*256;
+  const cy=((1-Math.log(Math.tan(la)+1/Math.cos(la))/Math.PI)/2*n)*256;
+  const W=1024,H=576, x0=cx-W/2, y0=cy-H/2;
+  let out="",k=0;
+  for(let ty=Math.floor(y0/256); ty<=Math.floor((y0+H)/256); ty++)
+    for(let tx=Math.floor(x0/256); tx<=Math.floor((x0+W)/256); tx++){
+      out+='<img data-t="'+(k++)+'" src="'+TILE+z+'/'+ty+'/'+tx+'" alt="" loading="lazy" '+
+        'style="left:'+((tx*256-x0)/W*100).toFixed(4)+'%;top:'+((ty*256-y0)/H*100).toFixed(4)+'%">';
+    }
+  return out;
+}
+/* La ricerca va ancorata al punto della spiaggia: senza, comanda il testo,
+   e il testo portava dentro il comune nella forma italiana — Cattaro, non
+   Kotor — così «Morinj Cattaro Montenegro» apriva il capoluogo. Ora il
+   comune non entra nella ricerca (lo fa il punto) e il nome perde la
+   parentesi, che è la traduzione per noi, non per Google. */
+const qLuogo=b=>encodeURIComponent(b.n.replace(/\s*\([^)]*\)/g,"").trim()+" Portugal");
+/* Una forma sola, per tutti: la ricerca parte dal punto della spiaggia.
+   Il place_id resta nei dati ma non guida piu’ il collegamento — e’ una
+   promessa che non possiamo verificare per mille spiagge, e dove e’ falsa
+   porta altrove senza che si veda. La coordinata invece e’ controllata. */
+const gMaps=b=>"https://www.google.com/maps/search/"+qLuogo(b)+"/@"+b.lat+","+b.lon+",16z";
+/* /maps/place/?q=place_id: è il vecchio formato, ora non risolve più: si usa l'API "Maps URLs".
+   Per il panorama, cbll è più tollerante di map_action=pano, che fallisce se non c'è
+   una vista entro 50 m dal punto. */
+const gFoto=b=>gMaps(b);
+/* source=outdoor tiene fuori le panoramiche scattate dentro i locali: senza,
+   Google agganciava la più vicina e capitava di finire dentro un ristorante. */
+/* ---- disponibilità di Street View ----------------------------------------
+   La chiave sta in configurazione.js, una sola per tutte le pagine. */
+const CHIAVE_GOOGLE = window.CHIAVE_GOOGLE || "";
+
+const panoNoti=new Map();
+function chiavePano(b){ return b.lat+","+b.lon; }
+async function panoDisponibile(b){
+  if(!CHIAVE_GOOGLE) return null;                       // senza chiave non si sa
+  const k=chiavePano(b);
+  if(panoNoti.has(k)) return panoNoti.get(k);
+  try{
+    const r=await fetch("https://maps.googleapis.com/maps/api/streetview/metadata?location="
+      +k+"&radius=150&source=outdoor&key="+CHIAVE_GOOGLE);
+    const d=await r.json();
+    /* Oltre al sì o no, la risposta dice quale panoramica e di che mese. Tenerne
+       l'identificativo permette di aprire esattamente quella invece della più
+       vicina, che è il modo sicuro di non finire dentro un locale. */
+    const e = d.status==="OK" ? {c:true, pano:d.pano_id||null, data:d.date||null} : {c:false};
+    panoNoti.set(k,e);
+    return e;
+  }catch(_){ return null; }                             // rete assente: non spegnere nulla
+}
+const MESI=["gennaio","febbraio","marzo","aprile","maggio","giugno","luglio",
+            "agosto","settembre","ottobre","novembre","dicembre"];
+function quando(t){                                     // «2023-06» → «giugno 2023»
+  const m=/^(\d{4})-(\d{2})/.exec(t||"");
+  return m ? MESI[+m[2]-1]+" "+m[1] : null;
+}
+/* Spegne i collegamenti a Street View di una scheda se la panoramica non esiste.
+   Finché la risposta non arriva non si tocca niente, per non far lampeggiare
+   il pulsante a ogni cambio di spiaggia. */
+async function verificaPano(b, dove){
+  const e=await panoDisponibile(b);
+  if(!e || !dove || !dove.isConnected) return;          // non si sa: si lascia com'è
+  if(!e.c){
+    dove.querySelectorAll("[data-pano]").forEach(a=>{
+      const s=document.createElement("span");
+      s.className="spento";
+      s.textContent="Street View non disponibile";
+      s.title="Google non ha panoramiche all'aperto entro 150 metri da questo punto";
+      a.replaceWith(s);
+    });
+    return;
+  }
+  const d=quando(e.data);
+  dove.querySelectorAll("[data-pano]").forEach(a=>{
+    if(e.pano) a.href="https://www.google.com/maps/@?api=1&map_action=pano&pano="+e.pano;
+    if(d) a.title="Panoramica di "+d;
+  });
+  const h5=dove.querySelector(".riquadro h5");          // nella scheda completa la data si vede
+  if(h5 && d && !h5.querySelector(".quando")){
+    const s=document.createElement("span");
+    s.className="quando"; s.textContent=d;
+    h5.insertBefore(s, h5.querySelector("[data-pano]"));
+  }
+}
+
+const gPano=b=>"https://www.google.com/maps?q&layer=c&cbll="+b.lat+","+b.lon+"&cbp=11,0,0,0,0&source=outdoor";
+const gVia=b=>"https://www.google.com/maps/dir/?api=1&destination="+b.lat+","+b.lon+"";
+const embMappa=b=>"https://maps.google.com/maps?q="+b.lat+","+b.lon+"&hl=it&z=16&t=k&output=embed";
+const embPano=b=>"https://maps.google.com/maps?q=&layer=c&cbll="+b.lat+","+b.lon+"&cbp=11,0,0,0,0&source=outdoor&hl=it&output=svembed";
+
+/* ======================= VEDUTA DI RISERVA ======================= */
+function rng(s){return()=>(s=(s*1103515245+12345)&0x7fffffff)/0x7fffffff;}
+function scuro(hex,d){const n=parseInt(hex.slice(1),16),c=[n>>16,(n>>8)&255,n&255].map(v=>Math.max(0,Math.min(255,v+d)));
+  return"#"+c.map(v=>v.toString(16).padStart(2,"0")).join("");}
+function pino(x,base,h){return'<line x1="'+x+'" y1="'+base+'" x2="'+x+'" y2="'+(base-h*.62)+'" stroke="#5a4632" stroke-width="3"/>'+
+  '<ellipse cx="'+x+'" cy="'+(base-h*.72)+'" rx="'+(h*.36).toFixed(0)+'" ry="'+(h*.19).toFixed(0)+'" fill="#43663f"/>'+
+  '<ellipse cx="'+(x-h*.12).toFixed(0)+'" cy="'+(base-h*.82)+'" rx="'+(h*.24).toFixed(0)+'" ry="'+(h*.14).toFixed(0)+'" fill="#547a48"/>';}
+function veduta(b){
+  const [sab,acq,sfo,ext]=b.sc,W=560,H=315,oriz=126,riva=214;
+  const r=rng(b.n.length*7919+b.n.charCodeAt(0)*131+b.n.charCodeAt(b.n.length-1)*17);
+  let o='<defs><linearGradient id="ci" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#bfe0f0"/><stop offset="70%" stop-color="#dff0f7"/><stop offset="100%" stop-color="#f2f8e9"/></linearGradient>'+
+   '<linearGradient id="mr" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+scuro(acq,-38)+'"/><stop offset="55%" stop-color="'+acq+'"/><stop offset="100%" stop-color="'+scuro(acq,50)+'"/></linearGradient>'+
+   '<linearGradient id="sb" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+sab+'"/><stop offset="100%" stop-color="'+scuro(sab,-28)+'"/></linearGradient></defs>'+
+   '<rect width="'+W+'" height="'+H+'" fill="url(#ci)"/>';
+  let m="M0,"+oriz; for(let x=0;x<=W;x+=56) m+=" L"+x+","+(oriz-18-r()*34).toFixed(0); m+=" L"+W+","+oriz+" Z";
+  o+='<path d="'+m+'" fill="#8fb0ae" opacity=".75"/><path d="'+m+'" transform="translate(42,12)" fill="#a9c6c2" opacity=".6"/>';
+  if(ext==="isola") o+='<path d="M392,'+oriz+' q32,-28 66,-3 q15,3 24,3 Z" fill="#8fb0ae"/><rect x="424" y="'+(oriz-34)+'" width="9" height="15" fill="#8fb0ae"/>';
+  if(ext==="baia") o+='<path d="M0,'+oriz+' q64,-42 140,-24 Z" fill="#94b5b1"/><path d="M'+W+','+oriz+' q-64,-42 -140,-24 Z" fill="#94b5b1"/>';
+  o+='<rect y="'+oriz+'" width="'+W+'" height="'+(riva-oriz+18)+'" fill="url(#mr)"/>';
+  for(let i=0;i<14;i++){const y=oriz+9+r()*(riva-oriz-12),x=r()*W,w=20+r()*52;
+    o+='<path d="M'+x.toFixed(0)+','+y.toFixed(0)+' q'+(w/2).toFixed(0)+',-3 '+w.toFixed(0)+',0" stroke="rgba(255,255,255,.5)" stroke-width="1.1" fill="none"/>';}
+  if(ext==="laguna") o+='<rect y="'+(riva-34)+'" width="'+W+'" height="34" fill="'+scuro(acq,68)+'" opacity=".7"/>';
+  if(ext==="barche") for(let i=0;i<3;i++){const x=96+i*140+r()*30,y=oriz+16+r()*22;
+    o+='<path d="M'+x+','+y+' l17,0 l-3,5 l-11,0 Z" fill="#3b6b80"/><line x1="'+(x+8)+'" y1="'+y+'" x2="'+(x+8)+'" y2="'+(y-13)+'" stroke="#3b6b80" stroke-width="1.2"/>';}
+  if(ext==="pontile"){o+='<rect x="356" y="'+(oriz+12)+'" width="164" height="4" fill="#5b7f8f"/>';
+    for(let x=368;x<516;x+=26) o+='<rect x="'+x+'" y="'+(oriz+16)+'" width="3" height="15" fill="#5b7f8f"/>';}
+  let sp="M0,"+(riva+12);
+  for(let x=0;x<=W;x+=44) sp+=" Q"+(x+22)+","+(riva+5+r()*16).toFixed(0)+" "+(x+44)+","+(riva+9+r()*11).toFixed(0);
+  sp+=" L"+W+","+H+" L0,"+H+" Z";
+  o+='<path d="'+sp+'" fill="url(#sb)"/><path d="'+sp+'" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.8"/>';
+  if(sfo==="pini") for(let i=0;i<7;i++){const x=(i<4?10+i*44:W-24-(i-4)*50)+r()*14; o+=pino(x,riva+5,56+r()*42);}
+  if(sfo==="granito"||ext==="massi"||ext==="pini-granito") for(let i=0;i<5;i++){
+    const x=(i<3?8+i*50:W-34-(i-3)*62),y=riva-6+r()*24,w=36+r()*48,h=26+r()*28;
+    o+='<ellipse cx="'+x.toFixed(0)+'" cy="'+y.toFixed(0)+'" rx="'+(w/2).toFixed(0)+'" ry="'+(h/2).toFixed(0)+'" fill="#c98d76" opacity=".9"/>'+
+       '<ellipse cx="'+(x-w/8).toFixed(0)+'" cy="'+(y-h/6).toFixed(0)+'" rx="'+(w/3).toFixed(0)+'" ry="'+(h/4).toFixed(0)+'" fill="#e0ac92" opacity=".65"/>';}
+  if(ext==="pini-granito") o+=pino(76,riva,68)+pino(W-70,riva-4,60);
+  if(sfo==="rocce") for(let i=0;i<6;i++){const x=r()*W,y=riva-4+r()*20,w=30+r()*46;
+    o+='<path d="M'+(x-w/2).toFixed(0)+','+(y+16).toFixed(0)+' L'+x.toFixed(0)+','+(y-18-r()*16).toFixed(0)+' L'+(x+w/2).toFixed(0)+','+(y+16).toFixed(0)+' Z" fill="#8b8a80" opacity=".92"/>';}
+  if(sfo==="macchia"||sfo==="dune") for(let i=0;i<10;i++){const x=r()*W,y=riva+12+r()*28,w=24+r()*38;
+    o+='<ellipse cx="'+x.toFixed(0)+'" cy="'+y.toFixed(0)+'" rx="'+(w/2).toFixed(0)+'" ry="'+(7+r()*7).toFixed(0)+'" fill="#8fa96a" opacity=".55"/>';}
+  if(sfo==="paese") for(let i=0;i<5;i++){const x=14+i*44+r()*10,h=28+r()*26,w=24+r()*14,y=riva-h+2;
+    o+='<rect x="'+x.toFixed(0)+'" y="'+y.toFixed(0)+'" width="'+w.toFixed(0)+'" height="'+h.toFixed(0)+'" fill="#f2e6cd"/>'+
+       '<path d="M'+(x-3)+','+y+' l'+(w/2+3)+',-10 l'+(w/2+3)+',10 Z" fill="#c0705c"/>';}
+  if(ext==="arco") o+='<path d="M'+(W-126)+','+(riva+7)+' q11,-68 66,-68 q55,0 66,68 l-24,0 q-8,-47 -42,-47 q-34,0 -42,47 Z" fill="#c98d76"/>';
+  if(ext==="torre") o+='<path d="M44,'+(riva-4)+' q28,-32 70,-15 l0,19 Z" fill="#7e9a72"/><rect x="62" y="'+(riva-70)+'" width="32" height="50" fill="#e0cda6"/><rect x="58" y="'+(riva-77)+'" width="40" height="9" fill="#cbb489"/>';
+  if(ext==="calette") o+='<path d="M0,'+(riva-12)+' q42,-50 102,-17 l0,42 l-102,0 Z" fill="#c98d76" opacity=".9"/><path d="M'+W+','+(riva-16)+' q-46,-52 -110,-15 l0,44 l110,0 Z" fill="#c98d76" opacity=".9"/>';
+  if(ext==="tronchi") for(let i=0;i<4;i++){const x=32+i*128+r()*40,y=riva+30+r()*32;
+    o+='<path d="M'+x+','+y+' l56,-8 l3,6 l-56,8 Z" fill="#a08a63" opacity=".9"/>';}
+  if(b.sv.lettini>=1) for(let i=0;i<4;i++){const x=66+i*126,y=riva+48+(i%2)*18;
+    o+='<path d="M'+(x-16)+','+y+' a16,10 0 0 1 32,0 Z" fill="#dd5b45"/><line x1="'+x+'" y1="'+y+'" x2="'+x+'" y2="'+(y+17)+'" stroke="#3b6b80" stroke-width="1.4"/>';}
+  return '<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Veduta schematica di '+b.n+'">'+o+'</svg>';
+}
+
+/* ======================= PANNELLO ======================= */
+const scheda=document.getElementById("scheda");
+function gradi(v,ns){const g=Math.floor(Math.abs(v)),p=(Math.abs(v)-g)*60;
+  return g+"°"+String(Math.floor(p)).padStart(2,"0")+"′"+String(Math.round((p%1)*60)).padStart(2,"0")+"″"+ns;}
+function linkMappa(b){return gMaps(b);}
+function vuoto(){ scheda.innerHTML=""; scheda.hidden=true; }
+function corpo(b){
+  const a=ACCESSI[b.acc]||ACCESSI.nc;
+  const chips=SERVIZI.map(([k,et])=>{
+    const v=b.sv[k],cls=(v==null)?"nc":(v>=1?"si":(v>0?"forse":"no")),
+      st=(v==null)?'<span class="st">n/c</span>':((v>0&&v<1)?'<span class="st">stag.</span>':"");
+    return '<span class="sv '+cls+'"><svg viewBox="0 0 20 20">'+ICONE[k]+'</svg><span class="lab">'+et+'</span>'+st+'</span>';}).join("");
+  return '<div class="corpo">'+
+   '<div class="riga-titolo"><div><h2>'+b.n+'</h2>'+
+     '<div class="sotto">'+b.com+' · '+gradi(b.lat,b.lat<0?"S":"N")+' '+gradi(b.lon,b.lon<0?"W":"E")+'</div></div>'+
+     '<div class="zona">'+ZONE[b.z]+'</div></div>'+
+   /* se lì sotto ce n'è più d'una, conviene dirlo: altrimenti sembra che il
+      clic non risponda, mentre sta solo scegliendo la prima */
+   (function(){const g=(typeof grappoloDi==="function")?grappoloDi(SPIAGGE.indexOf(b)):[];
+     return g.length>1 ? '<p class="grappolo">In questo punto ci sono <b>'+g.length+
+       '</b> spiagge: clicca ancora sul segno per passare alla successiva'+
+       (g.length>6?', oppure ingrandisci la carta per separarle':'')+'.</p>' : "";})()+
+   '<div class="badge-accesso" style="background:'+a.col+'14;border:1px solid '+a.col+'4d;color:'+a.col+'">'+
+     '<span class="glifo">'+a.glifo+'</span> '+a.et+'</div>'+
+   '<div id="slotLive"></div>'+
+   '<dl class="dati">'+
+     '<div><dt>Lunghezza</dt><dd>'+(b.lung||'n/c')+'</dd></div>'+
+     '<div><dt>Fondo</dt><dd>'+(b.fondo||'n/c')+'</dd></div>'+
+     '<div><dt>Affollamento</dt><dd>'+AFFOLLAMENTO(b.folla)+'</dd></div>'+
+     '<div><dt>Tratto a piedi</dt><dd>'+(b.camm||'n/c')+'</dd></div>'+
+     '<div style="grid-column:1/-1"><dt>Parcheggio</dt><dd>'+(b.park||'n/c')+'</dd></div>'+
+   '</dl>'+
+   '<p class="titoletto">Servizi in spiaggia</p><div class="servizi">'+chips+'</div>'+
+   '<p class="titoletto">Da sapere</p><p class="nota">'+(b.nota||'Descrizione non ancora disponibile.')+'</p>'+
+   '<div class="tag">'+b.id.map(t=>'<span'+(t==="Bandiera Blu"?' class="bb"':'')+'>'+t+'</span>').join("")+'</div>'+'</div>';
+}
+function vetrinaSat(b,i){
+  const bl=bloccato===i;
+  return '<div class="vetrina" id="vetrina">'+
+    '<div class="tela">'+tessere(b,16)+'</div><div class="mirino"></div>'+
+    '<button type="button" class="lucchetto'+(bl?' on':'')+'" id="btnLucchetto" '+
+      'title="'+(bl?'La scheda resta fissa anche passando su altre spiagge':'Fissa questa scheda')+'">'+
+      (bl?'● Scheda fissata':'○ Fissa scheda')+'</button>'+
+    '<span class="sat-eti">Vista aerea · '+b.n+'</span>'+
+    '<a class="apri-foto" href="'+gFoto(b)+'" target="_blank" rel="noopener" '+
+      'aria-label="Foto e recensioni di '+b.n+' su Google"><span>Foto e recensioni ↗</span></a></div>'+
+   '<div class="azioni">'+
+     '<a class="primaria" href="'+gFoto(b)+'" target="_blank" rel="noopener">Foto e recensioni</a>'+
+     '<a data-pano href="'+gPano(b)+'" target="_blank" rel="noopener">Street View</a>'+
+     '<a href="'+gVia(b)+'" target="_blank" rel="noopener">Indicazioni</a>'+
+     '<button type="button" id="btnScheda">Scheda completa</button>'+
+   '</div>';
+}
+let richiesta=0, corrente=null;
+function mostra(i){
+  const b=SPIAGGE[i], mio=++richiesta; corrente=i;
+  scheda.hidden=false;
+  scheda.innerHTML=vetrinaSat(b,i)+corpo(b);
+  const tela=scheda.querySelector(".tela");
+  let rotte=0;
+  tela.querySelectorAll("img").forEach(t=>t.onerror=()=>{ if(++rotte>=2 && scheda.querySelector("#vetrina"))
+    scheda.querySelector("#vetrina").outerHTML='<a class="vetrina-veduta" href="'+gFoto(b)+'" target="_blank" rel="noopener" aria-label="Foto e recensioni di '+b.n+' su Google">'+veduta(b)+'<span>Foto e recensioni ↗</span></a>'+'<div class="credito">Immagine satellitare non raggiungibile: qui sopra una veduta schematica.</div>'; });
+  scheda.querySelector("#btnScheda").onclick=()=>apriScheda(i);
+  verificaPano(b, scheda);
+  scheda.querySelector("#btnLucchetto").onclick=()=>{ bloccato=(bloccato===i?null:i); mostra(i); attiva(i); };
+  const slot=scheda.querySelector("#slotLive");
+  slot.innerHTML='<div class="live"><div class="live-testa"><span><i class="pulse"></i>Adesso in spiaggia</span></div>'+
+    '<div class="live-nota">Interrogo il modello meteo-marino…</div></div>';
+  condizioni(b).then(d=>{ if(mio===richiesta && slot.isConnected) slot.innerHTML=bloccoLive(b,d); })
+               .catch(()=>{ if(mio===richiesta && slot.isConnected) slot.innerHTML=bloccoLive(b,null); });
+}
+
+/* ======================= SOTTOPAGINA GOOGLE ======================= */
+let veloAperto=null;
+function chiudiScheda(){ if(veloAperto){veloAperto.remove(); veloAperto=null; document.body.style.overflow="";} }
+function apriScheda(i){
+  const b=SPIAGGE[i];
+  chiudiScheda();
+  const v=document.createElement("div"); v.className="velo";
+  v.innerHTML='<div class="foglio" role="dialog" aria-label="Scheda di '+b.n+'">'+
+    '<div class="foglio-testa"><div><h3>'+b.n+'</h3>'+
+      '<div class="sotto">'+b.com+' · '+ZONE[b.z]+' · '+gradi(b.lat,b.lat<0?"S":"N")+' '+gradi(b.lon,b.lon<0?"W":"E")+'</div></div>'+
+      '<button class="chiudi" aria-label="Chiudi">✕</button></div>'+
+    '<div class="riquadri">'+
+      '<div class="riquadro"><h5>Posizione · satellite'+
+        '<a href="'+gMaps(b)+'" target="_blank" rel="noopener">apri ↗</a></h5>'+
+        '<iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Mappa di '+b.n+'" src="'+embMappa(b)+'"></iframe></div>'+
+      '<div class="riquadro"><h5>Street View'+
+        '<a data-pano href="'+gPano(b)+'" target="_blank" rel="noopener">apri ↗</a></h5>'+
+        '<iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Street View di '+b.n+'" src="'+embPano(b)+'"></iframe></div>'+
+    '</div>'+
+    '<div class="azioni">'+
+      '<a class="primaria" href="'+gFoto(b)+'" target="_blank" rel="noopener">Foto e recensioni su Google</a>'+
+      '<a href="'+gVia(b)+'" target="_blank" rel="noopener">Indicazioni stradali</a>'+
+      '<a data-pano href="'+gPano(b)+'" target="_blank" rel="noopener">Street View a schermo intero</a>'+
+    '</div>'+
+    '<div class="foglio-corpo"><div id="liveFoglio"></div>'+
+      '<p class="titoletto">Da sapere</p><p class="nota">'+(b.nota||'Descrizione non ancora disponibile.')+'</p>'+
+      '<div class="tag">'+b.id.map(t=>'<span'+(t==="Bandiera Blu"?' class="bb"':'')+'>'+t+'</span>').join("")+'</div></div>'+
+    '<div class="avviso">Mappa e Street View sono incorporati da Google Maps. Se il riquadro resta vuoto, il browser sta bloccando l\'incorporamento: usa i pulsanti “apri ↗”.</div>'+
+  '</div>';
+  v.addEventListener("click",e=>{ if(e.target===v||e.target.closest(".chiudi")) chiudiScheda(); });
+  document.body.appendChild(v); document.body.style.overflow="hidden"; veloAperto=v;
+  verificaPano(b, v);      // anche i due collegamenti della scheda completa
+  const lf=v.querySelector("#liveFoglio");
+  lf.innerHTML='<div class="live"><div class="live-testa"><span><i class="pulse"></i>Adesso in spiaggia</span></div>'+
+    '<div class="live-nota">Interrogo il modello meteo-marino…</div></div>';
+  condizioni(b).then(d=>{ if(lf.isConnected) lf.innerHTML=bloccoLive(b,d); });
+}
+addEventListener("keydown",e=>{ if(e.key==="Escape") chiudiScheda(); });
+
+/* ======================= INTERAZIONE ======================= */
+let bloccato=null;
+function attiva(i){MARKER.forEach(m=>m.classList.toggle("attivo",+m.dataset.i===i));
+  document.querySelectorAll("#elenco li").forEach(l=>l.classList.toggle("attivo",+l.dataset.i===i));}
+/* Due spiagge a pochi pixel l'una dall'altra: il segno disegnato per ultimo
+   sta sopra e si prende tutti i clic, e alle altre non si arriva. Il clic
+   quindi non guarda più quale segno ha intercettato l'evento: guarda il punto
+   in cui si è cliccato, raccoglie le spiagge che stanno lì attorno e a ogni
+   clic passa alla successiva. */
+const GRAPPOLO_PX=14;
+function raggioGrappolo(){
+  const r=telaio.getBoundingClientRect();
+  const perU=Math.min((r.width||600)/vista.w,(r.height||600)/vista.h)||1;
+  return GRAPPOLO_PX/perU;
+}
+function grappoloDi(i){
+  const b=SPIAGGE[i], X=px(b.lon), Y=py(b.lat), R=raggioGrappolo();
+  return SPIAGGE.map((q,j)=>({j,d:Math.hypot(px(q.lon)-X,py(q.lat)-Y)}))
+    .filter(o=>o.d<=R && !ESCLUSE.has(o.j))
+    .sort((a,b2)=>a.d-b2.d || a.j-b2.j).map(o=>o.j);
+}
+let ultimoGrappolo=[], passoGrappolo=0;
+function scegli(i){
+  const g=grappoloDi(i);
+  if(g.length<2) { ultimoGrappolo=g; passoGrappolo=0; return i; }
+  const stesso=g.length===ultimoGrappolo.length && g.every((x,n)=>x===ultimoGrappolo[n]);
+  passoGrappolo = stesso ? (passoGrappolo+1)%g.length : 0;
+  ultimoGrappolo=g;
+  return g[passoGrappolo];
+}
+MARKER.forEach(m=>{
+  const i=+m.dataset.i;
+  m.addEventListener("mouseenter",()=>{if(bloccato===null&&!trascino){mostra(i);attiva(i);}});
+  /* nessun mouseleave: la scheda resta sullo schermo, così si possono usare i suoi pulsanti */
+  m.addEventListener("focus",()=>{if(bloccato===null){mostra(i);attiva(i);}});
+  m.addEventListener("click",()=>{ if(mosso>6) return;
+    const j=scegli(i);
+    const era=bloccato; bloccato=(bloccato===j?null:j); mostra(j); attiva(j);
+    if(bloccato!==null&&era!==j) portaAllaScheda(); });
+  m.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();m.click();}});
+});
+
+/* ======================= ELENCO E FILTRI ======================= */
+let fAcc=new Set(), fSrv=new Set(), ESCLUSE=new Set();
+const elenco=document.getElementById("elenco"), conta=document.getElementById("conta");
+/* Il segno dell'elenco e' quello della legenda, non un pallino qualunque:
+   stessa taglia, stesso colore per l'accesso, e la forma che sulla carta
+   distingue una lunghezza nota da una ignota. */
+function segnoElenco(b){
+  const c=(ACCESSI[b.acc]||ACCESSI.nc).col;
+  return '<svg class="pt" viewBox="-8 -8 16 16" width="16" height="16" aria-hidden="true">'+
+    (b.lung ? '<circle r="4.6" fill="'+c+'" stroke="#fff" stroke-width="1.4"/>'
+            : '<rect x="-2.9" y="-2.9" width="5.8" height="5.8" rx=".6" fill="'+c+'" stroke="#fff" stroke-width="1.4"/>')+
+    '</svg>';
+}
+function disegnaElenco(filtro){
+  const q=(filtro||"").trim().toLowerCase(); let html="",n=0;
+  Object.entries(ZONE).forEach(([z,et])=>{
+    const voci=SPIAGGE.map((b,i)=>({b,i})).filter(({b,i})=>b.z===z && !ESCLUSE.has(i) &&
+      (!q||(b.n+" "+b.com+" "+b.id.join(" ")).toLowerCase().includes(q)));
+    if(!voci.length) return; n+=voci.length;
+    html+='<h4>'+et+' · '+voci.length+'</h4><ul>'+voci.map(({b,i})=>
+      '<li data-i="'+i+'" tabindex="0">'+segnoElenco(b)+
+      b.n+'<small>'+b.com.split(" · ")[0]+'</small></li>').join("")+'</ul>';
+  });
+  elenco.innerHTML=html||'<h4>Nessun risultato</h4>';
+  conta.textContent=n+" / "+SPIAGGE.length;
+}
+const stretto=()=>window.innerWidth<=960;
+function portaAllaScheda(){ if(stretto()) setTimeout(()=>{
+  try{scheda.scrollIntoView({behavior:"smooth",block:"start"});}catch(_){scheda.scrollIntoView();} },80); }
+elenco.addEventListener("mouseover",e=>{const l=e.target.closest("li");if(l&&bloccato===null&&!stretto()){const i=+l.dataset.i;mostra(i);attiva(i);}});
+elenco.addEventListener("click",e=>{const l=e.target.closest("li");if(!l)return;const i=+l.dataset.i;
+  bloccato=i;mostra(i);attiva(i);if(!zonaAttiva)selezionaZona(SPIAGGE[i].z);portaAllaScheda();});
+elenco.addEventListener("keydown",e=>{const l=e.target.closest("li");if(l&&e.key==="Enter"){e.preventDefault();l.click();}});
+
+const btnElenco=document.getElementById("apriElenco");
+function elencoAperto(v){
+  elenco.classList.toggle("chiuso",!v);
+  btnElenco.setAttribute("aria-expanded",String(v));
+  btnElenco.textContent=v?"▴":"▾";
+}
+btnElenco.onclick=()=>elencoAperto(elenco.classList.contains("chiuso"));
+document.getElementById("cerca").addEventListener("input",e=>{
+  disegnaElenco(e.target.value);
+  if(e.target.value) elencoAperto(true);
+});
+
+const contA=document.getElementById("filtriAccesso");
+contA.innerHTML=Object.entries(ACCESSI).map(([k,a])=>
+  '<button class="f" data-a="'+k+'" aria-pressed="false"><span class="pt" style="background:'+a.col+'"></span>'+a.et+'</button>').join("");
+const SRV_F=[["bb","Bandiera Blu"],["ristorante","Ristorante"],["bar","Bar"],["lettini","Lettini"],["wc","WC"],
+  ["sorveglianza","Sorveglianza"],["cani","Cani ammessi"],["ombra","Ombra naturale"],["sport","Sport acquatici"]];
+const contS=document.getElementById("filtriServizi");
+contS.innerHTML=SRV_F.map(([k,et])=>'<button class="f" data-s="'+k+'" aria-pressed="false">'+et+'</button>').join("");
+function applicaFiltri(){
+  ESCLUSE=new Set();
+  SPIAGGE.forEach((b,i)=>{
+    const ok=(fAcc.size===0||fAcc.has(b.acc)) && [...fSrv].every(k=>b.sv[k]>0);
+    if(!ok) ESCLUSE.add(i);
+    MARKER[i].classList.toggle("spento",!ok);
+  });
+  disegnaElenco(document.getElementById("cerca").value);
+}
+contA.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+  const k=b.dataset.a; fAcc.has(k)?fAcc.delete(k):fAcc.add(k); b.setAttribute("aria-pressed",fAcc.has(k)); applicaFiltri();});
+contS.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+  const k=b.dataset.s; fSrv.has(k)?fSrv.delete(k):fSrv.add(k); b.setAttribute("aria-pressed",fSrv.has(k)); applicaFiltri();});
+document.getElementById("azzera").addEventListener("click",()=>{
+  fAcc.clear();fSrv.clear();
+  document.querySelectorAll(".f").forEach(b=>b.setAttribute("aria-pressed","false"));
+  document.getElementById("cerca").value=""; applicaFiltri();});
+
+
+disegnaElenco(""); vuoto();
+if(stretto()) elencoAperto(false);
+</script>
+</body>
+</html>
