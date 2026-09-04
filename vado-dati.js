@@ -92,7 +92,16 @@ const VADO = (() => {
     catch (_) { apriSessione(null); return null; }
   }
 
-  const iscriviti = (email, password) => auth("signup", { email, password }).then(d => {
+  /* Dove si atterra dopo aver confermato l'indirizzo o chiesto una nuova
+     password. Lo diciamo noi a ogni richiesta invece di affidarci al "Site URL"
+     del pannello: quello e' un'impostazione lontana, che si dimentica e che non
+     si vede fallire — ci si accorge dell'errore solo quando un iscritto
+     atterra su una pagina che non esiste. location.pathname senza l'ultimo
+     pezzo e' la cartella del sito, qualunque sia. */
+  const RITORNO = location.origin + location.pathname.replace(/[^/]*$/, "");
+
+  const iscriviti = (email, password) =>
+    auth("signup?redirect_to=" + encodeURIComponent(RITORNO), { email, password }).then(d => {
     /* Se la conferma per email e' attiva, qui NON arriva nessun gettone: e'
        normale, e va detto a chi si e' iscritto invece di lasciarlo davanti a
        una schermata che non cambia. */
@@ -104,7 +113,45 @@ const VADO = (() => {
     auth("token?grant_type=password", { email, password }).then(apriSessione);
 
   const scordata = email =>
-    auth("recover", { email, gotrue_meta_security: {} }).then(() => true);
+    auth("recover?redirect_to=" + encodeURIComponent(RITORNO),
+         { email, gotrue_meta_security: {} }).then(() => true);
+
+  /* Cambiare la password di chi e' gia' dentro (o e' appena rientrato dal
+     collegamento del "password dimenticata"). */
+  const nuovaPassword = async password => {
+    const g = await gettoneVivo();
+    if (!g) throw new Error("sessione scaduta");
+    const r = await fetch(BASE + "/auth/v1/user", {
+      method: "PUT",
+      headers: { "apikey": CHIAVE, "Content-Type": "application/json", "Authorization": "Bearer " + g },
+      body: JSON.stringify({ password })
+    });
+    if (!r.ok) { const t = await r.text(); const e = new Error(t.slice(0,200)); e.stato = r.status; throw e; }
+    return true;
+  };
+
+  /* --------------------------------------------------- il ritorno dalla posta
+     Confermata l'iscrizione, o aperto il collegamento per la nuova password,
+     Supabase rimanda al sito con i gettoni appesi al frammento dell'indirizzo
+     (dopo il #). Se nessuno li raccoglie, la persona atterra sul sito ANCORA
+     SLEGATA e pensa che non abbia funzionato. Qui si raccolgono, si apre la
+     sessione, e si ripulisce l'indirizzo: quei gettoni non devono restare
+     scritti nella barra del browser, ne' finire nella cronologia. */
+  let arrivo = null;                       /* "signup" | "recovery" | "errore" */
+  (function raccogli() {
+    const f = location.hash.slice(1);
+    if (!f || f.indexOf("access_token=") < 0 && f.indexOf("error") < 0) return;
+    const p = new URLSearchParams(f);
+    if (p.get("access_token")) {
+      apriSessione({ access_token: p.get("access_token"), refresh_token: p.get("refresh_token"),
+                     expires_in: +(p.get("expires_in") || 3600) });
+      arrivo = p.get("type") || "signup";
+    } else {
+      arrivo = "errore";
+    }
+    history.replaceState(null, "", location.pathname + location.search);
+  })();
+  const daPosta = () => arrivo;
 
   async function esci() {
     const g = sessione && sessione.gettone;
@@ -183,6 +230,7 @@ const VADO = (() => {
 
   return { regione, catalogo, chiedi, BASE,
            iscriviti, accedi, esci, scordata, alCambio, chiSono,
+           nuovaPassword, daPosta,
            preferitiSpiagge, preferitiZone, salvaSpiaggia, togliSpiaggia,
            salvaZona, togliZona, mieiAccessi };
 })();

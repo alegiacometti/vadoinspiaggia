@@ -39,6 +39,7 @@
   const nota   = velo.querySelector("[data-nota]");
   const esito  = velo.querySelector("[data-esito]");
   const campoPw= velo.querySelector("[data-campo-pw]");
+  const campoEmail = velo.querySelector(".conto-campo");
   const vai    = velo.querySelector("[data-vai]");
   const schede = [...velo.querySelectorAll(".conto-schede button")];
   let modo = "entra";
@@ -46,7 +47,8 @@
   const TESTI = {
     entra:     { nota: "Le regioni che hai sbloccato e le spiagge che hai salvato ti seguono su qualunque computer.", vai: "Entra", pw: true,  ac: "current-password" },
     iscriviti: { nota: "Basta un indirizzo email. Le Marche sono libere per tutti: puoi provare il sito prima di sbloccare qualsiasi cosa.", vai: "Crea l’account", pw: true, ac: "new-password" },
-    scordata:  { nota: "Ti arriva un messaggio con il collegamento per sceglierne una nuova.", vai: "Mandami il collegamento", pw: false, ac: "" }
+    scordata:  { nota: "Ti arriva un messaggio con il collegamento per sceglierne una nuova.", vai: "Mandami il collegamento", pw: false, ac: "" },
+    nuova:     { nota: "Scegli la password nuova. Almeno otto caratteri.", vai: "Salva la password", pw: true, ac: "new-password", senzaEmail: true }
   };
 
   function scheda(m) {
@@ -55,6 +57,12 @@
     nota.textContent = TESTI[m].nota;
     vai.textContent  = TESTI[m].vai;
     campoPw.hidden   = !TESTI[m].pw;
+    /* Chi arriva dal collegamento della posta e' gia' riconosciuto: chiedergli
+       di nuovo l'indirizzo sarebbe una domanda a cui il sito sa gia' rispondere. */
+    const soloNuova = !!TESTI[m].senzaEmail;
+    campoEmail.hidden = soloNuova;
+    f.email.required  = !soloNuova;
+    velo.querySelector(".conto-schede").hidden = soloNuova;
     const pw = f.password; pw.required = TESTI[m].pw; pw.autocomplete = TESTI[m].ac;
     esito.hidden = true; esito.className = "conto-esito";
   }
@@ -92,6 +100,10 @@
         if (r.entrato) velo.close();
         else dillo("Account creato. Ti ho mandato un messaggio a " + email +
                    ": aprilo per confermare l’indirizzo, poi torna qui ed entra.", true);
+      } else if (modo === "nuova") {
+        await VADO.nuovaPassword(pw);
+        dillo("Password cambiata. Sei dentro.", true);
+        setTimeout(() => velo.close(), 1400);
       } else {
         await VADO.scordata(email);
         /* Si risponde uguale che l'indirizzo esista o no: dire "questo indirizzo
@@ -118,6 +130,25 @@
     b.addEventListener("click", () => VADO.esci());
     dove.append(chi, b);
   });
+
+  /* ---------------------------------------------- si torna dalla posta
+     Chi ha appena confermato l'iscrizione, o ha aperto il collegamento per la
+     nuova password, deve accorgersi che e' successo qualcosa: altrimenti vede
+     una pagina identica a prima e pensa che il collegamento fosse rotto. */
+  const arrivo = VADO.daPosta && VADO.daPosta();
+  if (arrivo === "recovery") { scheda("nuova"); velo.showModal(); f.password.focus(); }
+  else if (arrivo === "signup" || arrivo === "magiclink") {
+    const b = document.createElement("div");
+    b.className = "conto-benvenuto";
+    b.textContent = "Indirizzo confermato: sei dentro.";
+    document.querySelector(".guscio").prepend(b);
+    setTimeout(() => b.remove(), 6000);
+  } else if (arrivo === "errore") {
+    const b = document.createElement("div");
+    b.className = "conto-benvenuto brutto";
+    b.textContent = "Quel collegamento non è più valido: chiedine un altro dalla finestra d’accesso.";
+    document.querySelector(".guscio").prepend(b);
+  }
 
   /* Se la sessione cambia in un'altra scheda del browser — si esce di là — qui
      il pulsante deve accorgersene, altrimenti si resta a guardare un "Esci"

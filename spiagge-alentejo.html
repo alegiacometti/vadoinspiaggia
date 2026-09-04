@@ -17,6 +17,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="carte-spiagge.css">
 <script src="configurazione.js"></script>
+<script src="vado-dati.js"></script>
 <style>/* misure di questa regione — vedi carte-spiagge.css */
 :root{--colonna-carta:640px;--telaio-h:min(46vh,440px)}</style>
 </head>
@@ -109,7 +110,10 @@ const ACCESSI={
   barca:   {et:"Solo in barca",               col:"#6470c4", glifo:"BARCA"},
   nc:      {et:"Accesso non documentato",    col:"#93a6b3", glifo:"N/C"}
 };
-const ZONE={"troia": "Tróia e la Comporta", "sines": "Sines e Santo André", "milfontes": "Vila Nova de Milfontes e il Mira", "zambujeira": "Da Zambujeira al Carvalhal"};
+/* I dati non stanno piu' qui dentro: arrivano dal database, e chi li
+   serve guarda prima chi li sta chiedendo. Vedi avvia(), in fondo. */
+const REGIONE="alentejo", REGIONE_ETI="dell'Alentejo";
+let ZONE={}, SPIAGGE=[];
 const SERVIZI=[["parcheggio","Parcheggio"],["ristorante","Ristorante"],["bar","Bar"],
   ["lettini","Lettini e ombrelloni"],["docce","Docce"],["wc","WC"],["sorveglianza","Sorveglianza"],
   ["sport","Sport acquatici"],["cani","Cani ammessi"],["ombra","Ombra naturale"]];
@@ -126,7 +130,6 @@ const ICONE={
   ombra:'<path d="M10 2.4l3.9 5.8h-2.3l3 4.6H5.4l3-4.6H6.1z"/><path d="M10 12.8v4.8"/>'
 };
 
-const SPIAGGE=[{"sid": "lisboa-088", "n": "Tróia - Mar", "com": "Grândola", "z": "troia", "lat": 38.49193, "lon": -8.906541, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf", "Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio. Rientra nel programma Praia Acessível. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 3500 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCU9C"}, {"sid": "lisboa-089", "n": "Tróia - Galé", "com": "Grândola", "z": "troia", "lat": 38.484632, "lon": -8.904023, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 1300 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCP3E"}, {"sid": "lisboa-090", "n": "Tróia - Bico das Lulas", "com": "Grândola", "z": "troia", "lat": 38.481016, "lon": -8.898272, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 1900 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCN9M"}, {"sid": "lisboa-091", "n": "Camarinhas", "com": "Grândola", "z": "troia", "lat": 38.463108, "lon": -8.879013, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 0, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 1100 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCH9J"}, {"sid": "lisboa-092", "n": "Atlântica", "com": "Grândola", "z": "troia", "lat": 38.452452, "lon": -8.862373, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf", "Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio. Rientra nel programma Praia Acessível. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 2000 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCP3X"}, {"sid": "lisboa-093", "n": "Comporta", "com": "Grândola", "z": "troia", "lat": 38.381442, "lon": -8.802598, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf", "Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio. Rientra nel programma Praia Acessível. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 2000 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCV7K"}, {"sid": "lisboa-094", "n": "Carvalhal", "com": "Grândola", "z": "troia", "lat": 38.305804, "lon": -8.778507, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf", "Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio. Rientra nel programma Praia Acessível. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 2000 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCN8T"}, {"sid": "lisboa-095", "n": "Pego", "com": "Grândola", "z": "troia", "lat": 38.292578, "lon": -8.777506, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf", "Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio. Rientra nel programma Praia Acessível. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 2000 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCD8F"}, {"sid": "lisboa-096", "n": "Galé - Fontaínhas", "com": "Grândola", "z": "troia", "lat": 38.204233, "lon": -8.776487, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 1000 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCH3F"}, {"sid": "lisboa-097", "n": "Aberta Nova", "com": "Grândola", "z": "troia", "lat": 38.177447, "lon": -8.780517, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 1700 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCK8F"}, {"sid": "lisboa-098", "n": "Melides", "com": "Grândola", "z": "troia", "lat": 38.128955, "lon": -8.791731, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf", "Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio. Rientra nel programma Praia Acessível. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 2000 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCU7H"}, {"sid": "lisboa-099", "n": "Costa de Santo André", "com": "Santiago Do Cacém", "z": "sines", "lat": 38.11407, "lon": -8.796455, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf", "Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio. Rientra nel programma Praia Acessível. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 2500 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCU7M"}, {"sid": "lisboa-100", "n": "Monte Velho\\Porto das Carretas", "com": "Santiago Do Cacém", "z": "sines", "lat": 38.08185, "lon": -8.811468, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, parcheggio.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCP3W"}, {"sid": "lisboa-101", "n": "Fonte do Cortiço", "com": "Santiago Do Cacém", "z": "sines", "lat": 38.055291, "lon": -8.820566, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 400 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCL3D"}, {"sid": "lisboa-102", "n": "Vasco da Gama", "com": "Sines", "z": "sines", "lat": 37.953364, "lon": -8.864912, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio. Rientra nel programma Praia Acessível. Capacità di carico stimata in 2000 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCU2V"}, {"sid": "lisboa-103", "n": "São Torpes", "com": "Sines", "z": "sines", "lat": 37.925464, "lon": -8.806458, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 2000 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCX3M"}, {"sid": "lisboa-104", "n": "Morgavel", "com": "Sines", "z": "sines", "lat": 37.907431, "lon": -8.798503, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 400 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCP2C"}, {"sid": "lisboa-105", "n": "Vieirinha - Vale de Figueiros", "com": "Sines", "z": "sines", "lat": 37.895564, "lon": -8.796734, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 1300 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCH7F"}, {"sid": "lisboa-106", "n": "Grande de Porto Covo", "com": "Sines", "z": "sines", "lat": 37.855819, "lon": -8.79344, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, docce, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 400 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCD9C"}, {"sid": "lisboa-107", "n": "Ilha do Pessegueiro", "com": "Sines", "z": "sines", "lat": 37.829026, "lon": -8.790938, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 700 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCF7C"}, {"sid": "alentejo-001", "n": "Malhão Norte", "com": "Odemira", "z": "milfontes", "lat": 37.783864, "lon": -8.801333, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 1000 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCE7Q"}, {"sid": "alentejo-002", "n": "Malhão Sul", "com": "Odemira", "z": "milfontes", "lat": 37.78025, "lon": -8.801778, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 600 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCE7Q"}, {"sid": "alentejo-003", "n": "Franquia", "com": "Odemira", "z": "milfontes", "lat": 37.722724, "lon": -8.787634, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Surf", "Laguna"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 1400 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCP3F"}, {"sid": "alentejo-004", "n": "Farol", "com": "Odemira", "z": "milfontes", "lat": 37.720274, "lon": -8.78879, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Laguna"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, parcheggio. Capacità di carico stimata in 700 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCU7J"}, {"sid": "alentejo-005", "n": "Furnas Rio", "com": "Odemira", "z": "milfontes", "lat": 37.71905, "lon": -8.783595, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf", "Accessibile", "Laguna"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, parcheggio. Rientra nel programma Praia Acessível. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 1000 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCW9Q"}, {"sid": "alentejo-006", "n": "Furnas Mar", "com": "Odemira", "z": "milfontes", "lat": 37.716319, "lon": -8.784175, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf", "Accessibile", "Laguna"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, parcheggio. Rientra nel programma Praia Acessível. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 1500 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCQ7K"}, {"sid": "alentejo-007", "n": "Almograve Norte", "com": "Odemira", "z": "milfontes", "lat": 37.652347, "lon": -8.80195, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, docce, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 400 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCE8D"}, {"sid": "alentejo-008", "n": "Almograve Sul", "com": "Odemira", "z": "zambujeira", "lat": 37.648622, "lon": -8.804853, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 100 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCE8D"}, {"sid": "alentejo-009", "n": "Zambujeira do Mar", "com": "Odemira", "z": "zambujeira", "lat": 37.523043, "lon": -8.786685, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf", "Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, docce, parcheggio. Rientra nel programma Praia Acessível. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 900 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCK7T"}, {"sid": "alentejo-010", "n": "Alteirinhos", "com": "Odemira", "z": "zambujeira", "lat": 37.518636, "lon": -8.787103, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 0, "bar": 0, "lettini": null, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf"], "nota": "Spiaggia sorvegliata nella stagione balneare. Ci sono bagni, docce, parcheggio. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 100 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCU7Q"}, {"sid": "alentejo-011", "n": "Carvalhal (Odemira)", "com": "Odemira", "z": "zambujeira", "lat": 37.499891, "lon": -8.790684, "lato": null, "lung": null, "fondo": null, "folla": null, "acc": "nc", "camm": null, "park": null, "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": 0, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 1}, "id": ["Bandiera Blu", "Surf", "Accessibile"], "nota": "Spiaggia sorvegliata nella stagione balneare. C'è uno stabilimento con servizio di ristoro. Ci sono bagni, parcheggio. Rientra nel programma Praia Acessível. Onde di valore riconosciuto per il surf. Capacità di carico stimata in 300 persone.", "pid": null, "vo": null, "sc": ["#e8dcbb", "#3fc0b6", "macchia", null], "mid": null, "apa": "PTCF8X"}];
 const WEBCAM=[];
 const camDella=b=>WEBCAM.find(c=>c.sp.includes(b.n))||null;
 
@@ -180,6 +183,8 @@ const BANDIERA='M-0.42,0.9L-0.42,-9.2L0.42,-9.2L0.42,0.9Z'
    piu’ lontane — e quelle vogliono il filo che le lega al segno. */
 const posEti={W:[-10,3.5,"end"],E:[10,3.5,"start"],N:[0,-11,"middle"],S:[0,17,"middle"]};
 const SCALE=[["E",10,3.5,"start",0],["W",-10,3.5,"end",0],["N",0,-11,"middle",0],["S",0,17,"middle",0],["NE",17,-10,"start",1],["NW",-17,-10,"end",1],["SE",17,17,"start",1],["SW",-17,17,"end",1],["E2",30,3.5,"start",1],["W2",-30,3.5,"end",1],["N2",0,-25,"middle",1],["S2",0,31,"middle",1]];
+let MARKER=[], ETIM=[], BANDE=[];
+function disegnaSegni(){
 document.getElementById("gMarker").innerHTML=SPIAGGE.map((b,i)=>{
   const A=ACCESSI[b.acc]||ACCESSI.nc,c=A.col,p=posEti[b.lato]||posEti.E;
   /* La forma dice quel che sappiamo: cerchio dimensionato se la lunghezza è nota,
@@ -194,12 +199,15 @@ document.getElementById("gMarker").innerHTML=SPIAGGE.map((b,i)=>{
          + '<rect class="cuore-q" x="'+(-r).toFixed(1)+'" y="'+(-r).toFixed(1)+'" width="'+(r*2).toFixed(1)+'" height="'+(r*2).toFixed(1)+'" rx=".6" fill="'+c+'"/>')+
    (b.sv.bb?'<g class="banda"><path class="bandierina" d="'+BANDIERA+'"/></g>':'')+
    '<g class="etim"><line class="guida" x1="0" y1="0" x2="0" y2="0"/><text class="nome" x="'+p[0]+'" y="'+p[1]+'" text-anchor="'+p[2]+'">'+b.n+'</text></g></g>';}).join("");
-const MARKER=[...document.querySelectorAll(".marker")];
+  MARKER=[...document.querySelectorAll(".marker")];
+  ETIM=MARKER.map(m=>m.querySelector(".etim"));
+  BANDE=MARKER.map(m=>m.querySelector(".banda"));
+}
 
 /* Le due legende nascono dagli stessi dati della carta: le misure passano per
    raggio(), i colori vengono da ACCESSI. Se domani si cambia la formula o si
    aggiunge un modo d'accesso, la legenda si aggiorna da sola. */
-(function legende(){
+function legende(){
   const cerchio=(r,riemp,bordo)=>'<svg viewBox="-8 -8 16 16" width="16" height="16" aria-hidden="true">'
     +'<circle r="'+r.toFixed(1)+'" fill="'+riemp+'" stroke="'+bordo+'" stroke-width="1.4"/></svg>';
   const voce=(dis,et)=>'<span class="lg-voce">'+dis+'<i>'+et+'</i></span>';
@@ -214,7 +222,7 @@ const MARKER=[...document.querySelectorAll(".marker")];
     Object.values(ACCESSI).map(a=>voce(cerchio(4.6,a.col,"#fff"),a.et)).join("")+(SPIAGGE.some(b=>b.sv.bb)?voce('<svg viewBox="-8 -8 16 16" width="16" height="16" aria-hidden="true">'
       +'<circle r="3.4" cy="-2.2" fill="#9ed4ea" stroke="#fff" stroke-width="1.1"/>'
       +'<path transform="translate(0,-1.4) scale(.62)" fill="#1786bd" d="'+BANDIERA+'"/></svg>',"Bandiera Blu 2026"):"");
-})();
+}
 
 
 /* ---------------- scritte a dimensione costante ----------------
@@ -224,8 +232,6 @@ const MARKER=[...document.querySelectorAll(".marker")];
    nasconde la meno importante (l'ordine è quello in cui sono elencate). */
 const SEGNI=[...document.querySelectorAll("#gPaesi .segno, #gCime .segno")];
 const GRADI=[...document.querySelectorAll("#gGriglia .grado-lat")];
-const ETIM=MARKER.map(m=>m.querySelector(".etim"));
-const BANDE=MARKER.map(m=>m.querySelector(".banda"));
 let ultimoF="";
 const urtano=(r,m)=>!(r.x+r.w<m.x||m.x+m.w<r.x||r.y+r.h<m.y||m.y+m.h<r.y);
 
@@ -388,8 +394,10 @@ function selezionaZona(z){zonaAttiva=z;
   document.querySelectorAll("#zone button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.z===(z||"")));
   MARKER.forEach((m,i)=>m.classList.toggle("eti",!!z&&SPIAGGE[i].z===z));
   vaiA(z?bboxZona(z):PIENO);}
+function disegnaZone(){
 document.getElementById("zone").innerHTML='<button data-z="" aria-pressed="true">Tutta la regione</button>'+
   Object.entries(ZONE).map(([k,v])=>'<button data-z="'+k+'" aria-pressed="false">'+v+'</button>').join("");
+}
 document.getElementById("zone").addEventListener("click",e=>{const b=e.target.closest("button");if(b)selezionaZona(b.dataset.z||null);});
 /* --- navigazione: rotella, trascinamento, pizzico, tastiera, pulsanti --- */
 const ZMIN=PIENO.w/70, ZMAX=PIENO.w*1.35;
@@ -1190,6 +1198,7 @@ function scegli(i){
   ultimoGrappolo=g;
   return g[passoGrappolo];
 }
+function legaSegni(){
 MARKER.forEach(m=>{
   const i=+m.dataset.i;
   m.addEventListener("mouseenter",()=>{if(bloccato===null&&!trascino){mostra(i);attiva(i);}});
@@ -1201,6 +1210,7 @@ MARKER.forEach(m=>{
     if(bloccato!==null&&era!==j) portaAllaScheda(); });
   m.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();m.click();}});
 });
+}
 
 /* ======================= ELENCO E FILTRI ======================= */
 let fAcc=new Set(), fSrv=new Set(), ESCLUSE=new Set();
@@ -1274,10 +1284,66 @@ document.getElementById("azzera").addEventListener("click",()=>{
   document.getElementById("cerca").value=""; applicaFiltri();});
 
 
-disegnaElenco(""); vuoto();
-if(stretto()) elencoAperto(false);
+/* ------------------------- accensione -------------------------
+   La carta, la navigazione e i filtri sono gia' in piedi: delle spiagge non
+   sanno niente. Qui si aspettano i dati e si accende quel che dipende da loro.
+
+   Gli esiti sono TRE, e vanno distinti, perche' a chi guarda significano cose
+   diverse:
+     - la richiesta fallisce            -> la rete, o il servizio, non risponde
+     - la richiesta riesce ma e' vuota  -> la regione c'e', ma non e' tua
+     - la richiesta riesce con dei dati -> si disegna tutto
+   Confonderli e' il modo piu' sicuro di far pensare "e' rotto" a chi invece
+   deve solo sbloccare la regione. */
+function avviso(titolo, testo, azione){
+  document.getElementById("elenco").innerHTML =
+    '<h4>'+titolo+'</h4><div class="elenco-avviso"><p>'+testo+'</p>'+(azione||'')+'</div>';
+  document.getElementById("conta").textContent="— / —";
+}
+function invitoSblocco(){
+  const a = "mailto:ing.giacometti@gmail.com"
+          + "?subject=" + encodeURIComponent("Vado in spiaggia — sbloccare " + REGIONE_ETI)
+          + "&body="    + encodeURIComponent(
+              "Vorrei sbloccare le spiagge " + REGIONE_ETI + ".\n\n"
+            + "Il mio indirizzo per l'accesso al sito e': ");
+  return '<a class="sblocca" href="'+a+'">Chiedi di sbloccarla</a>' +
+         (VADO.chiSono() ? '' :
+          '<button type="button" class="sblocca-entra">Ho già un account: entra</button>');
+}
+async function avvia(){
+  let d;
+  try{
+    d = await VADO.regione(REGIONE);
+  }catch(e){
+    console.warn("dati non caricati:", e);
+    return avviso("Dati non raggiungibili",
+      navigator.onLine ? "Il servizio non risponde in questo momento. Riprova fra poco."
+                       : "Sembra che manchi la connessione a internet.");
+  }
+  if(!d.spiagge.length){
+    avviso("Regione da sbloccare",
+      "La carta si vede da qui, ma le schede delle spiagge \u2014 fondo, servizi, "+
+      "accesso, meteo e stato del mare \u2014 sono riservate a chi ha sbloccato "+
+      "questa regione.", invitoSblocco());
+    const b = document.querySelector(".sblocca-entra");
+    if(b) b.onclick = ()=>{ const e=document.querySelector("#conto button"); if(e) e.click(); };
+    return;
+  }
+  ZONE = d.zone; SPIAGGE = d.spiagge;
+  disegnaSegni();          /* i segni sulla carta, e MARKER/ETIM/BANDE */
+  legende();               /* le due legende, che contano le spiagge */
+  disegnaZone();           /* i pulsanti delle zone */
+  legaSegni();             /* i comandi appesi a ogni segno */
+  applicaVista(vista=aspetta(PIENO)); aggiornaScala();
+  disegnaElenco(""); vuoto();
+  if(stretto()) elencoAperto(false);
+}
+avvia();
+/* Se si entra o si esce senza ricaricare, la regione va richiesta di nuovo:
+   e' cambiato chi sta chiedendo. */
+VADO.alCambio((function(){ let primo=true;
+  return ()=>{ if(primo){ primo=false; return; } location.reload(); }; })());
 </script>
-<script src="vado-dati.js"></script>
 <script src="vado-conto.js"></script>
 </body>
 </html>

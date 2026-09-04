@@ -17,6 +17,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="carte-spiagge.css">
 <script src="configurazione.js"></script>
+<script src="vado-dati.js"></script>
 <style>/* misure di questa regione — vedi carte-spiagge.css */
 :root{--colonna-carta:620px;--telaio-h:min(72vh,780px)}</style>
 </head>
@@ -109,7 +110,10 @@ const ACCESSI={
   barca:   {et:"Solo in barca",               col:"#6470c4", glifo:"BARCA"},
   nc:      {et:"Accesso non documentato",    col:"#93a6b3", glifo:"N/C"}
 };
-const ZONE={"karavasta": "Divjaka e la laguna di Karavasta", "seman": "Seman e Darëzezë"};
+/* I dati non stanno piu' qui dentro: arrivano dal database, e chi li
+   serve guarda prima chi li sta chiedendo. Vedi avvia(), in fondo. */
+const REGIONE="aldivjaka", REGIONE_ETI="di Divjaka e della costa di Fier";
+let ZONE={}, SPIAGGE=[];
 const SERVIZI=[["parcheggio","Parcheggio"],["ristorante","Ristorante"],["bar","Bar"],
   ["lettini","Lettini e ombrelloni"],["docce","Docce"],["wc","WC"],["sorveglianza","Sorveglianza"],
   ["sport","Sport acquatici"],["cani","Cani ammessi"],["ombra","Ombra naturale"]];
@@ -126,7 +130,6 @@ const ICONE={
   ombra:'<path d="M10 2.4l3.9 5.8h-2.3l3 4.6H5.4l3-4.6H6.1z"/><path d="M10 12.8v4.8"/>'
 };
 
-const SPIAGGE=[{"sid": "aldivjaka-001", "n": "Divjaka", "com": "Divjaka", "z": "karavasta", "lat": 40.96893, "lon": 19.4774, "lato": null, "lung": null, "fondo": "Sabbia", "folla": 2, "acc": "auto", "camm": "Dal parcheggio sterrato tra i pini si raggiunge la sabbia in pochi minuti a piedi.", "park": "Aree di sosta informali all'ombra della pineta, gratuite o a costo simbolico.", "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": null, "docce": null, "wc": null, "sorveglianza": null, "sport": null, "ombra": 1, "cani": null, "bb": 0}, "id": ["Acqua sufficiente"], "nota": "La spiaggia del parco nazionale di Divjakë-Karavasta e' una lingua di sabbia fine addossata all'unica pineta costiera naturale d'Albania, che arriva quasi fino alla battigia e garantisce ombra anche a mezzogiorno. Il fondale digrada lentamente e l'acqua resta bassa a lungo, condizione comoda con i bambini ma poco limpida nelle giornate di vento. Le fonti albanesi la descrivono come uno dei tratti di costa meno edificati del paese: pochi chioschi, prezzi bassi, molti visitatori che arrivano con ombrellone proprio da Lushnja, Elbasan e Tirana. Fa parte di un'area protetta, quindi conviene informarsi sugli orari di accesso e non lasciare rifiuti. Il monitoraggio europeo campiona questa spiaggia in 3 punti: nella stagione 2025 l’acqua e’ stata classificata «sufficiente».", "pid": null, "vo": null, "sc": ["#e6d4ac", "#2fa6cd", "pini", null], "mid": null}, {"sid": "aldivjaka-002", "n": "Seman", "com": "Fier", "z": "seman", "lat": 40.7702, "lon": 19.37235, "lato": null, "lung": "3,5 km", "fondo": "Sabbia", "folla": 2, "acc": "auto", "camm": "Si arriva in auto quasi sul bagnasciuga; l'arenile e' largo alcune centinaia di metri, quindi il tratto a piedi fino all'acqua puo' essere lungo.", "park": "Sosta libera sugli spiazzi sterrati dietro l'arenile, senza aree organizzate.", "sv": {"parcheggio": 1, "ristorante": null, "bar": null, "lettini": null, "docce": null, "wc": null, "sorveglianza": null, "sport": null, "ombra": 1, "cani": null, "bb": 0}, "id": ["Acqua buona"], "nota": "Seman e' la spiaggia di riferimento degli abitanti di Fier, a una quindicina di chilometri dalla citta' su strada asfaltata in condizioni discrete. La sabbia e' scura e molto ampia, da fine a grossolana, e il fondale scende gradualmente: buono per i bambini, ma l'acqua vicino a riva resta spesso torbida per via della sabbia sospesa e degli apporti fluviali. I servizi sono minimi, si noleggiano ombrelloni ma non ci sono docce con acqua dolce: conviene portarsi acqua e provviste. L'erosione e' forte e arretra la linea di costa di alcune decine di centimetri l'anno, tanto che vecchi bunker sono finiti in mare. Il monitoraggio europeo campiona questa spiaggia in 2 punti: nella stagione 2025 l’acqua e’ stata classificata «buona».", "pid": null, "vo": null, "sc": ["#e6d4ac", "#2fa6cd", "pini", null], "mid": null}, {"sid": "aldivjaka-003", "n": "Darëzezë", "com": "Fier", "z": "seman", "lat": 40.7103, "lon": 19.3618, "lato": null, "lung": "1 km", "fondo": "Sabbia", "folla": 2, "acc": "auto", "camm": "Pochi metri dal parcheggio alla sabbia, su percorso pianeggiante.", "park": "Ampio parcheggio sterrato e asfaltato a ridosso dell'arenile, con oltre un centinaio di posti.", "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": 1, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": 1, "ombra": null, "cani": null, "bb": 0}, "id": ["Acqua sufficiente"], "nota": "Darëzezë e Re, poco a sud di Seman, e' un tratto di sabbia bruna largo oltre cento metri e attrezzato meglio del resto del litorale di Fier: ristoranti e bar sull'arenile, lettini, docce, servizi igienici e un'area giochi per bambini. Il fondale e' sabbioso e resta bassissimo per oltre cento metri dalla riva, quindi e' una scelta comoda per famiglie. Il vento costante e l'acqua piatta ne hanno fatto un punto frequentato dai kitesurfisti. L'affollamento e' medio: si trova spazio anche in agosto, ma nei weekend il parcheggio si riempie presto. Il monitoraggio europeo campiona questa spiaggia in un punto: nella stagione 2025 l’acqua e’ stata classificata «sufficiente».", "pid": null, "vo": null, "sc": ["#e6d4ac", "#2fa6cd", "pini", null], "mid": null}];
 const WEBCAM=[];
 const camDella=b=>WEBCAM.find(c=>c.sp.includes(b.n))||null;
 
@@ -180,6 +183,8 @@ const BANDIERA='M-0.42,0.9L-0.42,-9.2L0.42,-9.2L0.42,0.9Z'
    piu’ lontane — e quelle vogliono il filo che le lega al segno. */
 const posEti={W:[-10,3.5,"end"],E:[10,3.5,"start"],N:[0,-11,"middle"],S:[0,17,"middle"]};
 const SCALE=[["E",10,3.5,"start",0],["W",-10,3.5,"end",0],["N",0,-11,"middle",0],["S",0,17,"middle",0],["NE",17,-10,"start",1],["NW",-17,-10,"end",1],["SE",17,17,"start",1],["SW",-17,17,"end",1],["E2",30,3.5,"start",1],["W2",-30,3.5,"end",1],["N2",0,-25,"middle",1],["S2",0,31,"middle",1]];
+let MARKER=[], ETIM=[], BANDE=[];
+function disegnaSegni(){
 document.getElementById("gMarker").innerHTML=SPIAGGE.map((b,i)=>{
   const A=ACCESSI[b.acc]||ACCESSI.nc,c=A.col,p=posEti[b.lato]||posEti.E;
   /* La forma dice quel che sappiamo: cerchio dimensionato se la lunghezza è nota,
@@ -194,12 +199,15 @@ document.getElementById("gMarker").innerHTML=SPIAGGE.map((b,i)=>{
          + '<rect class="cuore-q" x="'+(-r).toFixed(1)+'" y="'+(-r).toFixed(1)+'" width="'+(r*2).toFixed(1)+'" height="'+(r*2).toFixed(1)+'" rx=".6" fill="'+c+'"/>')+
    (b.sv.bb?'<g class="banda"><path class="bandierina" d="'+BANDIERA+'"/></g>':'')+
    '<g class="etim"><line class="guida" x1="0" y1="0" x2="0" y2="0"/><text class="nome" x="'+p[0]+'" y="'+p[1]+'" text-anchor="'+p[2]+'">'+b.n+'</text></g></g>';}).join("");
-const MARKER=[...document.querySelectorAll(".marker")];
+  MARKER=[...document.querySelectorAll(".marker")];
+  ETIM=MARKER.map(m=>m.querySelector(".etim"));
+  BANDE=MARKER.map(m=>m.querySelector(".banda"));
+}
 
 /* Le due legende nascono dagli stessi dati della carta: le misure passano per
    raggio(), i colori vengono da ACCESSI. Se domani si cambia la formula o si
    aggiunge un modo d'accesso, la legenda si aggiorna da sola. */
-(function legende(){
+function legende(){
   const cerchio=(r,riemp,bordo)=>'<svg viewBox="-8 -8 16 16" width="16" height="16" aria-hidden="true">'
     +'<circle r="'+r.toFixed(1)+'" fill="'+riemp+'" stroke="'+bordo+'" stroke-width="1.4"/></svg>';
   const voce=(dis,et)=>'<span class="lg-voce">'+dis+'<i>'+et+'</i></span>';
@@ -214,7 +222,7 @@ const MARKER=[...document.querySelectorAll(".marker")];
     Object.values(ACCESSI).map(a=>voce(cerchio(4.6,a.col,"#fff"),a.et)).join("")+(SPIAGGE.some(b=>b.sv.bb)?voce('<svg viewBox="-8 -8 16 16" width="16" height="16" aria-hidden="true">'
       +'<circle r="3.4" cy="-2.2" fill="#9ed4ea" stroke="#fff" stroke-width="1.1"/>'
       +'<path transform="translate(0,-1.4) scale(.62)" fill="#1786bd" d="'+BANDIERA+'"/></svg>',"Bandiera Blu"):"");
-})();
+}
 
 
 /* ---------------- scritte a dimensione costante ----------------
@@ -224,8 +232,6 @@ const MARKER=[...document.querySelectorAll(".marker")];
    nasconde la meno importante (l'ordine è quello in cui sono elencate). */
 const SEGNI=[...document.querySelectorAll("#gPaesi .segno, #gCime .segno")];
 const GRADI=[...document.querySelectorAll("#gGriglia .grado-lat")];
-const ETIM=MARKER.map(m=>m.querySelector(".etim"));
-const BANDE=MARKER.map(m=>m.querySelector(".banda"));
 let ultimoF="";
 const urtano=(r,m)=>!(r.x+r.w<m.x||m.x+m.w<r.x||r.y+r.h<m.y||m.y+m.h<r.y);
 
@@ -388,8 +394,10 @@ function selezionaZona(z){zonaAttiva=z;
   document.querySelectorAll("#zone button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.z===(z||"")));
   MARKER.forEach((m,i)=>m.classList.toggle("eti",!!z&&SPIAGGE[i].z===z));
   vaiA(z?bboxZona(z):PIENO);}
+function disegnaZone(){
 document.getElementById("zone").innerHTML='<button data-z="" aria-pressed="true">Tutta la regione</button>'+
   Object.entries(ZONE).map(([k,v])=>'<button data-z="'+k+'" aria-pressed="false">'+v+'</button>').join("");
+}
 document.getElementById("zone").addEventListener("click",e=>{const b=e.target.closest("button");if(b)selezionaZona(b.dataset.z||null);});
 /* --- navigazione: rotella, trascinamento, pizzico, tastiera, pulsanti --- */
 const ZMIN=PIENO.w/70, ZMAX=PIENO.w*1.35;
@@ -1190,6 +1198,7 @@ function scegli(i){
   ultimoGrappolo=g;
   return g[passoGrappolo];
 }
+function legaSegni(){
 MARKER.forEach(m=>{
   const i=+m.dataset.i;
   m.addEventListener("mouseenter",()=>{if(bloccato===null&&!trascino){mostra(i);attiva(i);}});
@@ -1201,6 +1210,7 @@ MARKER.forEach(m=>{
     if(bloccato!==null&&era!==j) portaAllaScheda(); });
   m.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();m.click();}});
 });
+}
 
 /* ======================= ELENCO E FILTRI ======================= */
 let fAcc=new Set(), fSrv=new Set(), ESCLUSE=new Set();
@@ -1274,10 +1284,66 @@ document.getElementById("azzera").addEventListener("click",()=>{
   document.getElementById("cerca").value=""; applicaFiltri();});
 
 
-disegnaElenco(""); vuoto();
-if(stretto()) elencoAperto(false);
+/* ------------------------- accensione -------------------------
+   La carta, la navigazione e i filtri sono gia' in piedi: delle spiagge non
+   sanno niente. Qui si aspettano i dati e si accende quel che dipende da loro.
+
+   Gli esiti sono TRE, e vanno distinti, perche' a chi guarda significano cose
+   diverse:
+     - la richiesta fallisce            -> la rete, o il servizio, non risponde
+     - la richiesta riesce ma e' vuota  -> la regione c'e', ma non e' tua
+     - la richiesta riesce con dei dati -> si disegna tutto
+   Confonderli e' il modo piu' sicuro di far pensare "e' rotto" a chi invece
+   deve solo sbloccare la regione. */
+function avviso(titolo, testo, azione){
+  document.getElementById("elenco").innerHTML =
+    '<h4>'+titolo+'</h4><div class="elenco-avviso"><p>'+testo+'</p>'+(azione||'')+'</div>';
+  document.getElementById("conta").textContent="— / —";
+}
+function invitoSblocco(){
+  const a = "mailto:ing.giacometti@gmail.com"
+          + "?subject=" + encodeURIComponent("Vado in spiaggia — sbloccare " + REGIONE_ETI)
+          + "&body="    + encodeURIComponent(
+              "Vorrei sbloccare le spiagge " + REGIONE_ETI + ".\n\n"
+            + "Il mio indirizzo per l'accesso al sito e': ");
+  return '<a class="sblocca" href="'+a+'">Chiedi di sbloccarla</a>' +
+         (VADO.chiSono() ? '' :
+          '<button type="button" class="sblocca-entra">Ho già un account: entra</button>');
+}
+async function avvia(){
+  let d;
+  try{
+    d = await VADO.regione(REGIONE);
+  }catch(e){
+    console.warn("dati non caricati:", e);
+    return avviso("Dati non raggiungibili",
+      navigator.onLine ? "Il servizio non risponde in questo momento. Riprova fra poco."
+                       : "Sembra che manchi la connessione a internet.");
+  }
+  if(!d.spiagge.length){
+    avviso("Regione da sbloccare",
+      "La carta si vede da qui, ma le schede delle spiagge \u2014 fondo, servizi, "+
+      "accesso, meteo e stato del mare \u2014 sono riservate a chi ha sbloccato "+
+      "questa regione.", invitoSblocco());
+    const b = document.querySelector(".sblocca-entra");
+    if(b) b.onclick = ()=>{ const e=document.querySelector("#conto button"); if(e) e.click(); };
+    return;
+  }
+  ZONE = d.zone; SPIAGGE = d.spiagge;
+  disegnaSegni();          /* i segni sulla carta, e MARKER/ETIM/BANDE */
+  legende();               /* le due legende, che contano le spiagge */
+  disegnaZone();           /* i pulsanti delle zone */
+  legaSegni();             /* i comandi appesi a ogni segno */
+  applicaVista(vista=aspetta(PIENO)); aggiornaScala();
+  disegnaElenco(""); vuoto();
+  if(stretto()) elencoAperto(false);
+}
+avvia();
+/* Se si entra o si esce senza ricaricare, la regione va richiesta di nuovo:
+   e' cambiato chi sta chiedendo. */
+VADO.alCambio((function(){ let primo=true;
+  return ()=>{ if(primo){ primo=false; return; } location.reload(); }; })());
 </script>
-<script src="vado-dati.js"></script>
 <script src="vado-conto.js"></script>
 </body>
 </html>

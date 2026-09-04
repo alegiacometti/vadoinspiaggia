@@ -17,6 +17,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="carte-spiagge.css">
 <script src="configurazione.js"></script>
+<script src="vado-dati.js"></script>
 <style>/* misure di questa regione — vedi carte-spiagge.css */
 :root{--colonna-carta:540px;--telaio-h:min(72vh,700px)}</style>
 </head>
@@ -109,7 +110,10 @@ const ACCESSI={
   barca:   {et:"Solo in barca",         col:"#6470c4", glifo:"BARCA"},
   nc:      {et:"Accesso non documentato",    col:"#93a6b3", glifo:"N/C"}
 };
-const ZONE={"delta":"Il delta del Po","chioggia":"Chioggia e Sottomarina","laguna":"Pellestrina e il Lido","cavallino":"Cavallino-Treporti","jesolo":"Jesolo ed Eraclea","caorle":"Caorle e Valle Vecchia","bibione":"Bibione"};
+/* I dati non stanno piu' qui dentro: arrivano dal database, e chi li
+   serve guarda prima chi li sta chiedendo. Vedi avvia(), in fondo. */
+const REGIONE="veneto", REGIONE_ETI="del Veneto";
+let ZONE={}, SPIAGGE=[];
 const SERVIZI=[["parcheggio","Parcheggio"],["ristorante","Ristorante"],["bar","Bar"],
   ["lettini","Lettini e ombrelloni"],["docce","Docce"],["wc","WC"],["sorveglianza","Sorveglianza"],
   ["sport","Sport acquatici"],["cani","Cani ammessi"],["ombra","Ombra naturale"]];
@@ -126,7 +130,6 @@ const ICONE={
   ombra:'<path d="M10 2.4l3.9 5.8h-2.3l3 4.6H5.4l3-4.6H6.1z"/><path d="M10 12.8v4.8"/>'
 };
 
-const SPIAGGE=[{"n":"Barricata","com":"Porto Tolle","z":"delta","lat":44.8505,"lon":12.4679,"lato":"E","lung":"≈2,0 km","fondo":"Sabbia finissima","folla":2,"acc":"auto","camm":"Nessuna: si arriva in auto fino alla spiaggia","park":"Sterrato vicino alla spiaggia.","sv":{"parcheggio":0.5,"ristorante":0.5,"bar":0.5,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":0,"ombra":0,"cani":0.5,"bb":1},"id":["Delta del Po","Dune","Zanzare","Bandiera Blu"],"nota":"La spiaggia più meridionale del Veneto, quasi intatta, con i legni portati dal mare a fare da arredo e il santuario della Madonna della Barricata all'estremità. L'acqua è calda ma torbida di sedimenti del Po e i granchi sul fondo non si vedono. Le zanzare, la sera, sono un problema serio.","pid":null,"sc":["#e8dcbb","#4aa0c0","dune",null],"sid":"veneto-001"},{"n":"Boccasette","com":"Porto Tolle","z":"delta","lat":45.0276,"lon":12.423,"lato":"W","lung":"≈1,5 km","fondo":"Sabbia fine","folla":2,"acc":"auto","camm":"Nessuna: si arriva in auto fino alla spiaggia","park":"Ampio, due euro al giorno.","sv":{"parcheggio":0.5,"ristorante":1,"bar":0.5,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":0.5,"ombra":0,"cani":0.5,"bb":1},"id":["Delta del Po","Bambini","Fenicotteri","Bandiera Blu"],"nota":"Per chi conosce il delta è la migliore della zona: parcheggio ampio a due euro, ombrellone e lettino a pochi euro, doccia a dieci centesimi. Di giorno c'è onda, la sera l'acqua si calma e diventa limpida. Sopra la testa passano i fenicotteri: qui nidificano.","pid":"ChIJnyw7mtIpfEcRp4b9V77mQa0","sc":["#e8dcbb","#4aa0c0","dune",null],"sid":"veneto-002"},{"n":"Porto Caleri","com":"Rosolina","z":"delta","lat":45.093,"lon":12.343,"lato":"E","lung":"≈2,0 km","fondo":"Sabbia fine","folla":1,"acc":"lungo","camm":"Si entra dal Giardino Botanico Litoraneo e si percorre il sentiero fra le dune e la pineta: una mezz'ora fino al mare.","park":"All'ingresso del giardino botanico.","sv":{"parcheggio":0,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"ombra":0.5,"cani":0.5,"bb":0},"id":["Area protetta","Dune","Giardino botanico"],"nota":"L'estremità sud della penisola di Rosolina, dentro il Giardino Botanico Litoraneo: dune mobili, pineta e barene lagunari, uno degli ambienti costieri meglio conservati dell'alto Adriatico. Il ponte di legno sulla laguna vale il percorso da solo. Nessun servizio in spiaggia.","pid":null,"sc":["#e8dcbb","#4aa0c0","dune",null],"sid":"veneto-003"},{"n":"Isola di Albarella","com":"Rosolina","z":"delta","lat":45.0829,"lon":12.3467,"lato":"W","lung":"≈2,5 km","fondo":"Sabbia fine","folla":2,"acc":"auto","camm":"Nessuna: si arriva in auto fino alla spiaggia, ma l'isola è privata e l'ingresso è regolato.","park":"Dentro l'isola; l'accesso è riservato a ospiti e proprietari.","sv":{"parcheggio":0.5,"ristorante":1,"bar":1,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":1,"ombra":0,"cani":0.5,"bb":0},"id":["Isola privata","Bambini","Ciclabile"],"nota":"Un'isola privata di ottocento ettari, chiusa alle auto esterne, dove ci si muove in bicicletta o in golf cart fra pinete e daini. Spiaggia curata e mare pulito. Non è un posto pubblico: si entra se si è ospiti di una struttura dell'isola.","pid":null,"sc":["#e8dcbb","#4aa0c0","pini",null],"sid":"veneto-004"},{"n":"Rosolina Mare","com":"Rosolina","z":"delta","lat":45.1172,"lon":12.3281,"lato":"E","lung":"≈8,0 km","fondo":"Sabbia fine dorata","folla":3,"acc":"auto","camm":"Nessuna: si arriva in auto fino alla spiaggia","park":"Ampio e a prezzi contenuti.","sv":{"parcheggio":0.5,"ristorante":1,"bar":0.5,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":0.5,"ombra":0,"cani":0.5,"bb":1},"id":["Pineta","Bambini","Ciclabile","Bandiera Blu"],"nota":"Otto chilometri di sabbia con la pineta alle spalle, stabilimenti alternati a tratti liberi e prezzi fra i più bassi dell'alto Adriatico. Non ci sono alberghi di lusso né discoteche: è una località di famiglie. In bassa stagione e a settembre dà il meglio; a Ferragosto è piena.","pid":"ChIJEySkfrydfkcRr-lZw5wsCiA","sc":["#e8dcbb","#4aa0c0","pini",null],"sid":"veneto-005"},{"n":"Isola Verde","com":"Chioggia","z":"chioggia","lat":45.1772,"lon":12.3208,"lato":"W","lung":"≈3,0 km","fondo":"Sabbia fine","folla":2,"acc":"auto","camm":"Nessuna: si arriva in auto fino alla spiaggia","park":"Lungo la via delle Nazioni Unite.","sv":{"parcheggio":0.5,"ristorante":1,"bar":0.5,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":0.5,"ombra":0,"cani":0.5,"bb":0},"id":["Bambini","Ciclabile"],"nota":"Fra la foce del Brenta e Sottomarina, una località di campeggi e villaggi con una spiaggia larga e poco affollata. I reti delle mitilicolture al largo portano a riva parecchia plastica, ed è la nota che ricorre in ogni recensione.","pid":null,"sc":["#e8dcbb","#4aa0c0","pini",null],"sid":"veneto-006"},{"n":"Sottomarina","com":"Chioggia","z":"chioggia","lat":45.2086,"lon":12.3,"lato":"E","lung":"≈4,0 km","fondo":"Sabbia scura ferrosa","folla":4,"acc":"auto","camm":"Nessuna: si arriva in auto fino alla spiaggia","park":"Numerosi parcheggi, dai cinque ai sette euro al giorno.","sv":{"parcheggio":0.5,"ristorante":1,"bar":1,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":1,"ombra":0,"cani":0.5,"bb":1},"id":["Sabbia ferrosa","Molto affollata","Chioggia","Bandiera Blu"],"nota":"La spiaggia di Chioggia, quattro chilometri larghissimi di sabbia scura ricca di ferro, a cui si attribuiscono da sempre proprietà curative. Quasi tutta in concessione: il tratto libero è una lingua stretta, e sulla pulizia le recensioni sono severe. Il centro storico di Chioggia, dall'altra parte del ponte, è la vera ragione per venirci.","pid":"ChIJbX5n2PCYfkcR0RdHgmhIQGc","sc":["#7d786f","#4aa0c0","paese","barche"],"sid":"veneto-007"},{"n":"Pellestrina · San Vio","com":"Venezia","z":"laguna","lat":45.2734,"lon":12.3029,"lato":"W","lung":"≈4,0 km","fondo":"Sabbia e ciottoli","folla":1,"acc":"breve","camm":"Si arriva in vaporetto o con il bus lungo l'isola, poi si scavalca la duna a piedi.","park":"Sull'isola le auto sono poche: si arriva dal Lido in traghetto o da Chioggia.","sv":{"parcheggio":0,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"ombra":0.5,"cani":0.5,"bb":0},"id":["Capanne","Solo via mare","Murazzi"],"nota":"Un'isola lunga undici chilometri e larga a volte cento metri, con la spiaggia selvatica sul lato mare e le capanne che i pellestrinotti costruiscono ogni estate con i legni portati dalla marea. Nessun servizio, quasi nessun turista. È la Venezia che nessuno visita.","pid":"ChIJIWZwYuGifkcRzkys57n4uBE","sc":["#d9d2c2","#4aa0c0","dune",null],"sid":"veneto-008"},{"n":"Lido · Murazzi","com":"Venezia","z":"laguna","lat":45.39,"lon":12.353,"lato":"E","lung":"≈2,0 km","fondo":"Massi e sabbia","folla":2,"acc":"breve","camm":"Si arriva in bus dal terminal del Lido e si scavalcano i massi.","park":"Sul Lido le auto sono limitate: meglio il vaporetto e poi il bus.","sv":{"parcheggio":0,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"ombra":0.5,"cani":0.5,"bb":0},"id":["Murazzi","Gratuita","Tuffi"],"nota":"I Murazzi sono la diga di massi in pietra d'Istria costruita dalla Repubblica di Venezia nel Settecento per fermare il mare: quattro chilometri di blocchi su cui la gente del Lido si stende e si tuffa. Non è una spiaggia, è un'opera idraulica di due secoli e mezzo fa su cui si prende il sole.","pid":null,"sc":["#d9d2c2","#4aa0c0","rocce",null],"sid":"veneto-009"},{"n":"Alberoni","com":"Venezia","z":"laguna","lat":45.3485,"lon":12.3292,"lato":"W","lung":"≈1,5 km","fondo":"Sabbia fine","folla":3,"acc":"breve","camm":"Dal terminal del Lido il bus A arriva al capolinea in venticinque minuti, poi si attraversa la duna a piedi.","park":"Poco: il Lido si gira in bus o in bicicletta.","sv":{"parcheggio":0.5,"ristorante":0,"bar":0.5,"lettini":0,"docce":0.5,"wc":0,"sorveglianza":0.5,"sport":0,"ombra":0.5,"cani":0.5,"bb":1},"id":["Dune","Area protetta","Naturismo","Bandiera Blu"],"nota":"L'estremità sud del Lido, con il sistema di dune protetto dal WWF e la pineta alle spalle: il tratto di litorale veneziano rimasto più intatto. Verso il faro c'è la zona storicamente frequentata da naturisti e punto di riferimento della comunità LGBT veneziana. Accanto al tratto in concessione resta un'ampia spiaggia libera.","pid":"ChIJX00t2d-kfkcR-HQXTfPlncA","sc":["#e8dcbb","#4aa0c0","dune",null],"sid":"veneto-010"},{"n":"Lido di Venezia","com":"Venezia","z":"laguna","lat":45.4142,"lon":12.3773,"lato":"E","lung":"≈1,0 km","fondo":"Sabbia fine","folla":4,"acc":"breve","camm":"Vaporetto da San Marco o dalle Fondamente Nove, poi cinque minuti a piedi attraverso l'isola.","park":"Il modo giusto di arrivare è il vaporetto.","sv":{"parcheggio":0.5,"ristorante":1,"bar":1,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":1,"ombra":0,"cani":0.5,"bb":1},"id":["Venezia","Molto affollata","Meduse","Bandiera Blu"],"nota":"La spiaggia comunale del Lido, con la fascia libera e le zone a pagamento prenotabili online. È l'unico posto dove si fa il bagno a mezz'ora da piazza San Marco, e questo basta a giustificare tutto il resto. Le meduse sono frequenti: anche quelle spiaggiate e morte pungono.","pid":"ChIJDz8S0K6vfkcR6Nj7ACelAFk","sc":["#e8dcbb","#4aa0c0","paese",null],"sid":"veneto-011"},{"n":"San Nicolò","com":"Venezia","z":"laguna","lat":45.423,"lon":12.385,"lato":"W","lung":"≈800 m","fondo":"Sabbia fine","folla":3,"acc":"breve","camm":"Dal terminal del Lido si va a piedi o in bus fino al piazzale Ravà.","park":"Come sopra: vaporetto e poi bus.","sv":{"parcheggio":0.5,"ristorante":1,"bar":0.5,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":0.5,"ombra":0,"cani":0.5,"bb":0},"id":["Bocca di porto","Tranquilla"],"nota":"All'estremità nord del Lido, davanti alla bocca di porto da cui entrano le navi in laguna. Più tranquilla del tratto centrale e con ombrelloni ben distanziati. La sabbia viene rastrellata di continuo; sulle cabine i giudizi sono altalenanti.","pid":"ChIJu7bQiYyvfkcRC4tuW41ZIsc","sc":["#e8dcbb","#4aa0c0","paese",null],"sid":"veneto-012"},{"n":"Punta Sabbioni","com":"Cavallino-Treporti","z":"cavallino","lat":45.4278,"lon":12.4367,"lato":"E","lung":"≈1,5 km","fondo":"Sabbia fine","folla":2,"acc":"auto","camm":"Nessuna: si arriva in auto fino alla spiaggia","park":"Ampio, circa sette euro al giorno.","sv":{"parcheggio":0.5,"ristorante":0,"bar":0.5,"lettini":0,"docce":0.5,"wc":0,"sorveglianza":0.5,"sport":0,"ombra":0.5,"cani":0.5,"bb":0},"id":["Dune","Cani ammessi","Venezia in vaporetto"],"nota":"La punta del litorale del Cavallino, con dune, boschetti e macchia rimasti allo stato naturale alle spalle: per molti la spiaggia migliore della penisola. I cani sono ammessi. Da qui parte il vaporetto per San Marco, che ci mette mezz'ora.","pid":"ChIJBbdOR1avfkcRpBRDbHweh0Q","sc":["#e8dcbb","#4aa0c0","dune",null],"sid":"veneto-013"},{"n":"Ca' Savio","com":"Cavallino-Treporti","z":"cavallino","lat":45.4435,"lon":12.4638,"lato":"W","lung":"≈2,0 km","fondo":"Sabbia molto fine","folla":3,"acc":"auto","camm":"Nessuna: si arriva in auto fino alla spiaggia","park":"Vicinissimo alla spiaggia, a pagamento.","sv":{"parcheggio":0.5,"ristorante":1,"bar":0.5,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":0.5,"ombra":0,"cani":0.5,"bb":0},"id":["Bambini","Conchiglie"],"nota":"Spiaggia pubblica grande e ben tenuta, con l'ingresso in acqua dolcissimo: ideale con i bambini piccoli, e piena di conchiglie appena si entra. Ombrellone, lettino, pedalò e canoe a noleggio. I bagni sono pochi e stanno solo nei chioschi.","pid":"ChIJefEbwNapfkcRQGpGxTsgVs8","sc":["#e8dcbb","#4aa0c0","pini",null],"sid":"veneto-014"},{"n":"Cavallino","com":"Cavallino-Treporti","z":"cavallino","lat":45.471,"lon":12.551,"lato":"E","lung":"≈3,0 km","fondo":"Sabbia fine","folla":3,"acc":"auto","camm":"Nessuna: si arriva in auto fino alla spiaggia","park":"Presso i campeggi che gestiscono i tratti attrezzati.","sv":{"parcheggio":0.5,"ristorante":1,"bar":0.5,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":0.5,"ombra":0,"cani":0.5,"bb":0},"id":["Cani ammessi","Campeggi","Ciclabile"],"nota":"Il litorale dei campeggi, il più grande d'Europa per numero di piazzole, con tratti liberi e attrezzati alternati e aree per i cani con docce e ciotole. Da qui parte la ciclabile che costeggia la laguna fino a Punta Sabbioni e a Lio Piccolo, che è la cosa migliore del posto.","pid":"ChIJpRCYaUyrfkcR81_viS-dqQQ","sc":["#e8dcbb","#4aa0c0","pini",null],"sid":"veneto-015"},{"n":"Jesolo","com":"Jesolo","z":"jesolo","lat":45.5083,"lon":12.6583,"lato":"W","lung":"≈15 km","fondo":"Sabbia fine dorata","folla":4,"acc":"auto","camm":"Nessuna: si arriva in auto fino alla spiaggia","park":"Numerosi, a pagamento in stagione.","sv":{"parcheggio":0.5,"ristorante":1,"bar":1,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":1,"ombra":0,"cani":0.5,"bb":0},"id":["Bambini","Molto affollata","Locali"],"nota":"Quindici chilometri di spiaggia, la più lunga dell'alto Adriatico, con il fondale che resta basso per decine di metri e una passeggiata pedonale serale di undici chilometri. I tratti liberi ci sono e sono ampi, cosa non scontata su questa costa. In agosto è affollatissima e la vita notturna è la ragione per cui molti ci vengono.","pid":"ChIJQWT3I2D_e0cR9nuTsWhXOWw","sc":["#e8dcbb","#4aa0c0","paese",null],"sid":"veneto-016"},{"n":"Eraclea Mare","com":"Eraclea","z":"jesolo","lat":45.5444,"lon":12.7644,"lato":"E","lung":"≈4,0 km","fondo":"Sabbia fine","folla":2,"acc":"breve","camm":"Si attraversa la pineta a piedi dal parcheggio.","park":"Dietro la pineta, in genere senza difficoltà.","sv":{"parcheggio":0.5,"ristorante":1,"bar":0.5,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":0.5,"ombra":0,"cani":0.5,"bb":1},"id":["Pineta","Laguna del Mort","Bambini","Bandiera Blu"],"nota":"Chiamata la spiaggia d'oro per la sabbia chiara, con una pineta di quaranta ettari a ridosso e nessun palazzo alto. All'estremità ovest c'è la Laguna del Mort, uno specchio d'acqua nato da una rotta del Piave nel 1935, dove nidificano gli uccelli e non ci sono costruzioni.","pid":"ChIJJzh0wsD5e0cRzohgfQSX_7g","sc":["#e8dcbb","#4aa0c0","pini",null],"sid":"veneto-017"},{"n":"Valle Vecchia","com":"Caorle","z":"caorle","lat":45.582,"lon":12.825,"lato":"W","lung":"≈6,0 km","fondo":"Sabbia e conchiglie","folla":1,"acc":"lungo","camm":"Non si arriva in auto: si lascia il mezzo al parcheggio di Brussa e si percorrono un paio di chilometri a piedi o in bicicletta attraverso il bosco.","park":"A Brussa, gratuito.","sv":{"parcheggio":0,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"ombra":0.5,"cani":0.5,"bb":0},"id":["Area protetta","Dune","Solo a piedi"],"nota":"Sei chilometri di spiaggia senza una costruzione, dentro un'area protetta di bonifica con bosco, canneti e dune: l'ultimo tratto di costa veneta rimasto davvero selvatico. Non c'è niente — né bar né bagni né ombra — e proprio per questo non c'è quasi nessuno. Le zanzare nel bosco sono numerose.","pid":null,"sc":["#e8dcbb","#4aa0c0","dune",null],"sid":"veneto-018"},{"n":"Duna Verde","com":"Caorle","z":"caorle","lat":45.5659,"lon":12.8087,"lato":"E","lung":"≈1,5 km","fondo":"Sabbia fine","folla":2,"acc":"breve","camm":"Si arriva attraverso i sentieri della pineta, comodi e brevi.","park":"Dietro la pineta.","sv":{"parcheggio":0.5,"ristorante":0,"bar":0.5,"lettini":0,"docce":0.5,"wc":0,"sorveglianza":0.5,"sport":0,"ombra":0.5,"cani":0.5,"bb":1},"id":["Cani ammessi","Pineta","Gratuita","Bandiera Blu"],"nota":"Spiaggia libera ampia e tenuta bene, con il bagnino e la pineta che dà ombra fino a riva. I cani possono entrare in acqua senza che nessuno protesti, ed è uno dei pochi posti del litorale veneto dove sia davvero così. Cestini solo all'inizio della pineta.","pid":"ChIJScPf_zvxe0cRGIpM7uRgBA0","sc":["#e8dcbb","#4aa0c0","pini",null],"sid":"veneto-019"},{"n":"Porto Santa Margherita","com":"Caorle","z":"caorle","lat":45.589,"lon":12.868,"lato":"W","lung":"≈2,0 km","fondo":"Sabbia fine","folla":3,"acc":"auto","camm":"Nessuna: si arriva in auto fino alla spiaggia","park":"Lungo il viale delle Rondini.","sv":{"parcheggio":0.5,"ristorante":1,"bar":0.5,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":0.5,"ombra":0,"cani":0.5,"bb":0},"id":["Porto turistico","Bambini"],"nota":"Dall'altra parte del canale rispetto a Caorle, una località nata attorno al porto turistico, più tranquilla del centro e con la stessa spiaggia. I venditori ambulanti sono numerosi e insistenti, e su questo le recensioni sono unanimi.","pid":"ChIJA70GFS3xe0cRYFZUquty6Uc","sc":["#e8dcbb","#4aa0c0","paese","barche"],"sid":"veneto-020"},{"n":"Caorle · Spiaggia di Ponente","com":"Caorle","z":"caorle","lat":45.5955,"lon":12.8789,"lato":"E","lung":"≈1,5 km","fondo":"Sabbia fine","folla":3,"acc":"auto","camm":"Nessuna: si arriva in auto fino alla spiaggia","park":"Lungo il viale Marconi.","sv":{"parcheggio":0.5,"ristorante":1,"bar":0.5,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":0.5,"ombra":0,"cani":0.5,"bb":1},"id":["Bambini","Scogliera d'autore","Bandiera Blu"],"nota":"La spiaggia a ovest del centro storico, con l'ingresso in acqua dolce e le isolette galleggianti al largo su cui i ragazzi si arrampicano. Sulla scogliera che la delimita, dal 1993, scultori invitati da tutto il mondo scolpiscono i massi: è una galleria d'arte all'aperto lunga un chilometro.","pid":null,"sc":["#e8dcbb","#4aa0c0","rocce",null],"sid":"veneto-021"},{"n":"Caorle · Spiaggia di Levante","com":"Caorle","z":"caorle","lat":45.6069,"lon":12.8964,"lato":"W","lung":"≈2,5 km","fondo":"Sabbia fine","folla":4,"acc":"auto","camm":"Nessuna: si arriva in auto fino alla spiaggia","park":"Numerosi lungo il lungomare Trieste.","sv":{"parcheggio":0.5,"ristorante":1,"bar":1,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":1,"ombra":0,"cani":0.5,"bb":1},"id":["Borgo","Bambini","Molto affollata","Bandiera Blu"],"nota":"La spiaggia principale di Caorle, larga e con l'acqua bassissima per un lungo tratto. Il centro storico alle spalle, con le case colorate e il campanile cilindrico, è uno dei borghi marinari meglio conservati dell'Adriatico. Bagni e docce pubblici gratuiti lungo tutto il lungomare.","pid":"ChIJuavCvdjxe0cRCr_t-g5D8KQ","sc":["#e8dcbb","#4aa0c0","paese","torre"],"sid":"veneto-022"},{"n":"Bibione Pineda","com":"San Michele al Tagliamento","z":"bibione","lat":45.627,"lon":13.025,"lato":"E","lung":"≈2,0 km","fondo":"Sabbia fine","folla":2,"acc":"breve","camm":"Si attraversa la pineta a piedi dal parcheggio.","park":"Dietro la pineta.","sv":{"parcheggio":0.5,"ristorante":1,"bar":0.5,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":0.5,"ombra":0,"cani":0.5,"bb":0},"id":["Pineta","Tranquilla","Bambini"],"nota":"La parte occidentale di Bibione, separata dal centro da una pineta e molto più quieta: niente palazzi alti, niente locali notturni, solo villette fra i pini. La spiaggia è la stessa del centro ma con un terzo della gente.","pid":null,"sc":["#e8dcbb","#4aa0c0","pini",null],"sid":"veneto-023"},{"n":"Bibione","com":"San Michele al Tagliamento","z":"bibione","lat":45.6309,"lon":13.0468,"lato":"W","lung":"≈8,0 km","fondo":"Sabbia fine dorata","folla":4,"acc":"auto","camm":"Nessuna: si arriva in auto fino alla spiaggia","park":"Numerosi, a pagamento in stagione.","sv":{"parcheggio":0.5,"ristorante":1,"bar":1,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":1,"ombra":0,"cani":0.5,"bb":1},"id":["Vietato fumare","Bambini","Molto affollata","Bandiera Blu"],"nota":"Otto chilometri di sabbia fine con il fondale che resta basso a lungo, e una regola che sorprende chi non la conosce: sulla spiaggia non si fuma se non nelle aree indicate, e gli animali non sono ammessi. Il risultato è un arenile davvero pulito. In agosto è pienissima.","pid":"ChIJC3vg-7iSe0cRDRW4Yw7ijq0","sc":["#e8dcbb","#4aa0c0","paese",null],"sid":"veneto-024"},{"n":"Faro di Bibione","com":"San Michele al Tagliamento","z":"bibione","lat":45.6395,"lon":13.0985,"lato":"E","lung":"≈1,5 km","fondo":"Sabbia e conchiglie","folla":2,"acc":"breve","camm":"Circa venti minuti a piedi o in bicicletta dal centro di Bibione, lungo la pineta fino alla foce del Tagliamento.","park":"Al limite della pineta, poi a piedi.","sv":{"parcheggio":0.5,"ristorante":0,"bar":0.5,"lettini":0,"docce":0.5,"wc":0,"sorveglianza":0.5,"sport":0,"ombra":0.5,"cani":0.5,"bb":0},"id":["Faro","Foce di fiume","Dune"],"nota":"L'ultima spiaggia del Veneto, alla foce del Tagliamento, davanti al faro e con il Friuli sull'altra riva. Dune, canneto e nessuna costruzione: quasi tutta libera e molto meno affollata del centro. Con la bassa marea la lingua di sabbia si allunga parecchio verso il fiume.","pid":null,"sc":["#e8dcbb","#4aa0c0","dune","faro"],"sid":"veneto-025"}];
 const WEBCAM=[];
 const camDella=b=>WEBCAM.find(c=>c.sp.includes(b.n))||null;
 
@@ -180,6 +183,8 @@ const BANDIERA='M-0.42,0.9L-0.42,-9.2L0.42,-9.2L0.42,0.9Z'
    piu’ lontane — e quelle vogliono il filo che le lega al segno. */
 const posEti={W:[-10,3.5,"end"],E:[10,3.5,"start"],N:[0,-11,"middle"],S:[0,17,"middle"]};
 const SCALE=[["E",10,3.5,"start",0],["W",-10,3.5,"end",0],["N",0,-11,"middle",0],["S",0,17,"middle",0],["NE",17,-10,"start",1],["NW",-17,-10,"end",1],["SE",17,17,"start",1],["SW",-17,17,"end",1],["E2",30,3.5,"start",1],["W2",-30,3.5,"end",1],["N2",0,-25,"middle",1],["S2",0,31,"middle",1]];
+let MARKER=[], ETIM=[], BANDE=[];
+function disegnaSegni(){
 document.getElementById("gMarker").innerHTML=SPIAGGE.map((b,i)=>{
   const A=ACCESSI[b.acc]||ACCESSI.nc,c=A.col,p=posEti[b.lato]||posEti.E;
   /* La forma dice quel che sappiamo: cerchio dimensionato se la lunghezza è nota,
@@ -194,12 +199,15 @@ document.getElementById("gMarker").innerHTML=SPIAGGE.map((b,i)=>{
          + '<rect class="cuore-q" x="'+(-r).toFixed(1)+'" y="'+(-r).toFixed(1)+'" width="'+(r*2).toFixed(1)+'" height="'+(r*2).toFixed(1)+'" rx=".6" fill="'+c+'"/>')+
    (b.sv.bb?'<g class="banda"><path class="bandierina" d="'+BANDIERA+'"/></g>':'')+
    '<g class="etim"><line class="guida" x1="0" y1="0" x2="0" y2="0"/><text class="nome" x="'+p[0]+'" y="'+p[1]+'" text-anchor="'+p[2]+'">'+b.n+'</text></g></g>';}).join("");
-const MARKER=[...document.querySelectorAll(".marker")];
+  MARKER=[...document.querySelectorAll(".marker")];
+  ETIM=MARKER.map(m=>m.querySelector(".etim"));
+  BANDE=MARKER.map(m=>m.querySelector(".banda"));
+}
 
 /* Le due legende nascono dagli stessi dati della carta: le misure passano per
    raggio(), i colori vengono da ACCESSI. Se domani si cambia la formula o si
    aggiunge un modo d'accesso, la legenda si aggiorna da sola. */
-(function legende(){
+function legende(){
   const cerchio=(r,riemp,bordo)=>'<svg viewBox="-8 -8 16 16" width="16" height="16" aria-hidden="true">'
     +'<circle r="'+r.toFixed(1)+'" fill="'+riemp+'" stroke="'+bordo+'" stroke-width="1.4"/></svg>';
   const voce=(dis,et)=>'<span class="lg-voce">'+dis+'<i>'+et+'</i></span>';
@@ -214,7 +222,7 @@ const MARKER=[...document.querySelectorAll(".marker")];
     Object.values(ACCESSI).map(a=>voce(cerchio(4.6,a.col,"#fff"),a.et)).join("")+(SPIAGGE.some(b=>b.sv.bb)?voce('<svg viewBox="-8 -8 16 16" width="16" height="16" aria-hidden="true">'
       +'<circle r="3.4" cy="-2.2" fill="#9ed4ea" stroke="#fff" stroke-width="1.1"/>'
       +'<path transform="translate(0,-1.4) scale(.62)" fill="#1786bd" d="'+BANDIERA+'"/></svg>',"Bandiera Blu 2026"):"");
-})();
+}
 
 
 /* ---------------- scritte a dimensione costante ----------------
@@ -224,8 +232,6 @@ const MARKER=[...document.querySelectorAll(".marker")];
    nasconde la meno importante (l'ordine è quello in cui sono elencate). */
 const SEGNI=[...document.querySelectorAll("#gPaesi .segno, #gCime .segno")];
 const GRADI=[...document.querySelectorAll("#gGriglia .grado-lat")];
-const ETIM=MARKER.map(m=>m.querySelector(".etim"));
-const BANDE=MARKER.map(m=>m.querySelector(".banda"));
 let ultimoF="";
 const urtano=(r,m)=>!(r.x+r.w<m.x||m.x+m.w<r.x||r.y+r.h<m.y||m.y+m.h<r.y);
 
@@ -388,8 +394,10 @@ function selezionaZona(z){zonaAttiva=z;
   document.querySelectorAll("#zone button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.z===(z||"")));
   MARKER.forEach((m,i)=>m.classList.toggle("eti",!!z&&SPIAGGE[i].z===z));
   vaiA(z?bboxZona(z):PIENO);}
+function disegnaZone(){
 document.getElementById("zone").innerHTML='<button data-z="" aria-pressed="true">Tutta la regione</button>'+
   Object.entries(ZONE).map(([k,v])=>'<button data-z="'+k+'" aria-pressed="false">'+v+'</button>').join("");
+}
 document.getElementById("zone").addEventListener("click",e=>{const b=e.target.closest("button");if(b)selezionaZona(b.dataset.z||null);});
 /* --- navigazione: rotella, trascinamento, pizzico, tastiera, pulsanti --- */
 const ZMIN=PIENO.w/70, ZMAX=PIENO.w*1.35;
@@ -1200,6 +1208,7 @@ function scegli(i){
   ultimoGrappolo=g;
   return g[passoGrappolo];
 }
+function legaSegni(){
 MARKER.forEach(m=>{
   const i=+m.dataset.i;
   m.addEventListener("mouseenter",()=>{if(bloccato===null&&!trascino){mostra(i);attiva(i);}});
@@ -1211,6 +1220,7 @@ MARKER.forEach(m=>{
     if(bloccato!==null&&era!==j) portaAllaScheda(); });
   m.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();m.click();}});
 });
+}
 
 /* ======================= ELENCO E FILTRI ======================= */
 let fAcc=new Set(), fSrv=new Set(), ESCLUSE=new Set();
@@ -1284,10 +1294,66 @@ document.getElementById("azzera").addEventListener("click",()=>{
   document.getElementById("cerca").value=""; applicaFiltri();});
 
 
-disegnaElenco(""); vuoto();
-if(stretto()) elencoAperto(false);
+/* ------------------------- accensione -------------------------
+   La carta, la navigazione e i filtri sono gia' in piedi: delle spiagge non
+   sanno niente. Qui si aspettano i dati e si accende quel che dipende da loro.
+
+   Gli esiti sono TRE, e vanno distinti, perche' a chi guarda significano cose
+   diverse:
+     - la richiesta fallisce            -> la rete, o il servizio, non risponde
+     - la richiesta riesce ma e' vuota  -> la regione c'e', ma non e' tua
+     - la richiesta riesce con dei dati -> si disegna tutto
+   Confonderli e' il modo piu' sicuro di far pensare "e' rotto" a chi invece
+   deve solo sbloccare la regione. */
+function avviso(titolo, testo, azione){
+  document.getElementById("elenco").innerHTML =
+    '<h4>'+titolo+'</h4><div class="elenco-avviso"><p>'+testo+'</p>'+(azione||'')+'</div>';
+  document.getElementById("conta").textContent="— / —";
+}
+function invitoSblocco(){
+  const a = "mailto:ing.giacometti@gmail.com"
+          + "?subject=" + encodeURIComponent("Vado in spiaggia — sbloccare " + REGIONE_ETI)
+          + "&body="    + encodeURIComponent(
+              "Vorrei sbloccare le spiagge " + REGIONE_ETI + ".\n\n"
+            + "Il mio indirizzo per l'accesso al sito e': ");
+  return '<a class="sblocca" href="'+a+'">Chiedi di sbloccarla</a>' +
+         (VADO.chiSono() ? '' :
+          '<button type="button" class="sblocca-entra">Ho già un account: entra</button>');
+}
+async function avvia(){
+  let d;
+  try{
+    d = await VADO.regione(REGIONE);
+  }catch(e){
+    console.warn("dati non caricati:", e);
+    return avviso("Dati non raggiungibili",
+      navigator.onLine ? "Il servizio non risponde in questo momento. Riprova fra poco."
+                       : "Sembra che manchi la connessione a internet.");
+  }
+  if(!d.spiagge.length){
+    avviso("Regione da sbloccare",
+      "La carta si vede da qui, ma le schede delle spiagge \u2014 fondo, servizi, "+
+      "accesso, meteo e stato del mare \u2014 sono riservate a chi ha sbloccato "+
+      "questa regione.", invitoSblocco());
+    const b = document.querySelector(".sblocca-entra");
+    if(b) b.onclick = ()=>{ const e=document.querySelector("#conto button"); if(e) e.click(); };
+    return;
+  }
+  ZONE = d.zone; SPIAGGE = d.spiagge;
+  disegnaSegni();          /* i segni sulla carta, e MARKER/ETIM/BANDE */
+  legende();               /* le due legende, che contano le spiagge */
+  disegnaZone();           /* i pulsanti delle zone */
+  legaSegni();             /* i comandi appesi a ogni segno */
+  applicaVista(vista=aspetta(PIENO)); aggiornaScala();
+  disegnaElenco(""); vuoto();
+  if(stretto()) elencoAperto(false);
+}
+avvia();
+/* Se si entra o si esce senza ricaricare, la regione va richiesta di nuovo:
+   e' cambiato chi sta chiedendo. */
+VADO.alCambio((function(){ let primo=true;
+  return ()=>{ if(primo){ primo=false; return; } location.reload(); }; })());
 </script>
-<script src="vado-dati.js"></script>
 <script src="vado-conto.js"></script>
 </body>
 </html>

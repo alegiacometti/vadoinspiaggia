@@ -531,3 +531,23 @@ button.f[data-s="bb"][aria-pressed="true"]{background:var(--azzurro);border-colo
 .conto-esito{margin:0;font-size:12.5px;line-height:1.5;padding:9px 11px;border-radius:8px}
 .conto-esito.buona{background:#eaf6ee;color:#1f6b45;border:1px solid #bfe3cd}
 .conto-esito.brutta{background:#fdecea;color:#a3352a;border:1px solid #f3c6c0}
+
+
+/* ---------- regione da sbloccare ----------
+   Non e' un errore, e non deve sembrarlo: chi arriva qui deve capire che il
+   sito funziona benissimo e che manca solo una cosa, che puo' chiedere. */
+.elenco-avviso{padding:13px;display:flex;flex-direction:column;gap:11px}
+.elenco-avviso p{margin:0;font-size:13px;line-height:1.55;color:#20536e}
+.sblocca,.sblocca-entra{font-family:var(--dati);font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;text-align:center;text-decoration:none;cursor:pointer;
+  border-radius:999px;padding:10px 14px;transition:.16s}
+.sblocca{background:var(--profondo);color:#fff;border:1px solid var(--profondo)}
+.sblocca:hover{background:var(--azzurro);border-color:var(--azzurro)}
+.sblocca-entra{background:var(--carta);color:var(--grigio);border:1px solid var(--tratto)}
+.sblocca-entra:hover{color:var(--azzurro);border-color:var(--basso)}
+
+/* il messaggio di ritorno dalla posta */
+.conto-benvenuto{font-family:var(--dati);font-size:11px;letter-spacing:.06em;
+  background:#eaf6ee;color:#1f6b45;border:1px solid #bfe3cd;border-radius:8px;
+  padding:9px 13px;margin:0 0 14px}
+.conto-benvenuto.brutto{background:#fdecea;color:#a3352a;border-color:#f3c6c0}

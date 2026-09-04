@@ -17,6 +17,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="carte-spiagge.css">
 <script src="configurazione.js"></script>
+<script src="vado-dati.js"></script>
 <style>/* misure di questa regione — vedi carte-spiagge.css */
 :root{--colonna-carta:580px;--telaio-h:min(70vh,690px)}</style>
 </head>
@@ -109,7 +110,10 @@ const ACCESSI={
   barca:   {et:"Solo in barca",               col:"#6470c4", glifo:"BARCA"},
   nc:      {et:"Accesso non documentato",    col:"#93a6b3", glifo:"N/C"}
 };
-const ZONE={"lignano":"Lignano e il Tagliamento","grado":"Grado e la laguna","duino":"Da Monfalcone a Duino","aurisina":"La costiera triestina","trieste":"Trieste, Miramare e Barcola","muggia":"Muggia e il confine"};
+/* I dati non stanno piu' qui dentro: arrivano dal database, e chi li
+   serve guarda prima chi li sta chiedendo. Vedi avvia(), in fondo. */
+const REGIONE="friuliveneziagiulia", REGIONE_ETI="del Friuli-Venezia Giulia";
+let ZONE={}, SPIAGGE=[];
 const SERVIZI=[["parcheggio","Parcheggio"],["ristorante","Ristorante"],["bar","Bar"],
   ["lettini","Lettini e ombrelloni"],["docce","Docce"],["wc","WC"],["sorveglianza","Sorveglianza"],
   ["sport","Sport acquatici"],["cani","Cani ammessi"],["ombra","Ombra naturale"]];
@@ -126,7 +130,6 @@ const ICONE={
   ombra:'<path d="M10 2.4l3.9 5.8h-2.3l3 4.6H5.4l3-4.6H6.1z"/><path d="M10 12.8v4.8"/>'
 };
 
-const SPIAGGE=[{"n":"Lignano Sabbiadoro","com":"Lignano Sabbiadoro","z":"lignano","lat":45.6867,"lon":13.1418,"lato":"N","lung":"≈8,0 km","fondo":"Sabbia fine dorata","folla":4,"acc":"auto","camm":"Nessuna: si arriva in auto fino alla spiaggia","park":"Numerosi, a pagamento in stagione.","sv":{"parcheggio":0.5,"ristorante":1,"bar":1,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":1,"ombra":0,"cani":0.5,"bb":0},"id":["Bambini","Molto affollata","Ciclabile"],"nota":"Otto chilometri di sabbia dorata con il fondale che resta basso a lungo: Hemingway, che ci veniva a pescare, la chiamò la Florida d'Italia. Docce, bagni e cabine ovunque, e sui tratti liberi si può portare da bere e da mangiare. In agosto è affollatissima; a settembre è quasi vuota.","pid":"ChIJDQDcAQ-Ue0cRaMgmJ6ozgE0","sc":["#e8dcbb","#4aa0c0","paese",null],"sid":"friuliveneziagiulia-001"},{"n":"Lignano Pineta","com":"Lignano Sabbiadoro","z":"lignano","lat":45.6694,"lon":13.1161,"lato":"S","lung":"≈3,0 km","fondo":"Sabbia fine","folla":3,"acc":"auto","camm":"Nessuna: si arriva in auto fino alla spiaggia","park":"Lungo il lungomare Kechler.","sv":{"parcheggio":0.5,"ristorante":1,"bar":1,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":1,"ombra":0,"cani":0.5,"bb":0},"id":["Pineta","Bambini"],"nota":"La parte disegnata negli anni Cinquanta con le strade a spirale dentro la pineta, più signorile e più quieta di Sabbiadoro. Attenzione a una regola che spiazza molti: qui il telo sulla sabbia non si può stendere, il lettino è obbligatorio, e i prezzi vanno dai quindici ai trenta euro al giorno.","pid":"ChIJEcuQwPSTe0cRU4S05ZrCGLI","sc":["#e8dcbb","#4aa0c0","pini",null],"sid":"friuliveneziagiulia-002"},{"n":"Lignano Riviera","com":"Lignano Sabbiadoro","z":"lignano","lat":45.6489,"lon":13.1015,"lato":"N","lung":"≈2,0 km","fondo":"Sabbia fine","folla":2,"acc":"auto","camm":"Nessuna: si arriva in auto fino alla spiaggia","park":"Strisce bianche gratuite ma spesso piene; blu a meno di un euro l'ora.","sv":{"parcheggio":0.5,"ristorante":1,"bar":0.5,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":0.5,"ombra":0,"cani":0.5,"bb":0},"id":["Pineta","Foce del Tagliamento","Tranquilla"],"nota":"L'estremità occidentale della penisola, alla foce del Tagliamento, la più tranquilla e la più verde delle tre Lignano. Come a Pineta l'ombrellone proprio non è ammesso, quindi con i bambini l'ombra va noleggiata. In acqua, vicino a riva, galleggia parecchia alga.","pid":"ChIJ6yxombKTe0cRVTRlAjZgULk","sc":["#e8dcbb","#4aa0c0","pini",null],"sid":"friuliveneziagiulia-003"},{"n":"Grado · Costa Azzurra","com":"Grado","z":"grado","lat":45.6798,"lon":13.379,"lato":"S","lung":"≈1,5 km","fondo":"Sabbia grigia fine","folla":3,"acc":"auto","camm":"Nessuna: si arriva in auto fino alla spiaggia","park":"Sulle strisce blu nelle vie interne, ed è il punto dolente.","sv":{"parcheggio":0.5,"ristorante":1,"bar":0.5,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":0.5,"ombra":0,"cani":0.5,"bb":1},"id":["Bambini","Maree","Conchiglie","Bandiera Blu"],"nota":"Per molti la migliore di Grado: acqua calda e limpida, sabbia piena di conchiglie e un tratto libero all'inizio. Il fondale è bassissimo e con la bassa marea si formano dune di sabbia dove i bambini giocano. Le alghe, in primavera, sono abbondanti.","pid":"ChIJGTJEJcOee0cRasOItuRu-yE","sc":["#cdbb9a","#4aa0c0","paese",null],"sid":"friuliveneziagiulia-004"},{"n":"Grado · Spiaggia Principale","com":"Grado","z":"grado","lat":45.677,"lon":13.4023,"lato":"N","lung":"≈2,0 km","fondo":"Sabbia grigia","folla":4,"acc":"auto","camm":"Nessuna: si arriva in auto fino alla spiaggia","park":"Vicino alla spiaggia, a pagamento.","sv":{"parcheggio":0.5,"ristorante":1,"bar":1,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":1,"ombra":0,"cani":0.5,"bb":1},"id":["Bambini","Termale","Molto affollata","Bandiera Blu"],"nota":"La spiaggia storica dell'Isola d'Oro, esposta a sud per tutto l'arco del giorno — cosa rara sull'Adriatico — e con l'acqua così bassa che per nuotare bisogna camminare venti minuti. Perfetta per chi non nuota e per i bambini, frustrante per tutti gli altri. Docce fredde gratis, calde a un euro.","pid":"ChIJLxsxaPeee0cR4orIVRAeDt8","sc":["#cdbb9a","#4aa0c0","paese",null],"sid":"friuliveneziagiulia-005"},{"n":"Grado · Città Giardino","com":"Grado","z":"grado","lat":45.679,"lon":13.413,"lato":"S","lung":"≈1,0 km","fondo":"Sabbia grigia","folla":2,"acc":"breve","camm":"Si attraversa la pineta a piedi dal parcheggio.","park":"Dietro la pineta, più facile che in centro.","sv":{"parcheggio":0.5,"ristorante":0.5,"bar":0.5,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":0,"ombra":0.5,"cani":0.5,"bb":0},"id":["Pineta","Tranquilla"],"nota":"Fra il centro e Grado Pineta, un tratto con la pineta a ridosso e molta meno gente. Il mare è lo stesso di tutta l'isola: bassissimo e caldo. Si viene qui soprattutto per trovare ombra vera, che sul resto del litorale non c'è.","pid":null,"sc":["#cdbb9a","#4aa0c0","pini",null],"sid":"friuliveneziagiulia-006"},{"n":"Grado Pineta","com":"Grado","z":"grado","lat":45.6768,"lon":13.43,"lato":"N","lung":"≈2,0 km","fondo":"Sabbia e alghe","folla":2,"acc":"auto","camm":"Nessuna: si arriva in auto fino alla spiaggia","park":"Ampio e in genere disponibile.","sv":{"parcheggio":0.5,"ristorante":1,"bar":0.5,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":0.5,"ombra":0,"cani":0.5,"bb":1},"id":["Tranquilla","Alghe","Bandiera Blu"],"nota":"L'estremità orientale dell'isola, la più quieta e la meno costruita. Va detto con chiarezza quello che dicono quasi tutte le recensioni: la quantità di alghe e di posidonia in acqua è notevole, e per fare il bagno si preferisce spostarsi. Per camminare e per il tramonto, invece, è il tratto migliore.","pid":"ChIJaTCqUkiee0cRykYrppFVsnE","sc":["#cdbb9a","#4aa0c0","pini",null],"sid":"friuliveneziagiulia-007"},{"n":"Marina Julia","com":"Monfalcone","z":"duino","lat":45.7752,"lon":13.5305,"lato":"S","lung":"≈2,0 km","fondo":"Sabbia e ghiaia","folla":3,"acc":"auto","camm":"Nessuna: si arriva in auto fino alla spiaggia","park":"Gratuito, come le docce e i bagni.","sv":{"parcheggio":0.5,"ristorante":1,"bar":0.5,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":0.5,"ombra":0,"cani":0.5,"bb":0},"id":["Cani ammessi","Bambini","Gratuita"],"nota":"La spiaggia di Monfalcone, con una laguna bassissima che la rende comoda con i bambini e un pontile da cui ci si tuffa — con l'occhio al livello dell'acqua, perché le maree qui cambiano parecchio. Parcheggio, doccia e bagni gratuiti. Il difetto, ricorrente in ogni recensione, sono le alghe.","pid":null,"sc":["#d9d2c2","#4aa0c0","paese",null],"sid":"friuliveneziagiulia-008"},{"n":"Baia di Sistiana","com":"Duino Aurisina","z":"duino","lat":45.7708,"lon":13.6307,"lato":"N","lung":"≈500 m","fondo":"Ciottoli e roccia","folla":4,"acc":"auto","camm":"Accesso comodo dalla strada; il porticciolo è a livello della baia.","park":"Ampio vicino al porticciolo.","sv":{"parcheggio":0.5,"ristorante":1,"bar":0.5,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":0.5,"ombra":0,"cani":0.5,"bb":0},"id":["Rilke","Molto affollata","Scarpette utili"],"nota":"La baia dove finisce il sentiero Rilke, il percorso a picco sulla falesia che parte da Duino. È di sassi, non di sabbia, e anche in acqua ci sono pietre: le scarpette servono. Molto affollata nei giorni feriali d'estate, e i locali sulla baia tirano tardi.","pid":"ChIJqZq8lxgMe0cRR4otgUNRuqw","sc":["#d9d2c2","#3aa8c4","rocce","calette"],"sid":"friuliveneziagiulia-009"},{"n":"Portopiccolo","com":"Duino Aurisina","z":"duino","lat":45.7637,"lon":13.636,"lato":"S","lung":"≈200 m","fondo":"Ghiaia fine","folla":3,"acc":"auto","camm":"Nessuna: si arriva in auto fino al borgo.","park":"Nel parcheggio interrato del complesso.","sv":{"parcheggio":0.5,"ristorante":1,"bar":1,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":1,"ombra":0,"cani":0.5,"bb":0},"id":["Porto turistico","Prenotazione","Cani ammessi"],"nota":"Un borgo costruito dal niente dentro una vecchia cava, con porto, alberghi e negozi. La spiaggia e la piscina si prenotano, e in alta stagione conviene farlo con un giorno di anticipo perché si esauriscono. È ordinato e curato; chi cerca l'autenticità cerchi altrove.","pid":"ChIJTZD7EDsMe0cR2jh9xywz1As","sc":["#d9d2c2","#3aa8c4","paese","barche"],"sid":"friuliveneziagiulia-010"},{"n":"Costa dei Barbari","com":"Duino Aurisina","z":"duino","lat":45.7646,"lon":13.6396,"lato":"N","lung":"≈600 m","fondo":"Roccia e ciottoli","folla":2,"acc":"lungo","camm":"Sentiero ripido in discesa dalla strada, con gradini: la risalita è impegnativa.","park":"Lungo la statale, pochi posti.","sv":{"parcheggio":0,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"ombra":0.5,"cani":0.5,"bb":0},"id":["Naturismo","Snorkeling","Scogliera"],"nota":"Un tratto di scogliera sotto il Carso, storicamente frequentato da naturisti e da chi cerca il mare senza nessuno intorno. Non c'è niente: né bar né bagni né ombra, e la discesa scoraggia i più. L'acqua è fra le più limpide del golfo di Trieste.","pid":null,"sc":["#d9d2c2","#3aa8c4","rocce","calette"],"sid":"friuliveneziagiulia-011"},{"n":"Filtri · Brojenca","com":"Duino Aurisina","z":"duino","lat":45.7427,"lon":13.6665,"lato":"S","lung":"≈300 m","fondo":"Roccia e ciottoli","folla":2,"acc":"lungo","camm":"Dall'istituto nautico si gira a sinistra verso una spiaggetta, poi si attraversa un pontile e si prosegue su rocce bagnate e scivolose: l'accesso è disagevole e va affrontato con scarpe adatte.","park":"Difficile, lungo la strada in alto.","sv":{"parcheggio":0,"ristorante":0,"bar":0,"lettini":0,"docce":0,"wc":0,"sorveglianza":0,"sport":0,"ombra":0.5,"cani":0.5,"bb":0},"id":["Snorkeling","Accesso difficile"],"nota":"Una delle spiagge più belle e meno raggiungibili della costiera: acqua limpida, natura intatta, quasi nessuno. Il prezzo è l'avvicinamento, che più di una recensione definisce assurdo. Chi ci arriva ci torna; chi ci prova con le infradito no.","pid":"ChIJu0fHNr0Ne0cR1C_BLvN_ua0","sc":["#d9d2c2","#3aa8c4","rocce","calette"],"sid":"friuliveneziagiulia-012"},{"n":"Canovella de' Zoppoli","com":"Duino Aurisina","z":"aurisina","lat":45.7496,"lon":13.6555,"lato":"N","lung":"≈200 m","fondo":"Ciottoli e roccia tagliente","folla":2,"acc":"lungo","camm":"Discesa lunga e comoda all'andata, con gradini; la risalita alla fine della giornata è la parte dura.","park":"In alto, lungo la strada.","sv":{"parcheggio":0.5,"ristorante":0.5,"bar":0.5,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":0,"ombra":0.5,"cani":0.5,"bb":0},"id":["Zoppoli","Snorkeling","Scarpette utili"],"nota":"Il nome viene dagli zoppoli, le barche monossili che i pescatori sloveni ricavavano da un solo tronco di pino scavato con l'ascia: qui le tiravano in secco. Le rocce a filo d'acqua sono taglienti e vanno prese sul serio. Un ristorante sopra la cala, e nient'altro.","pid":"ChIJqdA53rYNe0cRyWBevPx1jcE","sc":["#d9d2c2","#3aa8c4","rocce","calette"],"sid":"friuliveneziagiulia-013"},{"n":"Marina di Aurisina","com":"Duino Aurisina","z":"aurisina","lat":45.735,"lon":13.68,"lato":"S","lung":"≈300 m","fondo":"Roccia e ciottoli","folla":2,"acc":"breve","camm":"Si scende dalla strada costiera per un sentiero breve ma sconnesso.","park":"Lungo la costiera, limitato.","sv":{"parcheggio":0.5,"ristorante":0.5,"bar":0.5,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":0,"ombra":0.5,"cani":0.5,"bb":0},"id":["Snorkeling","Scogliera"],"nota":"Una delle cale sotto la falesia del Carso, con la roccia bianca che scende in acqua e il fondale ottimo per la maschera. Non c'è sabbia da nessuna parte su questa costa: ci si stende sulle piattaforme di cemento o direttamente sulla pietra.","pid":null,"sc":["#d9d2c2","#3aa8c4","rocce","calette"],"sid":"friuliveneziagiulia-014"},{"n":"Grignano","com":"Trieste","z":"aurisina","lat":45.7113,"lon":13.7107,"lato":"N","lung":"≈200 m","fondo":"Cemento e roccia","folla":3,"acc":"auto","camm":"Nessuna: si arriva in auto fino allo stabilimento.","park":"Vicino al porticciolo.","sv":{"parcheggio":0.5,"ristorante":1,"bar":0.5,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":0.5,"ombra":0,"cani":0.5,"bb":0},"id":["Piscine","Miramare","Porto"],"nota":"Uno stabilimento su piattaforme di cemento accanto al porticciolo di Grignano, con due piscine e la discesa in mare per scalette. Non c'è spiaggia: è il modello triestino. Sui prezzi e sull'accoglienza le recensioni sono spesso critiche; il castello di Miramare è a dieci minuti a piedi.","pid":"ChIJ4e9K3OsSe0cR0xXrXBZwsUE","sc":["#d9d2c2","#3aa8c4","paese","barche"],"sid":"friuliveneziagiulia-015"},{"n":"Miramare · Sticco","com":"Trieste","z":"trieste","lat":45.7011,"lon":13.7207,"lato":"S","lung":"≈300 m","fondo":"Cemento e ghiaia","folla":3,"acc":"auto","camm":"Nessuna: si arriva in auto o con l'autobus 6 lungo viale Miramare.","park":"Lungo il viale, difficile in stagione.","sv":{"parcheggio":0.5,"ristorante":1,"bar":0.5,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":0.5,"ombra":0,"cani":0.5,"bb":0},"id":["Castello di Miramare","Area protetta"],"nota":"Sotto il castello di Miramare e a ridosso della riserva marina, che è la più antica d'Italia e dove la balneazione è vietata. Lo stabilimento è su piattaforme; l'acqua non è sempre limpida e il servizio, dicono in molti, non è all'altezza del posto. Il castello e il parco valgono comunque la giornata.","pid":"ChIJhTSYQ9kSe0cRgB9T0kQH8_k","sc":["#d9d2c2","#3aa8c4","paese","torre"],"sid":"friuliveneziagiulia-016"},{"n":"Barcola · i Topolini","com":"Trieste","z":"trieste","lat":45.6895,"lon":13.7425,"lato":"N","lung":"≈4,0 km","fondo":"Cemento e ghiaia","folla":4,"acc":"auto","camm":"Nessuna: si arriva in auto o con gli autobus 6 e 36.","park":"Lungo la strada, complicato d'estate.","sv":{"parcheggio":0.5,"ristorante":0,"bar":0.5,"lettini":0,"docce":0.5,"wc":0,"sorveglianza":0.5,"sport":0,"ombra":0.5,"cani":0.5,"bb":0},"id":["Gratuita","Rito triestino","Tramonto"],"nota":"Dieci piattaforme di cemento a semicerchio, i Topolini, lungo quattro chilometri di lungomare: non è una spiaggia ed è il posto dove Trieste va al mare. Gratis, con bagnini, chioschi e bagni. Ci si sdraia sul cemento o sulla ghiaia e si scende in acqua dalle scalette. Il primo è dedicato a Margherita Hack.","pid":"ChIJbST4s2wTe0cRucGfeekFTFw","sc":["#d9d2c2","#3aa8c4","paese",null],"sid":"friuliveneziagiulia-017"},{"n":"Bagno Ausonia","com":"Trieste","z":"trieste","lat":45.6642,"lon":13.7568,"lato":"S","lung":"≈150 m","fondo":"Cemento","folla":3,"acc":"auto","camm":"Nessuna: si arriva a piedi dalle Rive.","park":"In città, difficile.","sv":{"parcheggio":0.5,"ristorante":1,"bar":0.5,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":0.5,"ombra":0,"cani":0.5,"bb":0},"id":["Storico","Tuffi"],"nota":"Uno stabilimento su palafitte sulle Rive, in funzione dal 1930, con i trampolini e la vista sul golfo. Come ovunque a Trieste non c'è sabbia: si prende il sole sulle assi e si scende in acqua dalle scale. È il posto dove i triestini vanno a nuotare prima di andare in ufficio.","pid":null,"sc":["#d9d2c2","#3aa8c4","paese",null],"sid":"friuliveneziagiulia-018"},{"n":"Pedocin · La Lanterna","com":"Trieste","z":"trieste","lat":45.6483,"lon":13.7548,"lato":"N","lung":"≈200 m","fondo":"Ciottoli e cemento","folla":4,"acc":"auto","camm":"Un quarto d'ora a piedi dal centro di Trieste.","park":"In città; conviene arrivare a piedi.","sv":{"parcheggio":0,"ristorante":0,"bar":0.5,"lettini":0,"docce":1,"wc":1,"sorveglianza":1,"sport":0,"ombra":0.5,"cani":0,"bb":0},"id":["Muro divisorio","Un euro","Storico"],"nota":"L'ultima spiaggia d'Europa dove un muro separa gli uomini dalle donne, in piedi dal 1903 e difeso dai triestini a ogni tentativo di abbatterlo. L'ingresso costa poco più di un euro, le sedie sono gratuite, i bagnini presenti. Le meduse sono frequenti. Non ha eguali da nessuna parte.","pid":"ChIJRSASJ39re0cRyoiBUMyJyus","sc":["#d9d2c2","#3aa8c4","paese","torre"],"sid":"friuliveneziagiulia-019"},{"n":"Muggia · San Cristoforo","com":"Muggia","z":"muggia","lat":45.6067,"lon":13.7624,"lato":"S","lung":"≈300 m","fondo":"Pietra e cemento","folla":3,"acc":"auto","camm":"Nessuna: si arriva in auto o in autobus fino al lungomare.","park":"Sosta gratuita per le moto, più difficile per le auto.","sv":{"parcheggio":0.5,"ristorante":0,"bar":0.5,"lettini":0,"docce":0.5,"wc":0,"sorveglianza":0.5,"sport":0,"ombra":0.5,"cani":0.5,"bb":0},"id":["Gratuita","Lungomare","Ciclabile"],"nota":"Spiaggia libera all'inizio del Lungomare di Muggia, di pietra come tutta la costa triestina, con le scalette di ferro per scendere in acqua. Docce gratuite, fontanelle e una pista ciclopedonale accanto. È piccola e a metà giornata si riempie: la mattina presto è tutta un'altra cosa.","pid":"ChIJUb1pLixre0cRjZ59eFHJ7uE","sc":["#d9d2c2","#3aa8c4","paese",null],"sid":"friuliveneziagiulia-020"},{"n":"Punta Sottile","com":"Muggia","z":"muggia","lat":45.6056,"lon":13.7201,"lato":"N","lung":"≈250 m","fondo":"Ghiaia e sabbia","folla":2,"acc":"auto","camm":"Nessuna: si arriva in auto fino allo stabilimento.","park":"Una cinquantina di posti sul posto.","sv":{"parcheggio":0.5,"ristorante":1,"bar":0.5,"lettini":1,"docce":1,"wc":1,"sorveglianza":1,"sport":0.5,"ombra":0,"cani":0.5,"bb":0},"id":["Snorkeling","Bambini","Faro"],"nota":"Sotto il faro all'estremità della penisola muggesana, uno dei pochi punti del golfo dove il fondale sia sabbioso per i primi metri. Alberi per l'ombra, bar, cabine e docce. Tranquilla e pulita: chi cerca il mare a Trieste senza il cemento viene qui.","pid":"ChIJ4Rj11K5ue0cRCvoCLnJ-1-w","sc":["#e8dcbb","#3aa8c4","macchia","faro"],"sid":"friuliveneziagiulia-021"},{"n":"San Bartolomeo","com":"Muggia","z":"muggia","lat":45.5905,"lon":13.7523,"lato":"S","lung":"≈200 m","fondo":"Pietra e ghiaia","folla":2,"acc":"auto","camm":"Nessuna: si arriva in auto fino al lungomare.","park":"Lungo la strada, in genere disponibile.","sv":{"parcheggio":0.5,"ristorante":0.5,"bar":0.5,"lettini":0.5,"docce":0.5,"wc":0.5,"sorveglianza":0.5,"sport":0,"ombra":0.5,"cani":0.5,"bb":0},"id":["Confine","Tramonto"],"nota":"L'ultimo tratto di costa italiana prima della Slovenia: il valico è a poche centinaia di metri e dall'altra parte comincia Lazzaretto. Pietra e ghiaia, nessuna folla, e il golfo di Trieste che si apre davanti fino a Grado. Qui finisce l'Italia e finisce anche questa carta.","pid":null,"sc":["#d9d2c2","#3aa8c4","paese",null],"sid":"friuliveneziagiulia-022"}];
 const WEBCAM=[];
 const camDella=b=>WEBCAM.find(c=>c.sp.includes(b.n))||null;
 
@@ -180,6 +183,8 @@ const BANDIERA='M-0.42,0.9L-0.42,-9.2L0.42,-9.2L0.42,0.9Z'
    piu’ lontane — e quelle vogliono il filo che le lega al segno. */
 const posEti={W:[-10,3.5,"end"],E:[10,3.5,"start"],N:[0,-11,"middle"],S:[0,17,"middle"]};
 const SCALE=[["E",10,3.5,"start",0],["W",-10,3.5,"end",0],["N",0,-11,"middle",0],["S",0,17,"middle",0],["NE",17,-10,"start",1],["NW",-17,-10,"end",1],["SE",17,17,"start",1],["SW",-17,17,"end",1],["E2",30,3.5,"start",1],["W2",-30,3.5,"end",1],["N2",0,-25,"middle",1],["S2",0,31,"middle",1]];
+let MARKER=[], ETIM=[], BANDE=[];
+function disegnaSegni(){
 document.getElementById("gMarker").innerHTML=SPIAGGE.map((b,i)=>{
   const A=ACCESSI[b.acc]||ACCESSI.nc,c=A.col,p=posEti[b.lato]||posEti.E;
   /* La forma dice quel che sappiamo: cerchio dimensionato se la lunghezza è nota,
@@ -194,12 +199,15 @@ document.getElementById("gMarker").innerHTML=SPIAGGE.map((b,i)=>{
          + '<rect class="cuore-q" x="'+(-r).toFixed(1)+'" y="'+(-r).toFixed(1)+'" width="'+(r*2).toFixed(1)+'" height="'+(r*2).toFixed(1)+'" rx=".6" fill="'+c+'"/>')+
    (b.sv.bb?'<g class="banda"><path class="bandierina" d="'+BANDIERA+'"/></g>':'')+
    '<g class="etim"><line class="guida" x1="0" y1="0" x2="0" y2="0"/><text class="nome" x="'+p[0]+'" y="'+p[1]+'" text-anchor="'+p[2]+'">'+b.n+'</text></g></g>';}).join("");
-const MARKER=[...document.querySelectorAll(".marker")];
+  MARKER=[...document.querySelectorAll(".marker")];
+  ETIM=MARKER.map(m=>m.querySelector(".etim"));
+  BANDE=MARKER.map(m=>m.querySelector(".banda"));
+}
 
 /* Le due legende nascono dagli stessi dati della carta: le misure passano per
    raggio(), i colori vengono da ACCESSI. Se domani si cambia la formula o si
    aggiunge un modo d'accesso, la legenda si aggiorna da sola. */
-(function legende(){
+function legende(){
   const cerchio=(r,riemp,bordo)=>'<svg viewBox="-8 -8 16 16" width="16" height="16" aria-hidden="true">'
     +'<circle r="'+r.toFixed(1)+'" fill="'+riemp+'" stroke="'+bordo+'" stroke-width="1.4"/></svg>';
   const voce=(dis,et)=>'<span class="lg-voce">'+dis+'<i>'+et+'</i></span>';
@@ -214,7 +222,7 @@ const MARKER=[...document.querySelectorAll(".marker")];
     Object.values(ACCESSI).map(a=>voce(cerchio(4.6,a.col,"#fff"),a.et)).join("")+(SPIAGGE.some(b=>b.sv.bb)?voce('<svg viewBox="-8 -8 16 16" width="16" height="16" aria-hidden="true">'
       +'<circle r="3.4" cy="-2.2" fill="#9ed4ea" stroke="#fff" stroke-width="1.1"/>'
       +'<path transform="translate(0,-1.4) scale(.62)" fill="#1786bd" d="'+BANDIERA+'"/></svg>',"Bandiera Blu 2026"):"");
-})();
+}
 
 
 /* ---------------- scritte a dimensione costante ----------------
@@ -224,8 +232,6 @@ const MARKER=[...document.querySelectorAll(".marker")];
    nasconde la meno importante (l'ordine è quello in cui sono elencate). */
 const SEGNI=[...document.querySelectorAll("#gPaesi .segno, #gCime .segno")];
 const GRADI=[...document.querySelectorAll("#gGriglia .grado-lat")];
-const ETIM=MARKER.map(m=>m.querySelector(".etim"));
-const BANDE=MARKER.map(m=>m.querySelector(".banda"));
 let ultimoF="";
 const urtano=(r,m)=>!(r.x+r.w<m.x||m.x+m.w<r.x||r.y+r.h<m.y||m.y+m.h<r.y);
 
@@ -388,8 +394,10 @@ function selezionaZona(z){zonaAttiva=z;
   document.querySelectorAll("#zone button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.z===(z||"")));
   MARKER.forEach((m,i)=>m.classList.toggle("eti",!!z&&SPIAGGE[i].z===z));
   vaiA(z?bboxZona(z):PIENO);}
+function disegnaZone(){
 document.getElementById("zone").innerHTML='<button data-z="" aria-pressed="true">Tutta la regione</button>'+
   Object.entries(ZONE).map(([k,v])=>'<button data-z="'+k+'" aria-pressed="false">'+v+'</button>').join("");
+}
 document.getElementById("zone").addEventListener("click",e=>{const b=e.target.closest("button");if(b)selezionaZona(b.dataset.z||null);});
 /* --- navigazione: rotella, trascinamento, pizzico, tastiera, pulsanti --- */
 const ZMIN=PIENO.w/70, ZMAX=PIENO.w*1.35;
@@ -1201,6 +1209,7 @@ function scegli(i){
   ultimoGrappolo=g;
   return g[passoGrappolo];
 }
+function legaSegni(){
 MARKER.forEach(m=>{
   const i=+m.dataset.i;
   m.addEventListener("mouseenter",()=>{if(bloccato===null&&!trascino){mostra(i);attiva(i);}});
@@ -1212,6 +1221,7 @@ MARKER.forEach(m=>{
     if(bloccato!==null&&era!==j) portaAllaScheda(); });
   m.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();m.click();}});
 });
+}
 
 /* ======================= ELENCO E FILTRI ======================= */
 let fAcc=new Set(), fSrv=new Set(), ESCLUSE=new Set();
@@ -1285,10 +1295,66 @@ document.getElementById("azzera").addEventListener("click",()=>{
   document.getElementById("cerca").value=""; applicaFiltri();});
 
 
-disegnaElenco(""); vuoto();
-if(stretto()) elencoAperto(false);
+/* ------------------------- accensione -------------------------
+   La carta, la navigazione e i filtri sono gia' in piedi: delle spiagge non
+   sanno niente. Qui si aspettano i dati e si accende quel che dipende da loro.
+
+   Gli esiti sono TRE, e vanno distinti, perche' a chi guarda significano cose
+   diverse:
+     - la richiesta fallisce            -> la rete, o il servizio, non risponde
+     - la richiesta riesce ma e' vuota  -> la regione c'e', ma non e' tua
+     - la richiesta riesce con dei dati -> si disegna tutto
+   Confonderli e' il modo piu' sicuro di far pensare "e' rotto" a chi invece
+   deve solo sbloccare la regione. */
+function avviso(titolo, testo, azione){
+  document.getElementById("elenco").innerHTML =
+    '<h4>'+titolo+'</h4><div class="elenco-avviso"><p>'+testo+'</p>'+(azione||'')+'</div>';
+  document.getElementById("conta").textContent="— / —";
+}
+function invitoSblocco(){
+  const a = "mailto:ing.giacometti@gmail.com"
+          + "?subject=" + encodeURIComponent("Vado in spiaggia — sbloccare " + REGIONE_ETI)
+          + "&body="    + encodeURIComponent(
+              "Vorrei sbloccare le spiagge " + REGIONE_ETI + ".\n\n"
+            + "Il mio indirizzo per l'accesso al sito e': ");
+  return '<a class="sblocca" href="'+a+'">Chiedi di sbloccarla</a>' +
+         (VADO.chiSono() ? '' :
+          '<button type="button" class="sblocca-entra">Ho già un account: entra</button>');
+}
+async function avvia(){
+  let d;
+  try{
+    d = await VADO.regione(REGIONE);
+  }catch(e){
+    console.warn("dati non caricati:", e);
+    return avviso("Dati non raggiungibili",
+      navigator.onLine ? "Il servizio non risponde in questo momento. Riprova fra poco."
+                       : "Sembra che manchi la connessione a internet.");
+  }
+  if(!d.spiagge.length){
+    avviso("Regione da sbloccare",
+      "La carta si vede da qui, ma le schede delle spiagge \u2014 fondo, servizi, "+
+      "accesso, meteo e stato del mare \u2014 sono riservate a chi ha sbloccato "+
+      "questa regione.", invitoSblocco());
+    const b = document.querySelector(".sblocca-entra");
+    if(b) b.onclick = ()=>{ const e=document.querySelector("#conto button"); if(e) e.click(); };
+    return;
+  }
+  ZONE = d.zone; SPIAGGE = d.spiagge;
+  disegnaSegni();          /* i segni sulla carta, e MARKER/ETIM/BANDE */
+  legende();               /* le due legende, che contano le spiagge */
+  disegnaZone();           /* i pulsanti delle zone */
+  legaSegni();             /* i comandi appesi a ogni segno */
+  applicaVista(vista=aspetta(PIENO)); aggiornaScala();
+  disegnaElenco(""); vuoto();
+  if(stretto()) elencoAperto(false);
+}
+avvia();
+/* Se si entra o si esce senza ricaricare, la regione va richiesta di nuovo:
+   e' cambiato chi sta chiedendo. */
+VADO.alCambio((function(){ let primo=true;
+  return ()=>{ if(primo){ primo=false; return; } location.reload(); }; })());
 </script>
-<script src="vado-dati.js"></script>
 <script src="vado-conto.js"></script>
 </body>
 </html>

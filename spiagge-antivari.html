@@ -17,6 +17,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="carte-spiagge.css">
 <script src="configurazione.js"></script>
+<script src="vado-dati.js"></script>
 <style>/* misure di questa regione — vedi carte-spiagge.css */
 :root{--colonna-carta:620px;--telaio-h:min(72vh,749px)}</style>
 </head>
@@ -109,7 +110,10 @@ const ACCESSI={
   barca:   {et:"Solo in barca",               col:"#6470c4", glifo:"BARCA"},
   nc:      {et:"Accesso non documentato",    col:"#93a6b3", glifo:"N/C"}
 };
-const ZONE={"spizza": "Spizza, Čanj e la Spiaggia Rossa", "bar": "Antivari, Šušanj e Žukotrlica", "utjeha": "Utjeha, Veliki pijesak e Kruče", "dulcigno": "Valdanos, Dulcigno e la Piccola spiaggia", "velika": "Velika plaža e Ada Bojana"};
+/* I dati non stanno piu' qui dentro: arrivano dal database, e chi li
+   serve guarda prima chi li sta chiedendo. Vedi avvia(), in fondo. */
+const REGIONE="antivari", REGIONE_ETI="di Antivari e Dulcigno";
+let ZONE={}, SPIAGGE=[];
 const SERVIZI=[["parcheggio","Parcheggio"],["ristorante","Ristorante"],["bar","Bar"],
   ["lettini","Lettini e ombrelloni"],["docce","Docce"],["wc","WC"],["sorveglianza","Sorveglianza"],
   ["sport","Sport acquatici"],["cani","Cani ammessi"],["ombra","Ombra naturale"]];
@@ -126,7 +130,6 @@ const ICONE={
   ombra:'<path d="M10 2.4l3.9 5.8h-2.3l3 4.6H5.4l3-4.6H6.1z"/><path d="M10 12.8v4.8"/>'
 };
 
-const SPIAGGE=[{"sid": "antivari-001", "n": "Čanj", "com": "Antivari", "z": "spizza", "lat": 42.15891, "lon": 18.99993, "lato": null, "lung": "800 m", "fondo": "Sabbia e ghiaia", "folla": 2, "acc": "auto", "camm": "Accesso diretto dall'abitato, senza dislivelli.", "park": "Parcheggi sterrati e a pagamento dietro la spiaggia.", "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": 1, "docce": null, "wc": null, "sorveglianza": null, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Fuori dal monitoraggio UE"], "nota": "Baia chiusa fra due promontori nel tratto settentrionale del comune di Antivari, con fondo di sabbia mista a ghiaia minuta e acqua bassa a lungo. L'abitato alle spalle è fatto soprattutto di case per le vacanze. Dalla spiaggia partono le barche per la vicina Crvena plaža. Il Montenegro non e’ nell’Unione europea: qui l’EEA non preleva e non classifica la qualità dell’acqua. Il mare lo controlla ogni settimana il monitoraggio nazionale di Morsko dobro e dell’Istituto di sanità pubblica.", "pid": null, "vo": null, "sc": ["#dfd2b4", "#2fa6cd", "macchia", null], "mid": null}, {"sid": "antivari-002", "n": "Maljevik", "com": "Antivari", "z": "spizza", "lat": 42.14067, "lon": 19.02325, "lato": null, "lung": "100 m", "fondo": "Ghiaia", "folla": 1, "acc": "sterrato", "camm": "Dal punto in cui si lascia l'auto restano alcuni minuti di sentiero fino alla riva.", "park": "Solo spiazzi improvvisati sullo sterrato, senza servizi.", "sv": {"parcheggio": null, "ristorante": null, "bar": null, "lettini": null, "docce": null, "wc": null, "sorveglianza": null, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Fuori dal monitoraggio UE"], "nota": "Piccola insenatura di un centinaio di metri fra Čanj e Sutomore, con fondo di ghiaia e roccia. Si raggiunge da una strada sterrata e non ha strutture: niente bar, niente lettini, niente ombra. È una delle poche spiagge accessibili del comune rimaste sostanzialmente selvagge. Il Montenegro non e’ nell’Unione europea: qui l’EEA non preleva e non classifica la qualità dell’acqua. Il mare lo controlla ogni settimana il monitoraggio nazionale di Morsko dobro e dell’Istituto di sanità pubblica.", "pid": null, "vo": null, "sc": ["#d6cfc2", "#2fa6cd", "macchia", null], "mid": null}, {"sid": "antivari-003", "n": "Sutomore (Spizza)", "com": "Antivari", "z": "spizza", "lat": 42.13578, "lon": 19.05485, "lato": null, "lung": "1,1 km", "fondo": "Sabbia", "folla": 3, "acc": "auto", "camm": "Accesso diretto dal lungomare del paese.", "park": "Parcheggi a pagamento nel paese e lungo la strada, affollati in agosto.", "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": 1, "docce": 1, "wc": 1, "sorveglianza": null, "sport": 1, "ombra": null, "cani": null, "bb": 0}, "id": ["Fuori dal monitoraggio UE"], "nota": "Arenile ad arco di poco più di un chilometro, il principale del comune di Antivari e uno dei pochi davvero sabbiosi della costa montenegrina. L'ingresso in acqua è molto graduale, il che lo rende adatto ai bambini. Alle spalle corre il paese con la ferrovia: è comodo da raggiungere anche in treno, ma d'estate è molto frequentato. Il Montenegro non e’ nell’Unione europea: qui l’EEA non preleva e non classifica la qualità dell’acqua. Il mare lo controlla ogni settimana il monitoraggio nazionale di Morsko dobro e dell’Istituto di sanità pubblica.", "pid": null, "vo": null, "sc": ["#e6d4ac", "#2fa6cd", "macchia", null], "mid": null}, {"sid": "antivari-004", "n": "Ratac", "com": "Antivari", "z": "spizza", "lat": 42.12265, "lon": 19.06253, "lato": null, "lung": null, "fondo": "Ghiaia", "folla": 1, "acc": "breve", "camm": "Breve sentiero dal parcheggio sopra il promontorio fino alle calette.", "park": "Piazzole informali lungo la strada sopra il capo.", "sv": {"parcheggio": null, "ristorante": null, "bar": null, "lettini": null, "docce": null, "wc": null, "sorveglianza": null, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Fuori dal monitoraggio UE"], "nota": "Serie di calette di ghiaia sul promontorio di Ratac, fra Sutomore e Antivari, ai piedi dei ruderi dell'abbazia benedettina di Santa Maria. Alcuni tratti sono usati come spiaggia naturista. Non ci sono servizi e l'ombra è quella della macchia mediterranea. Il Montenegro non e’ nell’Unione europea: qui l’EEA non preleva e non classifica la qualità dell’acqua. Il mare lo controlla ogni settimana il monitoraggio nazionale di Morsko dobro e dell’Istituto di sanità pubblica.", "pid": null, "vo": null, "sc": ["#d6cfc2", "#2fa6cd", "macchia", null], "mid": null}, {"sid": "antivari-005", "n": "Crvena plaža (Spiaggia Rossa)", "com": "Antivari", "z": "spizza", "lat": 42.12019, "lon": 19.07023, "lato": null, "lung": null, "fondo": "Sabbia rossa", "folla": 2, "acc": "breve", "camm": "Si arriva a piedi da Šušanj lungo la costa, oppure in barca dai paesi vicini.", "park": "Nessun parcheggio in loco: si lascia l'auto a Šušanj o sulla strada sopra la baia.", "sv": {"parcheggio": null, "ristorante": null, "bar": 1, "lettini": null, "docce": null, "wc": null, "sorveglianza": null, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Fuori dal monitoraggio UE"], "nota": "Deve il nome al fondo di ghiaino e sabbia di colore rossastro, insolito lungo questa costa. Si trova in una piccola baia fra Sutomore e Antivari, sotto il promontorio di Ratac. Non è raggiungibile in auto: ci si arriva a piedi o con le barche che d'estate fanno la spola dai paesi vicini, e l'unico servizio è un chiosco stagionale. Il Montenegro non e’ nell’Unione europea: qui l’EEA non preleva e non classifica la qualità dell’acqua. Il mare lo controlla ogni settimana il monitoraggio nazionale di Morsko dobro e dell’Istituto di sanità pubblica.", "pid": null, "vo": null, "sc": ["#e0bd9a", "#2fa6cd", "macchia", null], "mid": null}, {"sid": "antivari-006", "n": "Šušanj", "com": "Antivari", "z": "bar", "lat": 42.11491, "lon": 19.07983, "lato": null, "lung": null, "fondo": "Sabbia e ghiaia", "folla": 2, "acc": "auto", "camm": "Accesso diretto dal lungomare dell'abitato.", "park": "Parcheggi lungo le strade del quartiere, gratuiti fuori stagione.", "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": 1, "docce": 1, "wc": null, "sorveglianza": null, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Fuori dal monitoraggio UE"], "nota": "Spiaggia del sobborgo omonimo, subito a nord del porto di Antivari e in continuità con Žukotrlica. Il fondo è di sabbia grossa mista a ghiaia. È una spiaggia soprattutto locale, con bar e appartamenti alle spalle e poco turismo internazionale. Il Montenegro non e’ nell’Unione europea: qui l’EEA non preleva e non classifica la qualità dell’acqua. Il mare lo controlla ogni settimana il monitoraggio nazionale di Morsko dobro e dell’Istituto di sanità pubblica.", "pid": null, "vo": null, "sc": ["#dfd2b4", "#2fa6cd", "paese", "barche"], "mid": null}, {"sid": "antivari-007", "n": "Žukotrlica", "com": "Antivari", "z": "bar", "lat": 42.11294, "lon": 19.08651, "lato": null, "lung": "1 km", "fondo": "Ghiaia", "folla": 2, "acc": "auto", "camm": "Accesso diretto dal lungomare, senza dislivelli.", "park": "Parcheggi lungo la strada costiera, gratuiti in alcuni tratti.", "sv": {"parcheggio": 1, "ristorante": null, "bar": 1, "lettini": 1, "docce": 1, "wc": null, "sorveglianza": null, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Fuori dal monitoraggio UE"], "nota": "Circa un chilometro di ghiaia grossa e sabbia grezza fra Šušanj e il porto di Antivari, alle spalle una pineta usata come ombra naturale. È la spiaggia più frequentata dagli abitanti della città. I servizi sono essenziali e concentrati in pochi punti. Il Montenegro non e’ nell’Unione europea: qui l’EEA non preleva e non classifica la qualità dell’acqua. Il mare lo controlla ogni settimana il monitoraggio nazionale di Morsko dobro e dell’Istituto di sanità pubblica.", "pid": null, "vo": null, "sc": ["#d6cfc2", "#2fa6cd", "paese", "barche"], "mid": null}, {"sid": "antivari-008", "n": "Mali pijesak", "com": "Antivari", "z": "utjeha", "lat": 42.03687, "lon": 19.14268, "lato": null, "lung": null, "fondo": "Sabbia", "folla": 1, "acc": "sterrato", "camm": "Breve discesa dalla stradina sterrata che serve anche Veliki pijesak.", "park": "Poche piazzole sterrate sopra la caletta.", "sv": {"parcheggio": null, "ristorante": null, "bar": 1, "lettini": null, "docce": null, "wc": null, "sorveglianza": null, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Fuori dal monitoraggio UE"], "nota": "Caletta sabbiosa accanto a Veliki pijesak, da cui dista poche centinaia di metri, nella zona di Dobra Voda. È più piccola e più raccolta della vicina, con un solo chiosco stagionale. L'accesso in auto è scomodo e questo la tiene poco frequentata anche in agosto. Il Montenegro non e’ nell’Unione europea: qui l’EEA non preleva e non classifica la qualità dell’acqua. Il mare lo controlla ogni settimana il monitoraggio nazionale di Morsko dobro e dell’Istituto di sanità pubblica.", "pid": null, "vo": null, "sc": ["#e6d4ac", "#2fa6cd", "pini", null], "mid": null}, {"sid": "antivari-009", "n": "Veliki pijesak", "com": "Antivari", "z": "utjeha", "lat": 42.03447, "lon": 19.14225, "lato": null, "lung": "298 m", "fondo": "Sabbia", "folla": 1, "acc": "sterrato", "camm": "Ultimo tratto su strada bianca, poi pochi passi fino all'arenile.", "park": "Spiazzi sterrati sopra la spiaggia, di capienza ridotta.", "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": 1, "docce": null, "wc": null, "sorveglianza": null, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Fuori dal monitoraggio UE"], "nota": "Arenile sabbioso di circa 300 metri nel tratto meridionale del comune di Antivari, presso Dobra Voda. Vi si arriva da una strada in parte sterrata che scende dalla statale per Dulcigno. La vegetazione subtropicale che arriva quasi sull'acqua e l'assenza di grandi alberghi la tengono più tranquilla delle spiagge urbane. Il Montenegro non e’ nell’Unione europea: qui l’EEA non preleva e non classifica la qualità dell’acqua. Il mare lo controlla ogni settimana il monitoraggio nazionale di Morsko dobro e dell’Istituto di sanità pubblica.", "pid": null, "vo": null, "sc": ["#e6d4ac", "#2fa6cd", "pini", null], "mid": null}, {"sid": "antivari-010", "n": "Utjeha", "com": "Antivari", "z": "utjeha", "lat": 42.01054, "lon": 19.15127, "lato": null, "lung": "800 m", "fondo": "Ghiaia", "folla": 1, "acc": "auto", "camm": "Dal parcheggio si scende alla riva su un sentiero fra gli ulivi.", "park": "Parcheggio gratuito e soste lungo la strada.", "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": 1, "docce": 1, "wc": 1, "sorveglianza": null, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Fuori dal monitoraggio UE"], "nota": "Baia di circa 800 metri fra Antivari e Dulcigno, con fondo di ghiaia e roccia e uliveti alle spalle. Ha ottenuto la Bandiera Blu e dispone di servizi di base, docce, servizi igienici e un'area giochi. Resta una meta soprattutto di villeggianti locali, con affollamento contenuto. Il Montenegro non e’ nell’Unione europea: qui l’EEA non preleva e non classifica la qualità dell’acqua. Il mare lo controlla ogni settimana il monitoraggio nazionale di Morsko dobro e dell’Istituto di sanità pubblica.", "pid": null, "vo": null, "sc": ["#d6cfc2", "#2fa6cd", "pini", null], "mid": null}, {"sid": "antivari-011", "n": "Kruče", "com": "Dulcigno", "z": "utjeha", "lat": 41.98361, "lon": 19.14778, "lato": null, "lung": "600 m", "fondo": "Ghiaia", "folla": 1, "acc": "sterrato", "camm": "Dalla strada si scende alla riva con un breve tratto ripido.", "park": "Poche piazzole lungo la strada stretta che scende dalla statale.", "sv": {"parcheggio": null, "ristorante": null, "bar": 1, "lettini": 1, "docce": null, "wc": null, "sorveglianza": null, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Fuori dal monitoraggio UE"], "nota": "Baia di ghiaia e roccia di circa 600 metri sulla costa settentrionale del comune di Dulcigno, verso il confine con Antivari. La discesa avviene su una strada stretta e ripida, con parcheggio scarso. Ci sono due soli chioschi, che si animano dopo il tramonto; di giorno la spiaggia resta molto tranquilla. Il Montenegro non e’ nell’Unione europea: qui l’EEA non preleva e non classifica la qualità dell’acqua. Il mare lo controlla ogni settimana il monitoraggio nazionale di Morsko dobro e dell’Istituto di sanità pubblica.", "pid": null, "vo": null, "sc": ["#d6cfc2", "#2fa6cd", "pini", null], "mid": null}, {"sid": "antivari-012", "n": "Valdanos", "com": "Dulcigno", "z": "dulcigno", "lat": 41.95142, "lon": 19.16499, "lato": null, "lung": "300 m", "fondo": "Ghiaia", "folla": 1, "acc": "auto", "camm": "Si arriva in auto fin quasi alla riva, poi pochi passi.", "park": "Spiazzo sterrato dietro la baia, gratuito e quasi sempre libero.", "sv": {"parcheggio": 1, "ristorante": 1, "bar": null, "lettini": 1, "docce": null, "wc": null, "sorveglianza": null, "sport": null, "ombra": 1, "cani": null, "bb": 0}, "id": ["Fuori dal monitoraggio UE"], "nota": "Baia a mezzaluna di circa 300 metri con fondo di ciottoli tondi, chiusa da alture coperte di ulivi secolari: l'uliveto circostante conta all'incirca 18.000 piante. L'area è stata a lungo una zona militare e poi un villaggio turistico ora dismesso, per cui le strutture sono minime e in stato precario. È fra le spiagge più tranquille del comune. Il Montenegro non e’ nell’Unione europea: qui l’EEA non preleva e non classifica la qualità dell’acqua. Il mare lo controlla ogni settimana il monitoraggio nazionale di Morsko dobro e dell’Istituto di sanità pubblica.", "pid": null, "vo": null, "sc": ["#d6cfc2", "#2fa6cd", "paese", null], "mid": null}, {"sid": "antivari-013", "n": "Liman", "com": "Dulcigno", "z": "dulcigno", "lat": 41.92559, "lon": 19.19955, "lato": null, "lung": "80 m", "fondo": "Ghiaia", "folla": 1, "acc": "breve", "camm": "Sentiero panoramico in discesa sotto la fortezza della città vecchia.", "park": "Posti molto limitati: la stradina di accesso è stretta.", "sv": {"parcheggio": null, "ristorante": null, "bar": 1, "lettini": 1, "docce": null, "wc": null, "sorveglianza": null, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Fuori dal monitoraggio UE"], "nota": "Due piccoli settori, Liman I e Liman II, sotto le mura della città vecchia di Dulcigno. Il primo è una caletta di ciottoli di una ottantina di metri con pedane in legno, il secondo è essenzialmente una serie di terrazze in cemento sulla roccia. È una zona frequentata soprattutto da residenti, con qualche bar affacciato sul mare. Il Montenegro non e’ nell’Unione europea: qui l’EEA non preleva e non classifica la qualità dell’acqua. Il mare lo controlla ogni settimana il monitoraggio nazionale di Morsko dobro e dell’Istituto di sanità pubblica.", "pid": null, "vo": null, "sc": ["#d6cfc2", "#2fa6cd", "paese", null], "mid": null}, {"sid": "antivari-014", "n": "Mala plaža (Spiaggia Piccola)", "com": "Dulcigno", "z": "dulcigno", "lat": 41.92326, "lon": 19.20455, "lato": null, "lung": "376 m", "fondo": "Sabbia", "folla": 4, "acc": "breve", "camm": "Pochi minuti a piedi in discesa dalla città vecchia.", "park": "Nessun parcheggio sulla spiaggia: si usa quello del centro, a pagamento.", "sv": {"parcheggio": null, "ristorante": 1, "bar": 1, "lettini": 1, "docce": 1, "wc": 1, "sorveglianza": 1, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Fuori dal monitoraggio UE"], "nota": "È la spiaggia cittadina di Dulcigno, una mezzaluna di sabbia fine di circa 376 metri incastonata fra due promontori sotto la città vecchia. Il lungomare alle spalle è una fila continua di ristoranti di pesce e caffè. Molto comoda ma anche la più affollata del comune: in luglio e agosto lo spazio è ridotto al minimo. Il Montenegro non e’ nell’Unione europea: qui l’EEA non preleva e non classifica la qualità dell’acqua. Il mare lo controlla ogni settimana il monitoraggio nazionale di Morsko dobro e dell’Istituto di sanità pubblica.", "pid": null, "vo": null, "sc": ["#e6d4ac", "#2fa6cd", "paese", null], "mid": null}, {"sid": "antivari-015", "n": "Ženska plaža (Spiaggia delle Donne)", "com": "Dulcigno", "z": "dulcigno", "lat": 41.9199, "lon": 19.2134, "lato": null, "lung": null, "fondo": "Scoglio", "folla": 1, "acc": "breve", "camm": "Si arriva con un sentiero che attraversa la pineta sopra la costa.", "park": "Posti lungo la strada sopra il sentiero, senza area dedicata.", "sv": {"parcheggio": null, "ristorante": null, "bar": 1, "lettini": null, "docce": null, "wc": null, "sorveglianza": null, "sport": null, "ombra": 1, "cani": null, "bb": 0}, "id": ["Fuori dal monitoraggio UE"], "nota": "Piccola spiaggia rocciosa con piattaforme per prendere il sole, riservata alle sole donne e frequentata come spiaggia naturista. La sorgente solforosa che affiora nella caletta le ha dato da tempo fama di acque curative. L'accesso è pedonale attraverso la pineta e i servizi si limitano a un piccolo bar. Il Montenegro non e’ nell’Unione europea: qui l’EEA non preleva e non classifica la qualità dell’acqua. Il mare lo controlla ogni settimana il monitoraggio nazionale di Morsko dobro e dell’Istituto di sanità pubblica.", "pid": null, "vo": null, "sc": ["#c3bbac", "#2fa6cd", "paese", null], "mid": null}, {"sid": "antivari-016", "n": "Velika plaža (Spiaggia Grande)", "com": "Dulcigno", "z": "velika", "lat": 41.91222, "lon": 19.24778, "lato": null, "lung": "12 km", "fondo": "Sabbia", "folla": 2, "acc": "auto", "camm": "Dai parcheggi dei singoli stabilimenti si arriva all'acqua in pochi passi su terreno piano.", "park": "Ogni settore ha il proprio parcheggio, in genere sterrato e a pagamento in alta stagione.", "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": 1, "docce": 1, "wc": 1, "sorveglianza": null, "sport": 1, "ombra": null, "cani": null, "bb": 0}, "id": ["Fuori dal monitoraggio UE"], "nota": "Dodici chilometri di sabbia fine e scura, larga in media una sessantina di metri, che vanno da Porto Milena alla foce della Bojana: è l'arenile più lungo dell'Adriatico. La coordinata indicata è il punto centrale, perché i singoli tratti hanno nomi propri gestiti da concessionari diversi, fra cui Copacabana, Miami, Tropicana e Safari. L'acqua bassissima e il vento costante ne fanno il principale centro di kitesurf del Montenegro; l'affollamento varia molto da settore a settore, con il tratto nord più familiare e quello verso la Bojana più selvaggio. Il Montenegro non e’ nell’Unione europea: qui l’EEA non preleva e non classifica la qualità dell’acqua. Il mare lo controlla ogni settimana il monitoraggio nazionale di Morsko dobro e dell’Istituto di sanità pubblica.", "pid": null, "vo": null, "sc": ["#e6d4ac", "#2fa6cd", "pini", null], "mid": null}, {"sid": "antivari-017", "n": "Ada Bojana", "com": "Dulcigno", "z": "velika", "lat": 41.86417, "lon": 19.36111, "lato": null, "lung": "1,9 km", "fondo": "Sabbia", "folla": 2, "acc": "auto", "camm": "Dal parcheggio si attraversa la duna e si arriva all'acqua in pochi minuti.", "park": "Parcheggi sterrati presso i ristoranti, a pagamento in estate.", "sv": {"parcheggio": 1, "ristorante": 1, "bar": 1, "lettini": 1, "docce": 1, "wc": null, "sorveglianza": null, "sport": null, "ombra": null, "cani": null, "bb": 0}, "id": ["Fuori dal monitoraggio UE"], "nota": "Isola triangolare formata dal delta della Bojana, circondata dal fiume su due lati e dal mare sul terzo, all'estremo sud del paese e al confine con l'Albania. La spiaggia esterna è di sabbia grigia fine, lunga poco meno di due chilometri. È storicamente la principale spiaggia naturista del Montenegro e conserva un carattere ancora poco costruito, con ristoranti di pesce su palafitte lungo il fiume. Il Montenegro non e’ nell’Unione europea: qui l’EEA non preleva e non classifica la qualità dell’acqua. Il mare lo controlla ogni settimana il monitoraggio nazionale di Morsko dobro e dell’Istituto di sanità pubblica.", "pid": null, "vo": null, "sc": ["#e6d4ac", "#2fa6cd", "pini", null], "mid": null}];
 const WEBCAM=[];
 const camDella=b=>WEBCAM.find(c=>c.sp.includes(b.n))||null;
 
@@ -180,6 +183,8 @@ const BANDIERA='M-0.42,0.9L-0.42,-9.2L0.42,-9.2L0.42,0.9Z'
    piu’ lontane — e quelle vogliono il filo che le lega al segno. */
 const posEti={W:[-10,3.5,"end"],E:[10,3.5,"start"],N:[0,-11,"middle"],S:[0,17,"middle"]};
 const SCALE=[["E",10,3.5,"start",0],["W",-10,3.5,"end",0],["N",0,-11,"middle",0],["S",0,17,"middle",0],["NE",17,-10,"start",1],["NW",-17,-10,"end",1],["SE",17,17,"start",1],["SW",-17,17,"end",1],["E2",30,3.5,"start",1],["W2",-30,3.5,"end",1],["N2",0,-25,"middle",1],["S2",0,31,"middle",1]];
+let MARKER=[], ETIM=[], BANDE=[];
+function disegnaSegni(){
 document.getElementById("gMarker").innerHTML=SPIAGGE.map((b,i)=>{
   const A=ACCESSI[b.acc]||ACCESSI.nc,c=A.col,p=posEti[b.lato]||posEti.E;
   /* La forma dice quel che sappiamo: cerchio dimensionato se la lunghezza è nota,
@@ -194,12 +199,15 @@ document.getElementById("gMarker").innerHTML=SPIAGGE.map((b,i)=>{
          + '<rect class="cuore-q" x="'+(-r).toFixed(1)+'" y="'+(-r).toFixed(1)+'" width="'+(r*2).toFixed(1)+'" height="'+(r*2).toFixed(1)+'" rx=".6" fill="'+c+'"/>')+
    (b.sv.bb?'<g class="banda"><path class="bandierina" d="'+BANDIERA+'"/></g>':'')+
    '<g class="etim"><line class="guida" x1="0" y1="0" x2="0" y2="0"/><text class="nome" x="'+p[0]+'" y="'+p[1]+'" text-anchor="'+p[2]+'">'+b.n+'</text></g></g>';}).join("");
-const MARKER=[...document.querySelectorAll(".marker")];
+  MARKER=[...document.querySelectorAll(".marker")];
+  ETIM=MARKER.map(m=>m.querySelector(".etim"));
+  BANDE=MARKER.map(m=>m.querySelector(".banda"));
+}
 
 /* Le due legende nascono dagli stessi dati della carta: le misure passano per
    raggio(), i colori vengono da ACCESSI. Se domani si cambia la formula o si
    aggiunge un modo d'accesso, la legenda si aggiorna da sola. */
-(function legende(){
+function legende(){
   const cerchio=(r,riemp,bordo)=>'<svg viewBox="-8 -8 16 16" width="16" height="16" aria-hidden="true">'
     +'<circle r="'+r.toFixed(1)+'" fill="'+riemp+'" stroke="'+bordo+'" stroke-width="1.4"/></svg>';
   const voce=(dis,et)=>'<span class="lg-voce">'+dis+'<i>'+et+'</i></span>';
@@ -214,7 +222,7 @@ const MARKER=[...document.querySelectorAll(".marker")];
     Object.values(ACCESSI).map(a=>voce(cerchio(4.6,a.col,"#fff"),a.et)).join("")+(SPIAGGE.some(b=>b.sv.bb)?voce('<svg viewBox="-8 -8 16 16" width="16" height="16" aria-hidden="true">'
       +'<circle r="3.4" cy="-2.2" fill="#9ed4ea" stroke="#fff" stroke-width="1.1"/>'
       +'<path transform="translate(0,-1.4) scale(.62)" fill="#1786bd" d="'+BANDIERA+'"/></svg>',"Bandiera Blu"):"");
-})();
+}
 
 
 /* ---------------- scritte a dimensione costante ----------------
@@ -224,8 +232,6 @@ const MARKER=[...document.querySelectorAll(".marker")];
    nasconde la meno importante (l'ordine è quello in cui sono elencate). */
 const SEGNI=[...document.querySelectorAll("#gPaesi .segno, #gCime .segno")];
 const GRADI=[...document.querySelectorAll("#gGriglia .grado-lat")];
-const ETIM=MARKER.map(m=>m.querySelector(".etim"));
-const BANDE=MARKER.map(m=>m.querySelector(".banda"));
 let ultimoF="";
 const urtano=(r,m)=>!(r.x+r.w<m.x||m.x+m.w<r.x||r.y+r.h<m.y||m.y+m.h<r.y);
 
@@ -388,8 +394,10 @@ function selezionaZona(z){zonaAttiva=z;
   document.querySelectorAll("#zone button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.z===(z||"")));
   MARKER.forEach((m,i)=>m.classList.toggle("eti",!!z&&SPIAGGE[i].z===z));
   vaiA(z?bboxZona(z):PIENO);}
+function disegnaZone(){
 document.getElementById("zone").innerHTML='<button data-z="" aria-pressed="true">Tutta la regione</button>'+
   Object.entries(ZONE).map(([k,v])=>'<button data-z="'+k+'" aria-pressed="false">'+v+'</button>').join("");
+}
 document.getElementById("zone").addEventListener("click",e=>{const b=e.target.closest("button");if(b)selezionaZona(b.dataset.z||null);});
 /* --- navigazione: rotella, trascinamento, pizzico, tastiera, pulsanti --- */
 const ZMIN=PIENO.w/70, ZMAX=PIENO.w*1.35;
@@ -1190,6 +1198,7 @@ function scegli(i){
   ultimoGrappolo=g;
   return g[passoGrappolo];
 }
+function legaSegni(){
 MARKER.forEach(m=>{
   const i=+m.dataset.i;
   m.addEventListener("mouseenter",()=>{if(bloccato===null&&!trascino){mostra(i);attiva(i);}});
@@ -1201,6 +1210,7 @@ MARKER.forEach(m=>{
     if(bloccato!==null&&era!==j) portaAllaScheda(); });
   m.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();m.click();}});
 });
+}
 
 /* ======================= ELENCO E FILTRI ======================= */
 let fAcc=new Set(), fSrv=new Set(), ESCLUSE=new Set();
@@ -1274,10 +1284,66 @@ document.getElementById("azzera").addEventListener("click",()=>{
   document.getElementById("cerca").value=""; applicaFiltri();});
 
 
-disegnaElenco(""); vuoto();
-if(stretto()) elencoAperto(false);
+/* ------------------------- accensione -------------------------
+   La carta, la navigazione e i filtri sono gia' in piedi: delle spiagge non
+   sanno niente. Qui si aspettano i dati e si accende quel che dipende da loro.
+
+   Gli esiti sono TRE, e vanno distinti, perche' a chi guarda significano cose
+   diverse:
+     - la richiesta fallisce            -> la rete, o il servizio, non risponde
+     - la richiesta riesce ma e' vuota  -> la regione c'e', ma non e' tua
+     - la richiesta riesce con dei dati -> si disegna tutto
+   Confonderli e' il modo piu' sicuro di far pensare "e' rotto" a chi invece
+   deve solo sbloccare la regione. */
+function avviso(titolo, testo, azione){
+  document.getElementById("elenco").innerHTML =
+    '<h4>'+titolo+'</h4><div class="elenco-avviso"><p>'+testo+'</p>'+(azione||'')+'</div>';
+  document.getElementById("conta").textContent="— / —";
+}
+function invitoSblocco(){
+  const a = "mailto:ing.giacometti@gmail.com"
+          + "?subject=" + encodeURIComponent("Vado in spiaggia — sbloccare " + REGIONE_ETI)
+          + "&body="    + encodeURIComponent(
+              "Vorrei sbloccare le spiagge " + REGIONE_ETI + ".\n\n"
+            + "Il mio indirizzo per l'accesso al sito e': ");
+  return '<a class="sblocca" href="'+a+'">Chiedi di sbloccarla</a>' +
+         (VADO.chiSono() ? '' :
+          '<button type="button" class="sblocca-entra">Ho già un account: entra</button>');
+}
+async function avvia(){
+  let d;
+  try{
+    d = await VADO.regione(REGIONE);
+  }catch(e){
+    console.warn("dati non caricati:", e);
+    return avviso("Dati non raggiungibili",
+      navigator.onLine ? "Il servizio non risponde in questo momento. Riprova fra poco."
+                       : "Sembra che manchi la connessione a internet.");
+  }
+  if(!d.spiagge.length){
+    avviso("Regione da sbloccare",
+      "La carta si vede da qui, ma le schede delle spiagge \u2014 fondo, servizi, "+
+      "accesso, meteo e stato del mare \u2014 sono riservate a chi ha sbloccato "+
+      "questa regione.", invitoSblocco());
+    const b = document.querySelector(".sblocca-entra");
+    if(b) b.onclick = ()=>{ const e=document.querySelector("#conto button"); if(e) e.click(); };
+    return;
+  }
+  ZONE = d.zone; SPIAGGE = d.spiagge;
+  disegnaSegni();          /* i segni sulla carta, e MARKER/ETIM/BANDE */
+  legende();               /* le due legende, che contano le spiagge */
+  disegnaZone();           /* i pulsanti delle zone */
+  legaSegni();             /* i comandi appesi a ogni segno */
+  applicaVista(vista=aspetta(PIENO)); aggiornaScala();
+  disegnaElenco(""); vuoto();
+  if(stretto()) elencoAperto(false);
+}
+avvia();
+/* Se si entra o si esce senza ricaricare, la regione va richiesta di nuovo:
+   e' cambiato chi sta chiedendo. */
+VADO.alCambio((function(){ let primo=true;
+  return ()=>{ if(primo){ primo=false; return; } location.reload(); }; })());
 </script>
-<script src="vado-dati.js"></script>
 <script src="vado-conto.js"></script>
 </body>
 </html>
