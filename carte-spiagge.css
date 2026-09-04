@@ -486,3 +486,48 @@ button.f[data-s="bb"][aria-pressed="true"]{background:var(--azzurro);border-colo
 .corpo .grappolo{margin:.35rem 0 0;padding:6px 9px;border-left:3px solid var(--azzurro);
   background:#f2f9fc;font-size:.78rem;line-height:1.45;color:var(--profondo)}
 .corpo .grappolo b{font-weight:700}
+
+
+/* ---------- entrare, uscire, iscriversi ----------
+   La finestrella e' un <dialog>: il browser sa gia' metterlo sopra a tutto,
+   chiuderlo col tasto Esc e togliere il fuoco al resto della pagina. Rifarlo a
+   mano con un div sarebbe stato piu' codice e meno accessibile. */
+.conto{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.conto-chi{font-family:var(--dati);font-size:10.5px;letter-spacing:.04em;color:var(--grigio);
+  max-width:22ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.conto-entra,.conto-esci{font-family:var(--dati);font-size:10px;letter-spacing:.12em;
+  text-transform:uppercase;cursor:pointer;border-radius:999px;padding:6px 15px;transition:.16s}
+.conto-entra{background:var(--profondo);color:#fff;border:1px solid var(--profondo)}
+.conto-entra:hover{background:var(--azzurro);border-color:var(--azzurro)}
+.conto-esci{background:var(--carta);color:var(--grigio);border:1px solid var(--tratto)}
+.conto-esci:hover{color:var(--azzurro);border-color:var(--basso)}
+
+.velo-conto{border:0;padding:0;background:transparent;max-width:100%}
+.velo-conto::backdrop{background:rgba(8,60,92,.5);backdrop-filter:blur(4px)}
+.foglio-conto{position:relative;width:min(94vw,420px);background:var(--carta);
+  border:1px solid var(--tratto);border-radius:14px;box-shadow:0 18px 50px rgba(8,60,92,.22);
+  padding:26px 24px 24px;display:flex;flex-direction:column;gap:13px}
+.foglio-conto .chiudi{position:absolute;right:10px;top:10px;background:none;border:0;
+  font-size:16px;line-height:1;color:var(--secca);cursor:pointer;padding:4px 6px}
+.foglio-conto .chiudi:hover{color:var(--azzurro)}
+.conto-schede{display:flex;flex-wrap:wrap;gap:6px;margin-right:26px}
+.conto-schede button{font-family:var(--dati);font-size:9.5px;letter-spacing:.09em;
+  text-transform:uppercase;background:none;border:1px solid transparent;border-radius:999px;
+  padding:5px 10px;color:var(--grigio);cursor:pointer;transition:.15s}
+.conto-schede button:hover{color:var(--azzurro)}
+.conto-schede button.on{background:var(--nebbia);border-color:var(--tratto);color:var(--profondo)}
+.conto-nota{margin:0;font-size:12.5px;line-height:1.55;color:#20536e}
+.conto-campo{display:flex;flex-direction:column;gap:5px}
+.conto-campo>span{font-family:var(--dati);font-size:9.5px;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--grigio)}
+.conto-campo input{font:inherit;font-size:14px;padding:9px 11px;border:1px solid var(--tratto);
+  border-radius:8px;background:var(--nebbia);color:var(--profondo)}
+.conto-campo input:focus{outline:2px solid var(--ambra);outline-offset:1px;background:#fff}
+.conto-vai{font-family:var(--dati);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  background:var(--profondo);color:#fff;border:1px solid var(--profondo);border-radius:999px;
+  padding:11px 16px;cursor:pointer;transition:.16s}
+.conto-vai:hover:not(:disabled){background:var(--azzurro);border-color:var(--azzurro)}
+.conto-vai:disabled{opacity:.55;cursor:default}
+.conto-esito{margin:0;font-size:12.5px;line-height:1.5;padding:9px 11px;border-radius:8px}
+.conto-esito.buona{background:#eaf6ee;color:#1f6b45;border:1px solid #bfe3cd}
+.conto-esito.brutta{background:#fdecea;color:#a3352a;border:1px solid #f3c6c0}
