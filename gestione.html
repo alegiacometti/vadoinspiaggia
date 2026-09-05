@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#083c5c">
+<title>Gestione · Vado in spiaggia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="carte-spiagge.css">
+<script src="vado-dati.js"></script>
+<style>
+/* Questa pagina NON e' protetta dal fatto di essere nascosta: chiunque puo'
+   aprirla, e va benissimo. A proteggere sono le regole del database — senza
+   una sessione da amministratore ogni richiesta torna vuota. La schermata
+   "non hai accesso" qui sotto e' cortesia verso chi capita per sbaglio, non
+   una serratura: una serratura fatta di JavaScript non e' una serratura. */
+.gest-cifre{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 22px}
+.gest-cifra{flex:1 1 150px;background:var(--carta);border:1px solid var(--tratto);
+  border-radius:10px;padding:13px 16px;box-shadow:var(--ombra)}
+.gest-cifra b{display:block;font-family:var(--display);font-weight:400;font-size:30px;
+  line-height:1;color:var(--profondo)}
+.gest-cifra span{font-family:var(--dati);font-size:9.5px;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--grigio)}
+.gest-sez{margin:0 0 12px;font-family:var(--dati);font-size:10px;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--azzurro)}
+.gest-tab{width:100%;border-collapse:collapse;background:var(--carta);
+  border:1px solid var(--tratto);border-radius:10px;overflow:hidden;box-shadow:var(--ombra)}
+.gest-tab th{font-family:var(--dati);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--grigio);text-align:left;padding:10px 13px;background:var(--nebbia);
+  border-bottom:1px solid var(--tratto);font-weight:400;white-space:nowrap}
+.gest-tab td{padding:11px 13px;border-bottom:1px solid var(--tratto);font-size:13.5px;
+  vertical-align:top;color:var(--profondo)}
+.gest-tab tr:last-child td{border-bottom:0}
+.gest-tab tr:hover td{background:var(--schiuma)}
+.gest-chi{font-weight:500}
+.gest-quando{font-family:var(--dati);font-size:10.5px;color:var(--grigio);white-space:nowrap}
+.gest-ruolo{font-family:var(--dati);font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+  border:1px solid var(--tratto);border-radius:999px;padding:2px 8px;color:var(--grigio)}
+.gest-ruolo.admin{background:var(--profondo);color:#fff;border-color:var(--profondo)}
+.gest-sbl{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.gest-pat{display:inline-flex;align-items:center;gap:6px;font-size:12px;
+  background:var(--schiuma);border:1px solid var(--basso);border-radius:999px;padding:3px 6px 3px 11px}
+.gest-pat.paese{background:#eef3ff;border-color:#b9c8ef}
+.gest-pat.scaduto{background:#f4f1ec;border-color:var(--tratto);color:var(--grigio);
+  text-decoration:line-through}
+.gest-pat button{background:none;border:0;cursor:pointer;color:var(--grigio);
+  font-size:13px;line-height:1;padding:0 3px;border-radius:50%}
+.gest-pat button:hover{color:#a3352a;background:#fdecea}
+.gest-niente{color:var(--secca);font-size:12.5px}
+.gest-piu{font-family:var(--dati);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+  background:var(--carta);border:1px dashed var(--basso);border-radius:999px;padding:4px 11px;
+  color:var(--azzurro);cursor:pointer}
+.gest-piu:hover{background:var(--nebbia);border-style:solid}
+.gest-barra{width:100%;height:6px;background:var(--nebbia);border-radius:99px;overflow:hidden}
+.gest-barra i{display:block;height:100%;background:var(--azzurro)}
+.gest-vuoto{padding:20px;text-align:center;color:var(--grigio);font-size:13px}
+.gest-fuori{max-width:520px;margin:60px auto;text-align:center}
+.gest-fuori h2{font-family:var(--display);font-weight:400;font-size:26px;color:var(--profondo);margin:0 0 10px}
+.gest-fuori p{font-size:13.5px;line-height:1.6;color:#20536e;margin:0 0 18px}
+@media (max-width:760px){ .gest-nascondi{display:none} }
+</style>
+</head>
+<body>
+<div class="guscio">
+
+  <header class="testata">
+    <div>
+      <a class="ritorno" href="index.html">← Il sito</a>
+      <h1>Gestione</h1>
+    </div>
+    <div class="conto" id="conto"></div>
+  </header>
+
+  <div id="corpo"></div>
+
+</div>
+
+<dialog class="velo-conto" id="veloSbl">
+  <form method="dialog" class="foglio-conto">
+    <button class="chiudi" value="x" aria-label="Chiudi">✕</button>
+    <p class="conto-nota" id="sblChi"></p>
+    <label class="conto-campo"><span>Che cosa sbloccare</span>
+      <select id="sblCosa"></select></label>
+    <label class="conto-campo"><span>Scadenza (vuoto = per sempre)</span>
+      <input type="date" id="sblScade"></label>
+    <label class="conto-campo"><span>Nota (facoltativa)</span>
+      <input type="text" id="sblNota" placeholder="fiera di Rimini, prova 30 giorni…"></label>
+    <p class="conto-esito" id="sblEsito" hidden></p>
+    <button type="button" class="conto-vai" id="sblVai">Sblocca</button>
+  </form>
+</dialog>
+
+<script>
+/* =========================================================================
+   La dashboard non decide niente: chiede, e il database risponde secondo le
+   sue regole. Se chi guarda non e' amministratore, le richieste tornano vuote
+   ed e' quello — non un controllo scritto qui — a tenere fuori gli estranei.
+   ========================================================================= */
+const corpo = document.getElementById("corpo");
+const veloSbl = document.getElementById("veloSbl");
+let REGIONI = [], PACCHETTI = [], PROFILI = [], ACCESSI = [], IO = null;
+
+const esc = t => String(t == null ? "" : t)
+  .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const giorno = d => d ? new Date(d).toLocaleDateString("it-IT",
+  {day:"2-digit", month:"2-digit", year:"numeric"}) : "—";
+const scaduto = a => a.scade_il && new Date(a.scade_il) < new Date();
+
+function fuori(titolo, testo, conPulsante){
+  corpo.innerHTML =
+    '<div class="gest-fuori"><h2>'+esc(titolo)+'</h2><p>'+esc(testo)+'</p>'+
+    (conPulsante ? '<button type="button" class="conto-vai" id="fEntra">Accedi</button>' : '')+
+    '</div>';
+  const b = document.getElementById("fEntra");
+  if (b) b.onclick = () => window.apriConto && window.apriConto("accedi");
+}
+
+async function carica(){
+  if (!VADO.chiSono())
+    return fuori("Questa pagina è riservata",
+      "Serve un account con i permessi di amministrazione. Se ne hai uno, accedi.", true);
+  corpo.innerHTML = '<div class="gest-vuoto">Un momento…</div>';
+  try{
+    [REGIONI, PACCHETTI, PROFILI, ACCESSI] = await Promise.all([
+      VADO.chiedi("regioni?select=chiave,nome,paese,spiagge,libera&order=ordine"),
+      VADO.chiedi("pacchetti?select=chiave,nome,paese"),
+      VADO.chiedi("profili?select=utente,nome,email,ruolo,creato,ultimo_accesso&order=creato"),
+      VADO.chiedi("accessi?select=id,utente,regione,pacchetto,concesso_il,scade_il,origine,nota")
+    ]);
+  }catch(e){
+    return fuori("Non riesco a leggere", "Il servizio non risponde: " + e.message, false);
+  }
+  /* Un amministratore vede tutti i profili; un utente normale vede solo il
+     proprio. Se ne torna uno solo ed e' il suo, non e' un errore: e' la
+     risposta giusta a chi non ha i permessi. */
+  if (PROFILI.length <= 1 && !(PROFILI[0] && PROFILI[0].ruolo === "admin"))
+    return fuori("Questo account non amministra",
+      "Sei entrato, ma il tuo account non ha i permessi di amministrazione: il database "+
+      "ti mostra soltanto i tuoi dati.", false);
+  disegna();
+}
+
+function disegna(){
+  const perUtente = {};
+  ACCESSI.forEach(a => (perUtente[a.utente] = perUtente[a.utente] || []).push(a));
+  const vivi = ACCESSI.filter(a => !scaduto(a));
+  const conQualcosa = new Set(vivi.map(a => a.utente));
+
+  /* quante persone hanno ciascuna regione: uno sblocco di paese vale per tutte
+     le sue regioni, quindi si contano insieme — altrimenti i pacchetti
+     sembrerebbero non vendere mai */
+  const domanda = {};
+  REGIONI.forEach(r => domanda[r.chiave] = new Set());
+  vivi.forEach(a => {
+    if (a.regione && domanda[a.regione]) domanda[a.regione].add(a.utente);
+    else if (a.pacchetto) {
+      const p = PACCHETTI.find(x => x.chiave === a.pacchetto);
+      if (p) REGIONI.filter(r => r.paese === p.paese).forEach(r => domanda[r.chiave].add(a.utente));
+    }
+  });
+  const max = Math.max(1, ...Object.values(domanda).map(s => s.size));
+
+  corpo.innerHTML =
+    '<div class="gest-cifre">' +
+      cifra(PROFILI.length, PROFILI.length === 1 ? "iscritto" : "iscritti") +
+      cifra(conQualcosa.size, "con almeno uno sblocco") +
+      cifra(vivi.length, vivi.length === 1 ? "sblocco attivo" : "sblocchi attivi") +
+      cifra(ACCESSI.length - vivi.length, "scaduti") +
+    '</div>' +
+    '<p class="gest-sez">Le persone</p>' + tabellaPersone(perUtente) +
+    '<p class="gest-sez" style="margin-top:26px">Le regioni, per quante persone le hanno</p>' +
+    tabellaRegioni(domanda, max);
+
+  corpo.querySelectorAll("[data-sblocca]").forEach(b =>
+    b.onclick = () => apriSblocco(b.dataset.sblocca));
+  corpo.querySelectorAll("[data-revoca]").forEach(b =>
+    b.onclick = () => revoca(+b.dataset.revoca, b.dataset.che));
+}
+
+const cifra = (n, et) => '<div class="gest-cifra"><b>'+n+'</b><span>'+et+'</span></div>';
+
+function nomeDi(a){
+  if (a.regione)   { const r = REGIONI.find(x => x.chiave === a.regione);   return r ? r.nome : a.regione; }
+  const p = PACCHETTI.find(x => x.chiave === a.pacchetto);
+  return p ? p.nome : a.pacchetto;
+}
+
+function tabellaPersone(perUtente){
+  if (!PROFILI.length) return '<div class="gest-vuoto">Ancora nessun iscritto.</div>';
+  return '<table class="gest-tab"><thead><tr>' +
+    '<th>Chi</th><th class="gest-nascondi">Iscritto</th><th class="gest-nascondi">Ultimo accesso</th>' +
+    '<th>Ha sbloccato</th></tr></thead><tbody>' +
+    PROFILI.map(p => {
+      const suoi = (perUtente[p.utente] || [])
+        .sort((a,b) => (a.pacchetto?0:1) - (b.pacchetto?0:1));
+      return '<tr>' +
+        '<td><div class="gest-chi">' + esc(p.email || p.nome || "—") + '</div>' +
+          (p.ruolo === "admin" ? '<span class="gest-ruolo admin">amministratore</span>' : '') + '</td>' +
+        '<td class="gest-nascondi gest-quando">' + giorno(p.creato) + '</td>' +
+        '<td class="gest-nascondi gest-quando">' + giorno(p.ultimo_accesso) + '</td>' +
+        '<td><div class="gest-sbl">' +
+          (suoi.length ? suoi.map(a =>
+            '<span class="gest-pat' + (a.pacchetto ? ' paese' : '') + (scaduto(a) ? ' scaduto' : '') + '"' +
+            ' title="' + esc((a.origine === "acquisto" ? "acquistato" : "concesso a mano") +
+                    " il " + giorno(a.concesso_il) +
+                    (a.scade_il ? " · scade il " + giorno(a.scade_il) : "") +
+                    (a.nota ? " · " + a.nota : "")) + '">' +
+            esc(nomeDi(a)) +
+            '<button type="button" data-revoca="' + a.id + '" data-che="' + esc(nomeDi(a)) +
+            '" aria-label="Revoca">✕</button></span>').join("")
+            : '<span class="gest-niente">niente</span>') +
+          '<button type="button" class="gest-piu" data-sblocca="' + p.utente + '">+ sblocca</button>' +
+        '</div></td></tr>';
+    }).join("") + '</tbody></table>';
+}
+
+function tabellaRegioni(domanda, max){
+  const righe = REGIONI.slice().sort((a,b) =>
+    domanda[b.chiave].size - domanda[a.chiave].size || a.ordine - b.ordine);
+  return '<table class="gest-tab"><thead><tr><th>Regione</th>' +
+    '<th class="gest-nascondi">Spiagge</th><th>Persone</th><th style="width:34%"></th></tr></thead><tbody>' +
+    righe.map(r => '<tr>' +
+      '<td>' + esc(r.nome) + (r.libera ? ' <span class="gest-ruolo">libera</span>' : '') + '</td>' +
+      '<td class="gest-nascondi gest-quando">' + r.spiagge + '</td>' +
+      '<td class="gest-quando">' + domanda[r.chiave].size + '</td>' +
+      '<td><div class="gest-barra"><i style="width:' +
+        (100 * domanda[r.chiave].size / max).toFixed(1) + '%"></i></div></td></tr>').join("") +
+    '</tbody></table>';
+}
+
+/* ------------------------------------------------------------- concedere */
+let sblUtente = null;
+function apriSblocco(utente){
+  sblUtente = utente;
+  const p = PROFILI.find(x => x.utente === utente);
+  document.getElementById("sblChi").textContent = "A " + (p ? (p.email || p.nome) : "questa persona");
+  const gia = new Set(ACCESSI.filter(a => a.utente === utente)
+    .map(a => a.regione ? "r:" + a.regione : "p:" + a.pacchetto));
+  /* Quel che ha gia' non si ripropone: sarebbe l'unica scelta che non funziona,
+     e scoprirlo solo dopo aver premuto e' una piccola presa in giro. */
+  document.getElementById("sblCosa").innerHTML =
+    '<optgroup label="Paesi interi">' +
+      PACCHETTI.filter(p => !gia.has("p:" + p.chiave))
+        .map(p => '<option value="p:' + p.chiave + '">' + esc(p.nome) + '</option>').join("") +
+    '</optgroup><optgroup label="Regioni">' +
+      REGIONI.filter(r => !r.libera && !gia.has("r:" + r.chiave))
+        .map(r => '<option value="r:' + r.chiave + '">' + esc(r.nome) + '</option>').join("") +
+    '</optgroup>';
+  document.getElementById("sblScade").value = "";
+  document.getElementById("sblNota").value = "";
+  const e = document.getElementById("sblEsito"); e.hidden = true;
+  veloSbl.showModal();
+}
+
+document.getElementById("sblVai").onclick = async function(){
+  const scelta = document.getElementById("sblCosa").value;
+  const e = document.getElementById("sblEsito");
+  if (!scelta) { e.textContent = "Non c'è niente da sbloccare: ha già tutto.";
+                 e.className = "conto-esito brutta"; e.hidden = false; return; }
+  const scade = document.getElementById("sblScade").value;
+  const riga = { utente: sblUtente, origine: "manuale",
+                 nota: document.getElementById("sblNota").value.trim() || null,
+                 scade_il: scade ? new Date(scade + "T23:59:59").toISOString() : null };
+  if (scelta.startsWith("p:")) riga.pacchetto = scelta.slice(2); else riga.regione = scelta.slice(2);
+  this.disabled = true; const era = this.textContent; this.textContent = "Un momento…";
+  try{
+    await VADO.chiedi("accessi", { metodo:"POST", corpo: riga,
+      intestazioni:{ "Prefer":"return=minimal" } });
+    veloSbl.close(); await carica();
+  }catch(err){
+    e.textContent = "Non ha funzionato: " + err.message.slice(0,160);
+    e.className = "conto-esito brutta"; e.hidden = false;
+  }
+  this.disabled = false; this.textContent = era;
+};
+
+async function revoca(id, che){
+  if (!confirm("Togliere «" + che + "»?")) return;
+  try{
+    await VADO.chiedi("accessi?id=eq." + id, { metodo:"DELETE",
+      intestazioni:{ "Prefer":"return=minimal" } });
+    await carica();
+  }catch(e){ alert("Non ha funzionato: " + e.message.slice(0,200)); }
+}
+
+VADO.alCambio(s => { IO = s; carica(); });
+</script>
+<script src="vado-conto.js"></script>
+</body>
+</html>
