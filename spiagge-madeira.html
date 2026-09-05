@@ -15,9 +15,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="carte-spiagge.css?v=202609051201">
-<script src="configurazione.js?v=202609051201"></script>
-<script src="vado-dati.js?v=202609051201"></script>
+<link rel="stylesheet" href="carte-spiagge.css?v=202609051216">
+<script src="configurazione.js?v=202609051216"></script>
+<script src="vado-dati.js?v=202609051216"></script>
 <style>/* misure di questa regione — vedi carte-spiagge.css */
 :root{--colonna-carta:640px;--telaio-h:min(52vh,500px)}</style>
 </head>
@@ -1286,6 +1286,39 @@ elenco.addEventListener("click",e=>{const l=e.target.closest("li");if(!l)return;
   bloccato=i;mostra(i);attiva(i);if(!zonaAttiva)selezionaZona(SPIAGGE[i].z);portaAllaScheda();});
 elenco.addEventListener("keydown",e=>{const l=e.target.closest("li");if(l&&e.key==="Enter"){e.preventDefault();l.click();}});
 
+/* --- arrivare da un collegamento -------------------------------------
+   Il pezzo dopo il cancelletto dice su che cosa aprirsi: una spiaggia
+   (#marche-001) o un tratto di costa (#zona=sanbartolo). Serve ai preferiti,
+   e serve a poter mandare a qualcuno il collegamento di UNA spiaggia. */
+function apriDaIndirizzo(){
+  const q = decodeURIComponent((location.hash || "").slice(1));
+  if (!q) return;
+  if (q.indexOf("zona=") === 0){
+    const z = q.slice(5);
+    if (ZONE[z]) selezionaZona(z);
+    return;
+  }
+  const i = SPIAGGE.findIndex(b => b.sid === q);
+  if (i < 0) return;                      /* non e' di questa regione, o non c'e' piu' */
+  bloccato = i; mostra(i); attiva(i);
+  /* qui la zona si impone sempre, anche se ne era gia' scelta un'altra: chi
+     arriva da un collegamento vuole vedere DOVE sta quella spiaggia, non
+     restare inquadrato sul tratto di costa di prima. */
+  selezionaZona(SPIAGGE[i].z);
+  /* Portare la riga in vista muovendo SOLO l'elenco. scrollIntoView farebbe
+     scorrere anche la pagina, e si atterrerebbe a meta' schermo con il nome
+     della regione gia' fuori: uno non sa piu' dov'e' arrivato. */
+  const l = elenco.querySelector('li[data-i="' + i + '"]');
+  if (l && elenco.scrollHeight > elenco.clientHeight){
+    const a = l.getBoundingClientRect(), c = elenco.getBoundingClientRect();
+    elenco.scrollTop += (a.top - c.top) - (elenco.clientHeight - a.height) / 2;
+  }
+  portaAllaScheda();
+}
+/* Cambiare il cancelletto senza ricaricare — due preferiti di fila della
+   stessa regione — deve aprire la seconda spiaggia, non lasciare la prima. */
+addEventListener("hashchange", apriDaIndirizzo);
+
 const btnElenco=document.getElementById("apriElenco");
 function elencoAperto(v){
   elenco.classList.toggle("chiuso",!v);
@@ -1413,6 +1446,7 @@ async function avvia(){
   applicaVista(vista=aspetta(PIENO)); aggiornaScala();
   disegnaElenco(""); vuoto();
   if(stretto()) elencoAperto(false);
+  apriDaIndirizzo();       /* se l'indirizzo dice una spiaggia, si apre quella */
 }
 avvia();
 /* Se si entra o si esce senza ricaricare, la regione va richiesta di nuovo:
@@ -1420,6 +1454,6 @@ avvia();
 VADO.alCambio((function(){ let primo=true;
   return ()=>{ if(primo){ primo=false; return; } location.reload(); }; })());
 </script>
-<script src="vado-conto.js?v=202609051201"></script>
+<script src="vado-conto.js?v=202609051216"></script>
 </body>
 </html>

@@ -10,8 +10,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="carte-spiagge.css?v=202609051201">
-<script src="vado-dati.js?v=202609051201"></script>
+<link rel="stylesheet" href="carte-spiagge.css?v=202609051216">
+<script src="vado-dati.js?v=202609051216"></script>
 <style>
 .mie-sez{margin:26px 0 12px;font-family:var(--dati);font-size:10px;letter-spacing:.15em;
   text-transform:uppercase;color:var(--azzurro)}
@@ -99,7 +99,8 @@ function cartaZona(p){
   const nomeReg = (p.regioni && p.regioni.nome) || REGIONI[p.regione] || p.regione;
   const eti = (p.zone && p.zone.etichetta) || p.zona;
   return '<div class="pref-carta"><div class="pref-alto">' +
-    '<a class="pref-nome" href="spiagge-' + esc(p.regione) + '.html">' + esc(eti) + '</a>' +
+    '<a class="pref-nome" href="spiagge-' + esc(p.regione) + '.html#zona=' +
+      esc(encodeURIComponent(p.zona)) + '">' + esc(eti) + '</a>' +
     '<button type="button" class="stella on" data-togli-z="' + esc(p.regione + "/" + p.zona) +
       '" aria-label="Togli dai preferiti" title="Togli dai preferiti">★</button></div>' +
     '<div class="pref-dove">' + esc(nomeReg) + '</div></div>';
@@ -114,7 +115,8 @@ function cartaSpiaggia(p){
     '<p class="pref-persa">L’avevi salvata quando la sua regione era sbloccata. ' +
     'Il preferito resta: torna a vedersi appena la regione è di nuovo tua.</p></div>';
   return '<div class="pref-carta"><div class="pref-alto">' +
-    '<a class="pref-nome" href="spiagge-' + esc(b.regione) + '.html#' + esc(p.sid) + '">' +
+    '<a class="pref-nome" href="spiagge-' + esc(b.regione) + '.html#' +
+      esc(encodeURIComponent(p.sid)) + '">' +
       esc(b.n) + '</a>' +
     '<button type="button" class="stella on" data-togli-s="' + esc(p.sid) +
       '" aria-label="Togli dai preferiti" title="Togli dai preferiti">★</button></div>' +
@@ -127,6 +129,6 @@ function cartaSpiaggia(p){
 
 VADO.alCambio(() => carica());
 </script>
-<script src="vado-conto.js?v=202609051201"></script>
+<script src="vado-conto.js?v=202609051216"></script>
 </body>
 </html>
