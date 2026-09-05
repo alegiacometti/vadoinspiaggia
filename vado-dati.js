@@ -202,6 +202,13 @@ const VADO = (() => {
 
   /* Il catalogo e' pubblico: serve a dire che cosa esiste anche a chi non ha
      comprato niente. */
+  /* La riga di catalogo di una regione: nome, quante spiagge, se e' libera.
+     E' pubblica apposta — chi non l'ha sbloccata deve poter sapere che cosa si
+     perde. Una porta chiusa senza targhetta non si bussa. */
+  const dettaglioRegione = c =>
+    chiedi("regioni?chiave=eq." + c + "&select=chiave,nome,riga,spiagge,libera,prezzo")
+      .then(r => r[0] || null);
+
   const catalogo = () => chiedi("regioni?select=chiave,nome,paese,riga,spiagge,libera,prezzo&order=ordine");
 
   /* ------------------------------------------------------------- preferiti
@@ -228,7 +235,7 @@ const VADO = (() => {
      ma a dirlo a chi guarda. */
   const mieiAccessi = () => chiedi("accessi?select=regione,pacchetto,scade_il,origine");
 
-  return { regione, catalogo, chiedi, BASE,
+  return { regione, catalogo, dettaglioRegione, chiedi, BASE,
            iscriviti, accedi, esci, scordata, alCambio, chiSono,
            nuovaPassword, daPosta,
            preferitiSpiagge, preferitiZone, salvaSpiaggia, togliSpiaggia,

@@ -29,7 +29,7 @@
       <a class="ritorno" href="index.html#it">← Tutte le regioni: Italia</a>
       <h1>Le spiagge <em>delle Marche</em> <span class="bandiere"><img class="bandiera" src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag%20of%20Italy.svg?width=96" width="96" alt="Bandiera: Italia" title="Italia" loading="lazy" decoding="async" onerror="this.dataset.b?(this.src=this.dataset.b,this.removeAttribute('data-b')):this.remove()"><img class="bandiera" src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag%20of%20Marche.svg?width=96" width="96" alt="Bandiera: Marche" title="Marche" loading="lazy" decoding="async" onerror="this.dataset.b?(this.src=this.dataset.b,this.removeAttribute('data-b')):this.remove()"></span></h1>
     </div>
-    <div class="conto" id="conto"></div>
+      <div class="conto" id="conto"></div>
   </header>
 
   <div class="strumenti">
@@ -112,7 +112,7 @@ const ACCESSI={
 };
 /* I dati non stanno piu' qui dentro: arrivano dal database, e chi li
    serve guarda prima chi li sta chiedendo. Vedi avvia(), in fondo. */
-const REGIONE="marche";
+const REGIONE="marche", REGIONE_ETI="delle Marche";
 let ZONE={}, SPIAGGE=[];
 const SERVIZI=[["parcheggio","Parcheggio"],["ristorante","Ristorante"],["bar","Bar"],
   ["lettini","Lettini e ombrelloni"],["docce","Docce"],["wc","WC"],["sorveglianza","Sorveglianza"],
@@ -1288,17 +1288,61 @@ document.getElementById("azzera").addEventListener("click",()=>{
    La carta, la navigazione e i filtri sono gia' in piedi: delle spiagge non
    sanno niente. Qui si aspettano i dati e si accende quel che dipende da loro.
 
-   Gli esiti possibili sono TRE, e vanno distinti, perche' a chi guarda
-   significano cose diverse:
+   Gli esiti sono TRE, e vanno distinti, perche' a chi guarda significano cose
+   diverse:
      - la richiesta fallisce            -> la rete, o il servizio, non risponde
      - la richiesta riesce ma e' vuota  -> la regione c'e', ma non e' tua
      - la richiesta riesce con dei dati -> si disegna tutto
    Confonderli e' il modo piu' sicuro di far pensare "e' rotto" a chi invece
    deve solo sbloccare la regione. */
-function avviso(titolo, testo){
+function avviso(titolo, testo, azione){
   document.getElementById("elenco").innerHTML =
-    '<h4>'+titolo+'</h4><p style="padding:12px 13px;margin:0;font-size:13px;line-height:1.55;color:#20536e">'+testo+'</p>';
+    '<h4>'+titolo+'</h4><div class="elenco-avviso"><p>'+testo+'</p>'+(azione||'')+'</div>';
   document.getElementById("conta").textContent="— / —";
+}
+/* La fascia dell'invito. Sale in cima, sotto il titolo: dove stava prima —
+   in fondo alla colonna sinistra, sotto una carta vuota — si guarda per ultimo,
+   e solo dopo aver pensato che il sito fosse rotto. */
+function chiediSblocco(){
+  return "mailto:ing.giacometti@gmail.com"
+       + "?subject=" + encodeURIComponent("Vado in spiaggia — sbloccare " + REGIONE_ETI)
+       + "&body="    + encodeURIComponent(
+           "Vorrei sbloccare le spiagge " + REGIONE_ETI + ".\n\n"
+         + "Il mio indirizzo per l'accesso al sito è: ");
+}
+function serratura(zone, riga){
+  const chi  = VADO.chiSono();
+  const nome = (riga && riga.nome) || "questa regione";
+  const nz   = Object.keys(zone || {}).length;
+  const el  = Object.values(zone || {});
+  /* Quante spiagge, e come si chiamano i tratti di costa: e' tutto catalogo
+     pubblico, e serve a far capire che cosa c'e' dietro la porta. */
+  const quante = riga && riga.spiagge
+    ? "<b>" + riga.spiagge + " spiagge</b>" + (nz ? " in " + nz + (nz === 1 ? " zona" : " zone") : "")
+    : "Le schede di questa regione";
+  const nomi = el.length
+    ? '<p class="serratura-zone">' + el.slice(0, 6).join(" · ") +
+      (el.length > 6 ? " · e altre " + (el.length - 6) : "") + '</p>' : "";
+
+  const f = document.createElement("div");
+  f.className = "serratura";
+  f.innerHTML =
+    '<div class="serratura-dice">' +
+      '<h2>' + (riga && riga.nome ? riga.nome : 'Questa regione') +
+        ' — da sbloccare</h2>' +
+      '<p>' + quante + ' con fondo, servizi, accesso, affollamento, meteo e stato del mare. ' +
+        'La carta qui sotto si vede da subito; le schede sono riservate a chi ha ' +
+        'sbloccato la regione.</p>' + nomi +
+      (chi ? '<p class="serratura-chi">Sei entrato come <b>' + chi.email +
+             '</b>: questa regione non è fra le tue.</p>' : '') +
+    '</div>' +
+    '<div class="serratura-fai">' +
+      (chi ? '' : '<button type="button" class="sblocca-entra">Accedi / Registrati</button>') +
+      '<a class="sblocca' + (chi ? '' : ' seconda') + '" href="' + chiediSblocco() + '">Sblocca ' + nome + '</a>' +
+    '</div>';
+  document.querySelector("header.testata").insertAdjacentElement("afterend", f);
+  const b = f.querySelector(".sblocca-entra");
+  if (b) b.onclick = () => { if (window.apriConto) window.apriConto("accedi"); };
 }
 async function avvia(){
   let d;
@@ -1311,9 +1355,14 @@ async function avvia(){
                        : "Sembra che manchi la connessione a internet.");
   }
   if(!d.spiagge.length){
-    return avviso("Regione da sbloccare",
-      "La carta di questa regione si vede da qui, ma le schede delle spiagge — "+
-      "fondo, servizi, accesso, meteo e mare — sono riservate a chi l’ha sbloccata.");
+    /* Il catalogo e' pubblico, quindi si puo' chiedere quante sono anche da
+       fuori; se anche quello non arriva, l'invito si mostra lo stesso. */
+    let riga = null;
+    try{ riga = await VADO.dettaglioRegione(REGIONE); }catch(_){}
+    serratura(d.zone, riga);
+    avviso("Regione da sbloccare",
+      "Qui sopra c’è come sbloccarla.");
+    return;
   }
   ZONE = d.zone; SPIAGGE = d.spiagge;
   disegnaSegni();          /* i segni sulla carta, e MARKER/ETIM/BANDE */
@@ -1325,6 +1374,10 @@ async function avvia(){
   if(stretto()) elencoAperto(false);
 }
 avvia();
+/* Se si entra o si esce senza ricaricare, la regione va richiesta di nuovo:
+   e' cambiato chi sta chiedendo. */
+VADO.alCambio((function(){ let primo=true;
+  return ()=>{ if(primo){ primo=false; return; } location.reload(); }; })());
 </script>
 <script src="vado-conto.js"></script>
 </body>

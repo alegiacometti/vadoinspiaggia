@@ -497,7 +497,7 @@ button.f[data-s="bb"][aria-pressed="true"]{background:var(--azzurro);border-colo
   max-width:22ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .conto-entra,.conto-esci{font-family:var(--dati);font-size:10px;letter-spacing:.12em;
   text-transform:uppercase;cursor:pointer;border-radius:999px;padding:6px 15px;transition:.16s}
-.conto-entra{background:var(--profondo);color:#fff;border:1px solid var(--profondo)}
+.conto-entra{background:var(--profondo);color:#fff;border:1px solid var(--profondo);white-space:nowrap}
 .conto-entra:hover{background:var(--azzurro);border-color:var(--azzurro)}
 .conto-esci{background:var(--carta);color:var(--grigio);border:1px solid var(--tratto)}
 .conto-esci:hover{color:var(--azzurro);border-color:var(--basso)}
@@ -528,6 +528,23 @@ button.f[data-s="bb"][aria-pressed="true"]{background:var(--azzurro);border-colo
   padding:11px 16px;cursor:pointer;transition:.16s}
 .conto-vai:hover:not(:disabled){background:var(--azzurro);border-color:var(--azzurro)}
 .conto-vai:disabled{opacity:.55;cursor:default}
+/* "Password dimenticata" non e' una scheda: e' un collegamento piccolo sotto
+   il campo della password, dov'e' su quasi tutti i siti. Lo si cerca solo dopo
+   aver provato a entrare e aver sbagliato — metterlo in cima, alla pari con
+   "Accedi", vuol dire proporre di aver dimenticato la password a chi se la
+   ricordava benissimo. */
+/* L'attributo `hidden` vale display:none, ma e' una regola del browser: QUALSIASI
+   regola di questo foglio che dica display vince su di lui. Qui dentro ci sono
+   righe con display:flex che vanno nascoste e mostrate a seconda del passo —
+   senza questa riga restano visibili tutte insieme, e la finestra mostra il
+   campo della password anche quando sta chiedendo solo l'indirizzo. */
+[hidden]{display:none!important}
+.conto-scordata{display:flex;justify-content:flex-end;margin:-6px 0 0}
+.conto-torna{display:flex;margin:-4px 0 0}
+.conto-scordata button,.conto-torna button{background:none;border:0;padding:2px 0;cursor:pointer;
+  font:inherit;font-size:12px;color:var(--grigio);text-decoration:underline;
+  text-underline-offset:2px;text-decoration-color:var(--secca)}
+.conto-scordata button:hover,.conto-torna button:hover{color:var(--azzurro);text-decoration-color:var(--azzurro)}
 .conto-esito{margin:0;font-size:12.5px;line-height:1.5;padding:9px 11px;border-radius:8px}
 .conto-esito.buona{background:#eaf6ee;color:#1f6b45;border:1px solid #bfe3cd}
 .conto-esito.brutta{background:#fdecea;color:#a3352a;border:1px solid #f3c6c0}
@@ -535,16 +552,40 @@ button.f[data-s="bb"][aria-pressed="true"]{background:var(--azzurro);border-colo
 
 /* ---------- regione da sbloccare ----------
    Non e' un errore, e non deve sembrarlo: chi arriva qui deve capire che il
-   sito funziona benissimo e che manca solo una cosa, che puo' chiedere. */
+   sito funziona benissimo e che manca solo una cosa, che puo' chiedere.
+   Per questo la fascia sta SOTTO IL TITOLO e non in fondo alla colonna: in
+   fondo, sotto una carta vuota, si guarda per ultimo — e solo dopo aver
+   pensato che il sito fosse rotto. */
+.serratura{display:flex;flex-wrap:wrap;align-items:center;gap:18px 26px;
+  justify-content:space-between;margin:0 0 20px;padding:18px 22px;border-radius:12px;
+  background:linear-gradient(100deg,#f3faf6,#eaf4fb);border:1px solid var(--tratto);
+  border-left:4px solid var(--azzurro);box-shadow:var(--ombra)}
+.serratura-dice{flex:1 1 420px;min-width:0}
+.serratura-dice h2{font-family:var(--display);font-variation-settings:"SOFT" 30,"WONK" 1,"opsz" 100;
+  font-weight:400;font-size:23px;line-height:1.1;margin:0 0 6px;color:var(--profondo);
+  letter-spacing:-.012em}
+.serratura-dice p{margin:0;font-size:13.5px;line-height:1.55;color:#20536e}
+.serratura-dice p b{color:var(--profondo);font-weight:600}
+.serratura-zone{margin:7px 0 0!important;font-family:var(--dati);font-size:10.5px!important;
+  letter-spacing:.04em;color:var(--grigio)!important;line-height:1.7!important}
+.serratura-chi{margin:8px 0 0!important;font-size:12px!important;color:var(--grigio)!important}
+.serratura-fai{display:flex;flex-direction:column;gap:8px;flex:0 0 auto;min-width:210px}
+
 .elenco-avviso{padding:13px;display:flex;flex-direction:column;gap:11px}
 .elenco-avviso p{margin:0;font-size:13px;line-height:1.55;color:#20536e}
 .sblocca,.sblocca-entra{font-family:var(--dati);font-size:10px;letter-spacing:.1em;
   text-transform:uppercase;text-align:center;text-decoration:none;cursor:pointer;
-  border-radius:999px;padding:10px 14px;transition:.16s}
+  border-radius:999px;padding:10px 16px;transition:.16s}
 .sblocca{background:var(--profondo);color:#fff;border:1px solid var(--profondo)}
 .sblocca:hover{background:var(--azzurro);border-color:var(--azzurro)}
-.sblocca-entra{background:var(--carta);color:var(--grigio);border:1px solid var(--tratto)}
-.sblocca-entra:hover{color:var(--azzurro);border-color:var(--basso)}
+/* Quando non si e' entrati, il pulsante pieno e' quello dell'accesso: uno
+   sblocco si attacca a un account, quindi senza account non c'e' niente da
+   sbloccare. «Sblocca <regione>» resta, ma un passo indietro. */
+.sblocca.seconda{background:var(--carta);color:var(--profondo);border:1px solid var(--basso)}
+.sblocca.seconda:hover{background:var(--nebbia);color:var(--azzurro);border-color:var(--azzurro)}
+.sblocca-entra{background:var(--profondo);color:#fff;border:1px solid var(--profondo)}
+.sblocca-entra:hover{background:var(--azzurro);border-color:var(--azzurro)}
+@media (max-width:700px){ .serratura-fai{width:100%;min-width:0} }
 
 /* il messaggio di ritorno dalla posta */
 .conto-benvenuto{font-family:var(--dati);font-size:11px;letter-spacing:.06em;

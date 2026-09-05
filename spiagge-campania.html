@@ -1309,15 +1309,49 @@ function avviso(titolo, testo, azione){
     '<h4>'+titolo+'</h4><div class="elenco-avviso"><p>'+testo+'</p>'+(azione||'')+'</div>';
   document.getElementById("conta").textContent="— / —";
 }
-function invitoSblocco(){
-  const a = "mailto:ing.giacometti@gmail.com"
-          + "?subject=" + encodeURIComponent("Vado in spiaggia — sbloccare " + REGIONE_ETI)
-          + "&body="    + encodeURIComponent(
-              "Vorrei sbloccare le spiagge " + REGIONE_ETI + ".\n\n"
-            + "Il mio indirizzo per l'accesso al sito e': ");
-  return '<a class="sblocca" href="'+a+'">Chiedi di sbloccarla</a>' +
-         (VADO.chiSono() ? '' :
-          '<button type="button" class="sblocca-entra">Ho già un account: entra</button>');
+/* La fascia dell'invito. Sale in cima, sotto il titolo: dove stava prima —
+   in fondo alla colonna sinistra, sotto una carta vuota — si guarda per ultimo,
+   e solo dopo aver pensato che il sito fosse rotto. */
+function chiediSblocco(){
+  return "mailto:ing.giacometti@gmail.com"
+       + "?subject=" + encodeURIComponent("Vado in spiaggia — sbloccare " + REGIONE_ETI)
+       + "&body="    + encodeURIComponent(
+           "Vorrei sbloccare le spiagge " + REGIONE_ETI + ".\n\n"
+         + "Il mio indirizzo per l'accesso al sito è: ");
+}
+function serratura(zone, riga){
+  const chi  = VADO.chiSono();
+  const nome = (riga && riga.nome) || "questa regione";
+  const nz   = Object.keys(zone || {}).length;
+  const el  = Object.values(zone || {});
+  /* Quante spiagge, e come si chiamano i tratti di costa: e' tutto catalogo
+     pubblico, e serve a far capire che cosa c'e' dietro la porta. */
+  const quante = riga && riga.spiagge
+    ? "<b>" + riga.spiagge + " spiagge</b>" + (nz ? " in " + nz + (nz === 1 ? " zona" : " zone") : "")
+    : "Le schede di questa regione";
+  const nomi = el.length
+    ? '<p class="serratura-zone">' + el.slice(0, 6).join(" · ") +
+      (el.length > 6 ? " · e altre " + (el.length - 6) : "") + '</p>' : "";
+
+  const f = document.createElement("div");
+  f.className = "serratura";
+  f.innerHTML =
+    '<div class="serratura-dice">' +
+      '<h2>' + (riga && riga.nome ? riga.nome : 'Questa regione') +
+        ' — da sbloccare</h2>' +
+      '<p>' + quante + ' con fondo, servizi, accesso, affollamento, meteo e stato del mare. ' +
+        'La carta qui sotto si vede da subito; le schede sono riservate a chi ha ' +
+        'sbloccato la regione.</p>' + nomi +
+      (chi ? '<p class="serratura-chi">Sei entrato come <b>' + chi.email +
+             '</b>: questa regione non è fra le tue.</p>' : '') +
+    '</div>' +
+    '<div class="serratura-fai">' +
+      (chi ? '' : '<button type="button" class="sblocca-entra">Accedi / Registrati</button>') +
+      '<a class="sblocca' + (chi ? '' : ' seconda') + '" href="' + chiediSblocco() + '">Sblocca ' + nome + '</a>' +
+    '</div>';
+  document.querySelector("header.testata").insertAdjacentElement("afterend", f);
+  const b = f.querySelector(".sblocca-entra");
+  if (b) b.onclick = () => { if (window.apriConto) window.apriConto("accedi"); };
 }
 async function avvia(){
   let d;
@@ -1330,12 +1364,13 @@ async function avvia(){
                        : "Sembra che manchi la connessione a internet.");
   }
   if(!d.spiagge.length){
+    /* Il catalogo e' pubblico, quindi si puo' chiedere quante sono anche da
+       fuori; se anche quello non arriva, l'invito si mostra lo stesso. */
+    let riga = null;
+    try{ riga = await VADO.dettaglioRegione(REGIONE); }catch(_){}
+    serratura(d.zone, riga);
     avviso("Regione da sbloccare",
-      "La carta si vede da qui, ma le schede delle spiagge \u2014 fondo, servizi, "+
-      "accesso, meteo e stato del mare \u2014 sono riservate a chi ha sbloccato "+
-      "questa regione.", invitoSblocco());
-    const b = document.querySelector(".sblocca-entra");
-    if(b) b.onclick = ()=>{ const e=document.querySelector("#conto button"); if(e) e.click(); };
+      "Qui sopra c’è come sbloccarla.");
     return;
   }
   ZONE = d.zone; SPIAGGE = d.spiagge;
