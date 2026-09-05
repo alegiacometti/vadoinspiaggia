@@ -526,8 +526,11 @@ a.conto-chi:hover{color:var(--azzurro)}
 
 /* La fascia della vetrina non e' un muro: e' la stessa forma, ma dice il
    contrario — «questa la vedi tutta», non «questa non la vedi». */
-.serratura.vetrina{border-left-color:var(--verde)}
-.serratura.vetrina h2{color:var(--profondo)}
+/* NON chiamarla «vetrina»: quel nome ce l'ha gia' il riquadro della foto
+   aerea, che porta con se' aspect-ratio 16/9 — e la fascia diventava alta
+   765 pixel, con il testo perso in mezzo al vuoto. */
+.serratura.assaggiata{border-left-color:var(--verde)}
+.serratura.assaggiata h2{color:var(--profondo)}
 
 /* ---------- l'assaggio: una spiaggia per paese ----------
    Sta dentro la fascia della regione chiusa, sotto quello che spiega il muro:
@@ -764,9 +767,16 @@ a.conto-chi:hover{color:var(--azzurro)}
 
 .elenco-avviso{padding:13px;display:flex;flex-direction:column;gap:11px}
 .elenco-avviso p{margin:0;font-size:13px;line-height:1.55;color:#20536e}
+/* Due strade, non una: la regione oppure il paese. Sul pulsante il nome e
+   sotto il numero — 295 contro 997 dice tutto quello che serve a scegliere,
+   e senza dover indovinare se e' «tutta la» o «tutto il». */
+.sblocca-eti{margin:0 0 2px;font-family:var(--dati);font-size:9px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--grigio);text-align:center}
+.sblocca span{display:block;font-size:9px;letter-spacing:.06em;opacity:.72;
+  margin-top:3px;text-transform:none}
 .sblocca,.sblocca-entra{font-family:var(--dati);font-size:10px;letter-spacing:.1em;
   text-transform:uppercase;text-align:center;text-decoration:none;cursor:pointer;
-  border-radius:999px;padding:10px 16px;transition:.16s}
+  border-radius:999px;padding:9px 16px;transition:.16s}
 .sblocca{background:var(--profondo);color:#fff;border:1px solid var(--profondo)}
 .sblocca:hover{background:var(--azzurro);border-color:var(--azzurro)}
 /* Quando non si e' entrati, il pulsante pieno e' quello dell'accesso: uno

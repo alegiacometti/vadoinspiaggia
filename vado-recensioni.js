@@ -196,10 +196,23 @@ window.VADORECE = (function () {
     };
   }
 
+  /* Il codice 42501 vuol dire due cose diverse, e per un po' le ho confuse
+     tutte e due in «questa regione non e' tua»:
+
+       - «new row violates row-level security policy» → e' davvero il muro:
+         quella spiaggia sta in una regione che questa persona non ha;
+       - «permission denied for table» → e' un permesso mancante sulla
+         tabella, cioe' un guasto nostro, e dirgli che deve comprare una
+         regione che ha gia' e' il modo migliore per farlo arrabbiare.
+
+     Un messaggio plausibile ma falso e' peggio di un messaggio brutto: manda
+     a cercare il problema dove non e'. */
   function inItaliano(e) {
     const t = (e && e.message || "").toLowerCase();
-    if (t.includes("42501") || t.includes("row-level"))
+    if (t.includes("violates row-level") || t.includes("row-level security policy"))
       return "Questa spiaggia è in una regione che non hai sbloccato.";
+    if (t.includes("permission denied"))
+      return "Il servizio non mi lascia scrivere: è un problema nostro, non tuo. Segnalalo pure.";
     if (t.includes("failed to fetch")) return "Non riesco a raggiungere il servizio.";
     return "Non ha funzionato: " + (e && e.message || "errore sconosciuto");
   }

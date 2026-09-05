@@ -15,11 +15,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="carte-spiagge.css?v=202609051645">
-<script src="configurazione.js?v=202609051645"></script>
-<script src="vado-dati.js?v=202609051645"></script>
-<script src="vado-recensioni.js?v=202609051645"></script>
-<script src="vado-vento.js?v=202609051645"></script>
+<link rel="stylesheet" href="carte-spiagge.css?v=202609052234">
+<script src="configurazione.js?v=202609052234"></script>
+<script src="vado-dati.js?v=202609052234"></script>
+<script src="vado-recensioni.js?v=202609052234"></script>
+<script src="vado-vento.js?v=202609052234"></script>
 <style>/* misure di questa regione — vedi carte-spiagge.css */
 :root{--colonna-carta:620px;--telaio-h:min(72vh,673px)}</style>
 </head>
@@ -1442,6 +1442,45 @@ function chiediSblocco(){
            "Vorrei sbloccare le spiagge " + REGIONE_ETI + ".\n\n"
          + "Il mio indirizzo per l'accesso al sito è: ");
 }
+/* La stessa richiesta per il paese intero: oggetto e testo diversi, cosi'
+   quando arriva si sa gia' che cosa e' stato chiesto. */
+function chiediSbloccoPaese(nomePaese){
+  return "mailto:ing.giacometti@gmail.com"
+       + "?subject=" + encodeURIComponent("Vado in spiaggia — sbloccare " + nomePaese)
+       + "&body="    + encodeURIComponent(
+           "Vorrei sbloccare tutte le spiagge: " + nomePaese + ".\n\n"
+         + "Il mio indirizzo per l'accesso al sito è: ");
+}
+
+/* I due pulsanti. Il conteggio del paese arriva dopo, dalla rete: il pulsante
+   compare subito con una scritta di ripiego e si riempie quando la risposta
+   c'e'. Un pulsante che aspetta la rete per esistere e' un pulsante che certe
+   volte non esiste. */
+function bottoniSblocco(riga, chi){
+  const nomeReg = (riga && riga.nome) || "questa regione";
+  const nomePae = (riga && riga.paesi && riga.paesi.nome) || "";
+  return '<p class="sblocca-eti">Sblocca</p>' +
+    (chi ? '' : '<button type="button" class="sblocca-entra">Accedi / Registrati</button>') +
+    '<a class="sblocca' + (chi ? '' : ' seconda') + '" href="' + chiediSblocco() + '">' +
+      nomeReg + '<span>' +
+      (riga && riga.spiagge ? riga.spiagge + " spiagge" : "questa regione") + '</span></a>' +
+    (nomePae
+      ? '<a class="sblocca seconda" href="' + chiediSbloccoPaese(nomePae) + '">' +
+        nomePae + '<span data-conta-pae>tutto il paese</span></a>'
+      : '');
+}
+
+async function contaPaese(fascia, riga){
+  const dove = fascia.querySelector("[data-conta-pae]");
+  if (!dove || !riga || !riga.paese) return;
+  try{
+    const r = await VADO.chiedi("regioni?paese=eq." + encodeURIComponent(riga.paese) +
+                                "&select=spiagge");
+    const tot = r.reduce((a, x) => a + (x.spiagge || 0), 0);
+    if (tot) dove.textContent = tot + " spiagge · " + r.length +
+      (r.length === 1 ? " regione" : " regioni");
+  }catch(_){}
+}
 function serratura(zone, riga){
   const chi  = VADO.chiSono();
   const nome = (riga && riga.nome) || "questa regione";
@@ -1468,15 +1507,13 @@ function serratura(zone, riga){
       (chi ? '<p class="serratura-chi">Sei entrato come <b>' + chi.email +
              '</b>: questa regione non è fra le tue.</p>' : '') +
     '</div>' +
-    '<div class="serratura-fai">' +
-      (chi ? '' : '<button type="button" class="sblocca-entra">Accedi / Registrati</button>') +
-      '<a class="sblocca' + (chi ? '' : ' seconda') + '" href="' + chiediSblocco() + '">Sblocca ' + nome + '</a>' +
-    '</div>';
+    '<div class="serratura-fai">' + bottoniSblocco(riga, chi) + '</div>';
   document.querySelector("header.testata").insertAdjacentElement("afterend", f);
   const b = f.querySelector(".sblocca-entra");
   if (b) b.onclick = () => { if (window.apriConto) window.apriConto("accedi"); };
   pareriInVetrina(f);
   assaggioNellaFascia(f, riga);
+  contaPaese(f, riga);
 }
 
 /* --- l'assaggio ---------------------------------------------------------
@@ -1622,7 +1659,7 @@ async function controllaVetrina(){
   if (!riga || !riga.spiagge || SPIAGGE.length >= riga.spiagge) return;
   const chi = VADO.chiSono();
   const f = document.createElement("div");
-  f.className = "serratura vetrina";
+  f.className = "serratura assaggiata";
   f.innerHTML =
     '<div class="serratura-dice">' +
       '<h2>' + (riga.nome || "Questa regione") + ' — la tua spiaggia gratuita</h2>' +
@@ -1632,16 +1669,13 @@ async function controllaVetrina(){
         ' sono da sbloccare.</p>' +
       (chi ? '<p class="serratura-chi">Sei entrato come <b>' + chi.email + '</b>.</p>' : '') +
     '</div>' +
-    '<div class="serratura-fai">' +
-      (chi ? '' : '<button type="button" class="sblocca-entra">Accedi / Registrati</button>') +
-      '<a class="sblocca' + (chi ? '' : ' seconda') + '" href="' + chiediSblocco() + '">Sblocca ' +
-        (riga.nome || "questa regione") + '</a>' +
-    '</div>';
+    '<div class="serratura-fai">' + bottoniSblocco(riga, chi) + '</div>';
   document.querySelector("header.testata").insertAdjacentElement("afterend", f);
   const b = f.querySelector(".sblocca-entra");
   if (b) b.onclick = () => { if (window.apriConto) window.apriConto("accedi"); };
   pareriInVetrina(f);
   assaggioNellaFascia(f, riga);
+  contaPaese(f, riga);
 }
 avvia();
 /* Se si entra o si esce senza ricaricare, la regione va richiesta di nuovo:
@@ -1649,6 +1683,6 @@ avvia();
 VADO.alCambio((function(){ let primo=true;
   return ()=>{ if(primo){ primo=false; return; } location.reload(); }; })());
 </script>
-<script src="vado-conto.js?v=202609051645"></script>
+<script src="vado-conto.js?v=202609052234"></script>
 </body>
 </html>
