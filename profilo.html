@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#083c5c">
+<title>Il mio profilo · Vado in spiaggia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="carte-spiagge.css?v=202609051645">
+<script src="vado-dati.js?v=202609051645"></script>
+<style>
+.pro{max-width:520px}
+.pro-nota{font-size:13.5px;line-height:1.65;color:#20536e;margin:0 0 20px}
+.pro-campi{display:flex;flex-direction:column;gap:14px;background:var(--carta);
+  border:1px solid var(--tratto);border-radius:11px;padding:18px;box-shadow:var(--ombra)}
+.pro-riga{display:flex;flex-direction:column;gap:5px}
+.pro-riga>span{font-family:var(--dati);font-size:9.5px;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--grigio)}
+.pro-riga input{font:inherit;font-size:14px;padding:9px 11px;border:1px solid var(--tratto);
+  border-radius:8px;background:var(--nebbia);color:var(--inchiostro)}
+.pro-riga input:focus{outline:2px solid var(--ambra);outline-offset:1px;background:#fff}
+.pro-riga input[readonly]{color:var(--grigio);cursor:default}
+.pro-anteprima{font-size:13px;color:#20536e;margin:2px 0 0}
+.pro-anteprima b{color:var(--profondo)}
+.pro-esito{margin:0;font-size:12.5px}
+.pro-esito.buona{color:var(--verde)} .pro-esito.brutta{color:var(--corallo)}
+</style>
+</head>
+<body>
+<div class="guscio">
+
+  <header class="testata">
+    <div>
+      <a class="ritorno casa" href="index.html"><svg class="marchio" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#083c5c"/><circle cx="44" cy="20" r="8" fill="#e8b04b"/><path d="M8 40c5 0 5-5 10-5s5 5 10 5 5-5 10-5 5 5 10 5 5-5 8-5" fill="none" stroke="#9ed4ea" stroke-width="6" stroke-linecap="round"/><path d="M8 51c5 0 5-5 10-5s5 5 10 5 5-5 10-5 5 5 10 5 5-5 8-5" fill="none" stroke="#1786bd" stroke-width="6" stroke-linecap="round"/></svg> Home page</a>
+      <h1>Il mio <em>profilo</em></h1>
+    </div>
+    <div class="conto" id="conto"></div>
+  </header>
+
+  <div class="pro" id="corpo"></div>
+
+  <p class="piede">Dati: EEA · geoBoundaries · ISTAT · GSHHG · Natural Earth · Open-Meteo — immagini: Esri World Imagery, Google Maps. <a href="crediti.html">Crediti e licenze</a></p>
+
+</div>
+
+<script>
+/* =========================================================================
+   Nome e cognome, e nient'altro.
+
+   Servono a UNA cosa sola: firmare una recensione. Non sono obbligatori, il
+   sito funziona uguale senza, e chi non li mette firma «Anonimo». Per questo
+   non si chiedono all'iscrizione: due campi in piu' davanti a chi si sta
+   ancora chiedendo se il sito gli serve sono due campi che fanno chiudere la
+   pagina.
+
+   Il cognome intero non compare mai in pubblico: di la' esce l'iniziale.
+   ========================================================================= */
+const corpo = document.getElementById("corpo");
+const esc = t => String(t == null ? "" : t)
+  .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
+function anteprima(nome, cognome){
+  const n = (nome || "").trim(), c = (cognome || "").trim();
+  if (!n) return 'Senza nome le tue recensioni si firmano <b>Anonimo</b>.';
+  /* col cognome la firma finisce gia' con un punto: aggiungerne un altro fa
+     «Alessandro G..», che sembra un errore di battitura perche' lo e' */
+  return 'Le tue recensioni si firmeranno <b>' + esc(n) +
+         (c ? " " + esc(c[0]) + ".</b>" : "</b>.");
+}
+
+async function carica(){
+  if (!VADO.chiSono()){
+    corpo.innerHTML = '<div class="pref-vuoto"><p style="margin:0 0 16px">' +
+      'Il profilo è la tua firma sulle recensioni: per averne uno serve un account.</p>' +
+      '<button type="button" class="conto-vai" id="pEntra">Accedi / Registrati</button></div>';
+    document.getElementById("pEntra").onclick = () => window.apriConto && window.apriConto("accedi");
+    return;
+  }
+  let p = null;
+  try { p = await VADO.ilMioProfilo(); }
+  catch(e){ corpo.innerHTML = '<div class="pref-vuoto">Non riesco a leggere il profilo: ' +
+    esc(e.message) + '</div>'; return; }
+  p = p || {};
+
+  corpo.innerHTML =
+    '<p class="pro-nota">Nome e cognome servono a una cosa sola: firmare le recensioni che scrivi. ' +
+    'Sono facoltativi — senza, le tue recensioni restano anonime — e su ogni singola recensione ' +
+    'puoi comunque decidere se mostrarli o no. Il cognome intero non compare mai: di fuori si vede ' +
+    'solo l’iniziale.</p>' +
+    '<div class="pro-campi">' +
+      '<label class="pro-riga"><span>Email</span>' +
+        '<input type="email" value="' + esc(p.email || VADO.chiSono().email) + '" readonly></label>' +
+      '<label class="pro-riga"><span>Nome</span>' +
+        '<input id="nome" type="text" maxlength="60" autocomplete="given-name" value="' + esc(p.nome || "") + '"></label>' +
+      '<label class="pro-riga"><span>Cognome</span>' +
+        '<input id="cognome" type="text" maxlength="60" autocomplete="family-name" value="' + esc(p.cognome || "") + '"></label>' +
+      '<p class="pro-anteprima" id="ante">' + anteprima(p.nome, p.cognome) + '</p>' +
+      '<p class="pro-esito" id="esito" hidden></p>' +
+      '<button type="button" class="conto-vai" id="salva">Salva</button>' +
+    '</div>';
+
+  const nome = document.getElementById("nome"), cognome = document.getElementById("cognome"),
+        ante = document.getElementById("ante"), esito = document.getElementById("esito"),
+        salva = document.getElementById("salva");
+  const rifai = () => { ante.innerHTML = anteprima(nome.value, cognome.value); esito.hidden = true; };
+  nome.oninput = rifai; cognome.oninput = rifai;
+
+  salva.onclick = async () => {
+    salva.disabled = true; const era = salva.textContent; salva.textContent = "Un momento…";
+    try{
+      await VADO.salvaProfilo(nome.value, cognome.value);
+      esito.textContent = "Salvato."; esito.className = "pro-esito buona"; esito.hidden = false;
+    }catch(e){
+      esito.textContent = "Non ha funzionato: " + e.message;
+      esito.className = "pro-esito brutta"; esito.hidden = false;
+    }
+    salva.disabled = false; salva.textContent = era;
+  };
+}
+VADO.alCambio(() => carica());
+</script>
+<script src="vado-conto.js?v=202609051645"></script>
+</body>
+</html>

@@ -62,6 +62,8 @@ h1 em{font-style:normal;font-variation-settings:inherit;color:inherit}
    sulla stessa riga, nell'ordine in cui si e' arrivati fin qui. */
 .briciole{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 10px}
 .briciole .ritorno{margin:0}
+.ritorno.vicino{color:var(--azzurro);border-color:var(--basso)}
+.ritorno.vicino:hover{background:var(--schiuma)}
 
 .strumenti{display:flex;flex-wrap:wrap;gap:16px 26px;align-items:flex-start;margin-bottom:18px}
 .gruppo{display:flex;flex-direction:column;gap:8px}
@@ -501,6 +503,8 @@ button.f[data-s="bb"][aria-pressed="true"]{background:var(--azzurro);border-colo
    chiuderlo col tasto Esc e togliere il fuoco al resto della pagina. Rifarlo a
    mano con un div sarebbe stato piu' codice e meno accessibile. */
 .conto{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+a.conto-chi{text-decoration:none;transition:.15s}
+a.conto-chi:hover{color:var(--azzurro)}
 .conto-chi{font-family:var(--dati);font-size:10.5px;letter-spacing:.04em;color:var(--grigio);
   max-width:22ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .conto-entra,.conto-esci{font-family:var(--dati);font-size:10px;letter-spacing:.12em;
@@ -509,6 +513,132 @@ button.f[data-s="bb"][aria-pressed="true"]{background:var(--azzurro);border-colo
 .conto-entra:hover{background:var(--azzurro);border-color:var(--azzurro)}
 .conto-esci{background:var(--carta);color:var(--grigio);border:1px solid var(--tratto)}
 .conto-esci:hover{color:var(--azzurro);border-color:var(--basso)}
+/* ---------- manda a chi viene con te ----------
+   Sta accanto alla stellina e ha lo stesso peso visivo: sono due gesti dello
+   stesso tipo — tengo questa per me, mando questa a qualcuno. */
+.manda{background:none;border:0;cursor:pointer;padding:3px 4px;line-height:0;border-radius:6px;
+  color:var(--grigio);transition:.15s;vertical-align:baseline}
+.manda svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round;display:block}
+.manda:hover{color:var(--azzurro);background:var(--nebbia)}
+.manda.fatto{color:var(--verde)}
+.manda:focus-visible{outline:2px solid var(--ambra);outline-offset:1px}
+
+/* La fascia della vetrina non e' un muro: e' la stessa forma, ma dice il
+   contrario — «questa la vedi tutta», non «questa non la vedi». */
+.serratura.vetrina{border-left-color:var(--verde)}
+.serratura.vetrina h2{color:var(--profondo)}
+
+/* ---------- l'assaggio: una spiaggia per paese ----------
+   Sta dentro la fascia della regione chiusa, sotto quello che spiega il muro:
+   prima si dice che cosa manca, poi si dice come averne un pezzo. */
+.assaggio{margin:16px 0 0;padding:14px;background:var(--carta);border:1px solid var(--tratto);
+  border-left:3px solid var(--verde);border-radius:10px}
+.assaggio-eti{margin:0 0 6px;font-family:var(--dati);font-size:9.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--verde)}
+.assaggio-dice{margin:0 0 10px;font-size:13px;line-height:1.55;color:#20536e}
+.assaggio-dice a{color:var(--azzurro)}
+.assaggio-invito{margin:12px 0 0;font-size:13px;line-height:1.55;color:#20536e}
+.assaggio-cerca{width:100%;font:inherit;font-size:13px;padding:7px 12px;border-radius:999px;
+  border:1px solid var(--tratto);background:var(--nebbia);color:var(--inchiostro);margin:0 0 9px}
+.assaggio-cerca:focus{outline:2px solid var(--ambra);outline-offset:1px;background:#fff}
+.assaggio-nomi{display:flex;flex-wrap:wrap;gap:6px;max-height:230px;overflow:auto;
+  padding:2px;border-radius:8px}
+.assaggio-nomi button{font:inherit;font-size:12.5px;cursor:pointer;background:var(--nebbia);
+  border:1px solid var(--tratto);border-radius:999px;padding:5px 12px;color:var(--profondo);
+  display:inline-flex;align-items:baseline;gap:6px;transition:.14s}
+.assaggio-nomi button:hover:not(:disabled){border-color:var(--verde);color:var(--verde);
+  background:#f0f8f4}
+.assaggio-nomi button:disabled{opacity:.45;cursor:default}
+.assaggio-nomi small{font-family:var(--dati);font-size:9px;letter-spacing:.04em;color:var(--grigio)}
+.assaggio-esito{margin:9px 0 0;font-size:12.5px;color:var(--grigio)}
+.assaggio-esito.brutta{color:var(--corallo)}
+
+/* ---------- i pareri nella vetrina ----------
+   Dentro la fascia di una regione chiusa: non un elenco, tre voci sole. Sono
+   la prova che dietro la porta c'e' qualcosa, non il contenuto della stanza. */
+.serratura-pareri{margin:14px 0 0;display:flex;flex-direction:column;gap:9px}
+.serratura-eti{margin:0;font-family:var(--dati);font-size:9.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--grigio)}
+.serratura-pareri blockquote{margin:0;padding:9px 12px;background:var(--carta);
+  border:1px solid var(--tratto);border-radius:9px;display:flex;flex-wrap:wrap;
+  align-items:baseline;gap:4px 9px}
+.serratura-pareri q{font-size:13px;line-height:1.5;color:#20536e;quotes:"\201C" "\201D"}
+.serratura-pareri cite{font-family:var(--dati);font-size:9.5px;letter-spacing:.05em;
+  color:var(--grigio);font-style:normal;margin-left:auto;white-space:nowrap}
+
+/* ---------- il vento tradotto ----------
+   Tre colori perche' sono tre cose diverse, non tre sfumature della stessa:
+   verde il vento che appiattisce il mare, ambra quello di lato, corallo quello
+   che porta l'onda a riva. */
+.vento-dice{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 9px;margin:0 0 11px;
+  padding:9px 12px;border-radius:9px;font-size:12.5px;line-height:1.5;
+  background:var(--nebbia);border:1px solid var(--tratto);border-left:3px solid var(--grigio);
+  color:#20536e}
+.vento-dice b{font-family:var(--dati);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+.vento-dice i{font-family:var(--dati);font-size:9.5px;letter-spacing:.05em;color:var(--grigio);
+  font-style:normal;margin-left:auto;white-space:nowrap}
+.vento-dice.terra{border-left-color:var(--verde);background:#f0f8f4}
+.vento-dice.terra b{color:var(--verde)}
+.vento-dice.mare{border-left-color:var(--corallo);background:#fdf3f1}
+.vento-dice.mare b{color:var(--corallo)}
+.vento-dice.lato{border-left-color:var(--ambra);background:#fdf8ef}
+.vento-dice.lato b{color:var(--ambra)}
+.vento-dice.ferma b{color:var(--grigio)}
+
+/* ---------- pareri di chi c'e' stato ----------
+   Le stelle del VOTO sono ambra piena; quelle dei PREFERITI, piu' sotto, sono
+   la stessa forma ma un'altra cosa. Si distinguono per posizione — il voto sta
+   dentro il riquadro dei pareri, il preferito accanto al nome — e per il fatto
+   che il voto e' sempre cinque, il preferito sempre uno. */
+.voto-stelle{display:inline-flex;gap:1px;font-size:14px;line-height:1;color:var(--secca)}
+.voto-stelle .on{color:var(--ambra)}
+.voto-quanti{font-family:var(--dati);font-size:10px;letter-spacing:.06em;color:var(--grigio)}
+.voto-vuoto{font-family:var(--dati);font-size:10.5px;letter-spacing:.04em;color:var(--grigio)}
+.rec-riassunto{display:flex;align-items:baseline;gap:7px;margin:-6px 0 11px}
+.rec-riassunto b{font-size:14px;color:var(--profondo)}
+.rec{margin-top:20px;border-top:1px solid var(--tratto);padding-top:16px}
+.rec-attesa{font-size:12.5px;color:var(--grigio);margin:0}
+.rec-media{display:flex;align-items:baseline;gap:8px;margin:0 0 12px}
+.rec-media b{font-size:17px;color:var(--profondo)}
+.rec-elenco{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-direction:column;gap:10px}
+.rec-elenco li{background:var(--nebbia);border:1px solid var(--tratto);border-radius:9px;padding:10px 12px}
+.rec-alto{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.rec-firma{font-weight:500;font-size:13px;color:var(--profondo)}
+.rec-quando{font-family:var(--dati);font-size:9.5px;letter-spacing:.06em;color:var(--grigio);margin-left:auto}
+.rec-togli{background:none;border:1px solid var(--tratto);border-radius:999px;width:22px;height:22px;
+  line-height:1;cursor:pointer;color:var(--grigio);font-size:11px;padding:0}
+.rec-togli:hover{color:var(--corallo);border-color:var(--corallo)}
+.rec-testo{margin:7px 0 0;font-size:13.5px;line-height:1.6;color:#20536e;white-space:pre-wrap}
+.rec-invito{background:var(--nebbia);border:1px solid var(--tratto);border-radius:10px;padding:14px;
+  text-align:center}
+.rec-invito p{margin:0 0 10px;font-size:13px;color:#20536e}
+.rec-modulo{background:var(--nebbia);border:1px solid var(--tratto);border-radius:10px;padding:13px;
+  display:flex;flex-direction:column;gap:9px}
+.rec-mio{margin:0;font-family:var(--dati);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--azzurro)}
+.rec-voto{display:flex;align-items:center;gap:2px}
+.rec-voto button{background:none;border:0;cursor:pointer;font-size:25px;line-height:1;padding:0 1px;
+  color:var(--secca);transition:.12s}
+.rec-voto button.on{color:var(--ambra)}
+.rec-voto button:hover{transform:scale(1.12)}
+.rec-voto-eti{margin-left:9px;font-family:var(--dati);font-size:10px;letter-spacing:.06em;color:var(--grigio)}
+.rec-modulo textarea{font:inherit;font-size:13.5px;line-height:1.5;padding:9px 11px;border-radius:8px;
+  border:1px solid var(--tratto);background:var(--carta);color:var(--inchiostro);resize:vertical}
+.rec-modulo textarea:focus{outline:2px solid var(--ambra);outline-offset:1px}
+.rec-nome{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#20536e;cursor:pointer}
+.rec-nome input{width:15px;height:15px;accent-color:var(--azzurro);cursor:pointer}
+.rec-azioni{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.rec-azioni .conto-vai{margin:0}
+.rec-cancella{background:none;border:0;padding:2px 0;cursor:pointer;font-family:var(--dati);
+  font-size:10px;letter-spacing:.08em;color:var(--grigio);text-decoration:underline;
+  text-underline-offset:3px}
+.rec-cancella:hover{color:var(--corallo)}
+.rec-esito{margin:0;font-size:12.5px;line-height:1.5}
+.rec-esito.buona{color:var(--verde)}
+.rec-esito.brutta{color:var(--corallo)}
+.rec-esito a{color:var(--azzurro)}
+
 /* ---------- preferiti ----------
    La stellina e' un pulsante, non un'icona: ha un'etichetta per chi non vede lo
    schermo, e cambia stato senza ricaricare niente. Chi non e' entrato la vede
@@ -591,6 +721,15 @@ button.f[data-s="bb"][aria-pressed="true"]{background:var(--azzurro);border-colo
    senza questa riga restano visibili tutte insieme, e la finestra mostra il
    campo della password anche quando sta chiedendo solo l'indirizzo. */
 [hidden]{display:none!important}
+/* Il misuratore della password. La barra dice quanto, la parola dice cosa:
+   una barra colorata da sola non si sa se e' buona o cattiva. */
+.conto-forza{display:flex;align-items:center;gap:10px;margin:-5px 0 0}
+.conto-forza .forza-barra{flex:1;height:5px;border-radius:999px;background:var(--schiuma);overflow:hidden}
+.conto-forza .forza-barra i{display:block;height:100%;width:0;border-radius:999px;
+  background:var(--corallo);transition:width .22s,background .22s}
+.conto-forza .forza-eti{font-family:var(--dati);font-size:9.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--grigio);min-width:9ch;text-align:right}
+.conto-captcha{display:flex;justify-content:center;min-height:65px}
 .conto-scordata{display:flex;justify-content:flex-end;margin:-6px 0 0}
 .conto-torna{display:flex;margin:-4px 0 0}
 .conto-scordata button,.conto-torna button{background:none;border:0;padding:2px 0;cursor:pointer;

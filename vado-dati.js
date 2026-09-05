@@ -155,10 +155,22 @@ const VADO = (() => {
      si vede fallire — ci si accorge dell'errore solo quando un iscritto
      atterra su una pagina che non esiste. location.pathname senza l'ultimo
      pezzo e' la cartella del sito, qualunque sia. */
-  const RITORNO = location.origin + location.pathname.replace(/[^/]*$/, "");
+  /* Le pagine pubbliche delle spiagge stanno in una sottocartella: da li' il
+     ritorno dopo la conferma per email deve puntare alla RADICE del sito, non
+     a una cartella che non ha una pagina d'ingresso. */
+  const RITORNO = (location.origin + location.pathname.replace(/[^/]*$/, ""))
+                    .replace(/\/(spiaggia|elenco)\/$/, "/");
 
-  const iscriviti = (email, password) =>
-    auth("signup?redirect_to=" + encodeURIComponent(RITORNO), { email, password }).then(d => {
+  /* Il gettone del captcha, quando c'e', viaggia in gotrue_meta_security: e'
+     il posto dove il servizio lo cerca. Se il captcha e' spento il campo non
+     si manda affatto — mandarlo vuoto, con la protezione accesa, e' un rifiuto
+     sicuro. */
+  const conCaptcha = (corpo, gettone) =>
+    gettone ? Object.assign({}, corpo, { gotrue_meta_security: { captcha_token: gettone } }) : corpo;
+
+  const iscriviti = (email, password, captcha) =>
+    auth("signup?redirect_to=" + encodeURIComponent(RITORNO),
+         conCaptcha({ email, password }, captcha)).then(d => {
     /* Se la conferma per email e' attiva, qui NON arriva nessun gettone: e'
        normale, e va detto a chi si e' iscritto invece di lasciarlo davanti a
        una schermata che non cambia. */
@@ -166,12 +178,12 @@ const VADO = (() => {
     return { entrato: !!(d && d.access_token), email: d && d.user && d.user.email };
   });
 
-  const accedi = (email, password) =>
-    auth("token?grant_type=password", { email, password }).then(apriSessione);
+  const accedi = (email, password, captcha) =>
+    auth("token?grant_type=password", conCaptcha({ email, password }, captcha)).then(apriSessione);
 
-  const scordata = email =>
+  const scordata = (email, captcha) =>
     auth("recover?redirect_to=" + encodeURIComponent(RITORNO),
-         { email, gotrue_meta_security: {} }).then(() => true);
+         conCaptcha({ email }, captcha)).then(() => true);
 
   /* Cambiare la password di chi e' gia' dentro (o e' appena rientrato dal
      collegamento del "password dimenticata"). */
@@ -306,7 +318,7 @@ const VADO = (() => {
      E' pubblica apposta — chi non l'ha sbloccata deve poter sapere che cosa si
      perde. Una porta chiusa senza targhetta non si bussa. */
   const dettaglioRegione = c =>
-    chiedi("regioni?chiave=eq." + c + "&select=chiave,nome,riga,spiagge,libera,prezzo")
+    chiedi("regioni?chiave=eq." + c + "&select=chiave,nome,riga,spiagge,libera,prezzo,paese,paesi(nome)")
       .then(r => r[0] || null);
 
   const catalogo = () => chiedi("regioni?select=chiave,nome,paese,riga,spiagge,libera,prezzo&order=ordine");
@@ -364,9 +376,161 @@ const VADO = (() => {
      ma a dirlo a chi guarda. */
   const mieiAccessi = () => chiedi("accessi?select=regione,pacchetto,scade_il,origine");
 
+  /* L'indirizzo della pagina pubblica di una spiaggia. La regola sta scritta
+     qui una volta sola perche' la usano in due: questo file, per il pulsante
+     «manda a chi viene con te», e il generatore che quelle pagine le scrive.
+     Se le due regole divergessero, meta' dei collegamenti porterebbe a un 404
+     — quindi non e' una comodita', e' un vincolo. */
+  const rullo = t => String(t || "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")   /* via gli accenti */
+    .toLowerCase().replace(/['’]/g, "").replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "").slice(0, 60).replace(/-+$/, "");
+  const paginaSpiaggia = b => "spiaggia/" + (rullo(b && b.n) || "spiaggia") + "-" + b.sid + ".html";
+
+  /* ------------------------------------------------------------ vicinanza
+     La posizione non viene salvata da nessuna parte: entra in una domanda ed
+     esce con una risposta. Il database non la scrive, e qui non resta.
+
+     "vicine" risponde solo con le spiagge delle regioni che chi chiede ha
+     sbloccato — non perche' lo controlli questa funzione, ma perche' e' la
+     regola scritta sulla tabella. "quante_vicine" invece conta ANCHE quelle
+     chiuse: il numero si', quali no. */
+  const vicine = (lat, lon, raggio, quante) => chiedi("rpc/vicine", {
+    metodo: "POST", corpo: { la: lat, lo: lon, raggio: raggio || 30, quante: quante || 40 } });
+
+  const quanteVicine = (lat, lon, raggio) => chiedi("rpc/quante_vicine", {
+    metodo: "POST", corpo: { la: lat, lo: lon, raggio: raggio || 30 } });
+
+  /* Il catalogo dei nomi e' pubblico: cercare una spiaggia deve funzionare
+     anche per chi non ha comprato niente — se no non sa nemmeno che c'e'. */
+  /* Tutti i nomi di una regione: pubblici, e servono a far scegliere l'assaggio
+     a chi quella regione non ce l'ha — non si puo' scegliere fra cose che non
+     si vedono. */
+  const nomiRegione = reg => chiedi(
+    "nomi_spiagge?regione=eq." + encodeURIComponent(reg) + "&select=sid,n,com&order=n");
+
+  const cercaNomi = (testo, quante) => {
+    const p = "*" + String(testo).replace(/[*(),]/g, "") + "*";
+    return chiedi("nomi_spiagge?or=(n.ilike." + encodeURIComponent(p) +
+                  ",com.ilike." + encodeURIComponent(p) + ")" +
+                  "&select=sid,n,com,regione,regione_nome,paese,libera&order=n&limit=" + (quante || 30));
+  };
+
+  /* -------------------------------------------------------------- assaggi
+     Una spiaggia per paese, gratis, scelta da chi guarda. Non e' una vetrina
+     decisa da noi: e' la prima che quella persona decide di aprire in quel
+     paese, e da quel momento resta sua.
+
+     La regola sta nella chiave primaria della tabella — (persona, paese) —
+     non qui: il database non PUO' accettarne una seconda, quindi non serve
+     un controllo in questa pagina, e non c'e' un controllo in questa pagina
+     che possa sbagliarsi. */
+  const mieiAssaggi = () => chiSono()
+    ? chiedi("miei_assaggi?select=paese,paese_nome,sid,spiaggia,regione,regione_nome,preso")
+    : Promise.resolve([]);
+
+  /* La risposta dice che cosa e' successo davvero, e sono quattro cose
+     diverse: presa adesso, ne avevi gia' un'altra in questo paese, questa
+     regione ce l'hai gia' (e allora l'assaggio non si spreca), non sei
+     entrato. Confonderle vuol dire lasciare qualcuno davanti a una pagina
+     che non cambia senza sapere perche'. */
+  const assaggia = async sid => {
+    const r = await chiedi("rpc/assaggia", { metodo: "POST", corpo: { p_sid: sid } });
+    return (r && r[0]) || { esito: "errore" };
+  };
+
+  /* ------------------------------------------------------------- recensioni
+     Le recensioni si leggono da DUE posti diversi, e non e' una ripetizione:
+
+       - recensioni_pubbliche e' quello che vede il mondo. Niente identificativo
+         di chi ha scritto: solo il parere e una firma gia' composta («Prova R.»
+         oppure «Anonimo»). La legge chiunque, anche chi non e' entrato e anche
+         su regioni che non ha sbloccato — il muro sta sulla scheda della
+         spiaggia, non sul parere di chi c'e' stato;
+
+       - la tabella "recensioni" nuda la si legge solo per la PROPRIA riga: e'
+         quella che serve al modulo, per ritrovare il voto che si era gia' dato
+         invece di farlo riscrivere da capo. */
+  const recensioniSpiaggia = sid => chiedi(
+    "recensioni_pubbliche?sid=eq." + encodeURIComponent(sid) +
+    "&select=voto,commento,firma,creata&order=creata.desc");
+
+  /* Le ultime di una regione: serve alla fascia di chi la regione non ce l'ha,
+     per far vedere che dietro c'e' gente vera. */
+  const recensioniRegione = (regione, quante) => chiedi(
+    "recensioni_pubbliche?regione=eq." + encodeURIComponent(regione) +
+    "&select=sid,spiaggia,voto,commento,firma,creata&order=creata.desc&limit=" + (quante || 4));
+
+  /* Le medie di un gruppo di spiagge in una richiesta sola, non una per
+     spiaggia: l'elenco di una regione ne ha centinaia. */
+  const votiSpiagge = async sids => {
+    if (!sids || !sids.length) return {};
+    const fuori = {};
+    /* la lista dentro in.() ha un limite di lunghezza pratico: si va a blocchi */
+    for (let i = 0; i < sids.length; i += 300) {
+      const pezzo = sids.slice(i, i + 300).map(s => '"' + String(s).replace(/"/g, '') + '"').join(",");
+      const r = await chiedi("voti_spiagge?sid=in.(" + encodeURIComponent(pezzo) + ")&select=sid,media,quanti");
+      r.forEach(x => fuori[x.sid] = x);
+    }
+    return fuori;
+  };
+
+  const miaRecensione = async sid => {
+    if (!chiSono()) return null;
+    const r = await chiedi("recensioni?sid=eq." + encodeURIComponent(sid) +
+                           "&select=sid,voto,commento,mostra_nome,creata");
+    return r[0] || null;
+  };
+
+  const mieRecensioni = () => chiedi(
+    "recensioni?select=sid,voto,commento,mostra_nome,creata&order=creata.desc");
+
+  /* Salvare e correggere sono la stessa cosa: la chiave e' (persona, spiaggia),
+     quindi la seconda volta si sovrascrive invece di aggiungere una riga. */
+  const salvaRecensione = (sid, voto, commento, mostraNome) => chiedi("recensioni", {
+    metodo: "POST",
+    corpo: { utente: chiSono().id, sid: sid, voto: voto,
+             commento: (commento || "").trim() || null, mostra_nome: !!mostraNome },
+    intestazioni: { "Prefer": "resolution=merge-duplicates,return=minimal" } });
+
+  /* Senza utente si cancella la propria — le regole del database non ne
+     lascerebbero toccare altre. Con l'utente e' l'amministratore che modera:
+     la stessa richiesta, che a chiunque altro non toglierebbe niente. */
+  const togliRecensione = (sid, utente) => chiedi(
+    "recensioni?sid=eq." + encodeURIComponent(sid) +
+    (utente ? "&utente=eq." + encodeURIComponent(utente) : "&utente=eq." + chiSono().id),
+    { metodo: "DELETE", intestazioni: { "Prefer": "return=minimal" } });
+
+  /* Le recensioni di UNA spiaggia con dentro chi le ha scritte: serve solo a
+     chi modera, e a chi non modera la vista risponde vuoto. */
+  const recensioniModerabili = sid => chiedi(
+    "recensioni_admin?sid=eq." + encodeURIComponent(sid) +
+    "&select=sid,utente,voto,creata&order=creata.desc");
+
+  const daModerare = (quante) => chiedi(
+    "recensioni_admin?select=sid,spiaggia,regione,utente,email,voto,commento,mostra_nome,creata" +
+    "&order=creata.desc&limit=" + (quante || 50));
+
+  /* ---------------------------------------------------------------- profilo
+     Nome e cognome sono facoltativi e servono a una cosa sola: firmare una
+     recensione. Chi non li mette resta «Anonimo», e il sito funziona uguale. */
+  const ilMioProfilo = async () => {
+    if (!chiSono()) return null;
+    const r = await chiedi("profili?utente=eq." + chiSono().id + "&select=nome,cognome,email");
+    return r[0] || null;
+  };
+  const salvaProfilo = (nome, cognome) => chiedi(
+    "profili?utente=eq." + chiSono().id,
+    { metodo: "PATCH",
+      corpo: { nome: (nome || "").trim() || null, cognome: (cognome || "").trim() || null },
+      intestazioni: { "Prefer": "return=minimal" } });
+
   return { regione, catalogo, dettaglioRegione, chiedi, BASE,
            iscriviti, accedi, esci, scordata, alCambio, chiSono,
            nuovaPassword, daPosta, sonoAdmin,
            preferitiSpiagge, preferitiZone, stelleAccese, salvaSpiaggia, togliSpiaggia,
-           salvaZona, togliZona, mieiAccessi };
+           salvaZona, togliZona, mieiAccessi, vicine, quanteVicine, cercaNomi, nomiRegione, paginaSpiaggia, rullo, mieiAssaggi, assaggia,
+           recensioniSpiaggia, recensioniRegione, votiSpiagge, miaRecensione, mieRecensioni,
+           salvaRecensione, togliRecensione, daModerare, recensioniModerabili,
+           ilMioProfilo, salvaProfilo };
 })();

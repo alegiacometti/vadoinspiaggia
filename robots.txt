@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /gestione.html
+Disallow: /preferiti.html
+Disallow: /profilo.html
+Disallow: /confronta.html
+
+Sitemap: https://alegiacometti.github.io/vadoinspiaggia/sitemap.xml

@@ -4,18 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<meta name="description" content="2600 spiagge d'Europa, dall'Atlantico all'Adriatico">
+<link rel="canonical" href="https://alegiacometti.github.io/vadoinspiaggia/">
+<meta name="description" content="5534 spiagge in 11 paesi d'Europa, dall'Atlantico all'Egeo: carte navigabili, meteo e stato del mare, accessi, servizi e pareri di chi c'è stato.">
 <meta name="theme-color" content="#083c5c">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="it_IT">
 <meta property="og:site_name" content="Vado in spiaggia">
 <meta property="og:title" content="Vado in spiaggia">
-<meta property="og:description" content="2600 spiagge d'Europa, dall'Atlantico all'Adriatico">
+<meta property="og:description" content="5534 spiagge in 11 paesi d'Europa, dall'Atlantico all'Egeo: carte navigabili, meteo e stato del mare, accessi, servizi e pareri di chi c'è stato.">
 <title>Vado in spiaggia · carte, meteo e mare in tempo reale</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="carte-spiagge.css?v=202609051247">
+<link rel="stylesheet" href="carte-spiagge.css?v=202609051645">
+<script src="vado-dati.js?v=202609051645"></script>
 <style>/* misure di questa pagina — vedi carte-spiagge.css */
 :root{--colonna-carta:820px;--telaio-h:min(41vh,380px)}
 
@@ -110,6 +112,30 @@ svg.carta{cursor:default;touch-action:auto}
 .stato .bandiera{height:22px;max-width:34px}
 
 /* --- passo 2: la barra di ritorno --- */
+/* ---------- la ricerca globale ---------- */
+.cerca-riga{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;margin:0 0 18px}
+.cerca-cont{position:relative;flex:1 1 320px;min-width:0}
+.cerca-cont input{width:100%;font:inherit;font-size:14.5px;padding:11px 16px;border-radius:999px;
+  border:1px solid var(--tratto);background:var(--carta);color:var(--inchiostro);
+  box-shadow:var(--ombra)}
+.cerca-cont input:focus{outline:2px solid var(--ambra);outline-offset:1px}
+.cerca-esiti{position:absolute;z-index:30;left:0;right:0;top:calc(100% + 6px);max-height:58vh;
+  overflow:auto;background:var(--carta);border:1px solid var(--tratto);border-radius:12px;
+  box-shadow:0 12px 34px rgba(8,60,92,.14)}
+.cerca-esiti a,.cerca-esiti .vuoto{display:flex;align-items:baseline;gap:9px;padding:10px 15px;
+  text-decoration:none;color:var(--profondo);font-size:14px;border-bottom:1px solid var(--tratto)}
+.cerca-esiti a:last-child{border-bottom:0}
+.cerca-esiti a:hover,.cerca-esiti a:focus{background:var(--schiuma);outline:none}
+.cerca-esiti small{font-family:var(--dati);font-size:9.5px;letter-spacing:.05em;color:var(--grigio)}
+.cerca-esiti .chiusa{margin-left:auto;font-family:var(--dati);font-size:9px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ambra);border:1px solid var(--ambra);border-radius:999px;
+  padding:2px 8px;white-space:nowrap}
+.cerca-esiti .vuoto{color:var(--grigio);font-size:13px}
+.cerca-qui{display:inline-flex;align-items:center;gap:8px;text-decoration:none;white-space:nowrap;
+  font-family:var(--dati);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  background:var(--profondo);color:#fff;border-radius:999px;padding:12px 20px;transition:.16s}
+.cerca-qui::before{content:"◉";font-size:12px}
+.cerca-qui:hover{background:var(--azzurro)}
 .barra-stato{display:flex;align-items:center;gap:13px;margin:0 0 11px}
 button.ritorno{cursor:pointer;margin:0}   /* il resto viene da .ritorno, uguale alle pagine regionali */
 .barra-eti{display:inline-flex;align-items:center;gap:8px;font-family:var(--dati);font-size:11px;
@@ -176,6 +202,20 @@ svg.carta{transition:none}
     </p>
       <div class="conto" id="conto"></div>
   </header>
+
+  <!-- La ricerca e il «qui vicino» stanno sopra la carta perche' sono le due
+       domande che uno si fa arrivando: «c'e' quella spiaggia?» e «cosa ho
+       intorno?». La carta risponde a una terza domanda — «cosa c'e' in quella
+       regione» — che viene dopo. -->
+  <div class="cerca-riga">
+    <div class="cerca-cont">
+      <input id="cercaTutto" type="search" autocomplete="off" spellcheck="false"
+             placeholder="Cerca una spiaggia o un comune, in tutti i paesi…"
+             aria-label="Cerca una spiaggia o un comune">
+      <div class="cerca-esiti" id="cercaEsiti" hidden></div>
+    </div>
+    <a class="cerca-qui" href="vicino.html">Spiagge intorno a me</a>
+  </div>
 
   <div class="impaginato">
     <div class="colonna-carta">
@@ -537,6 +577,63 @@ svg.carta{transition:none}
 </div>
 
 <script>
+/* ------------------------------------------------------ la ricerca globale
+   Cerca fra tutti i nomi, non solo fra quelli che si possono vedere: il
+   catalogo dei nomi e' pubblico apposta. Una spiaggia di una regione chiusa
+   compare lo stesso, con la sua targhetta — perche' una porta chiusa senza
+   targhetta non la bussa nessuno. */
+(function(){
+  const campo = document.getElementById("cercaTutto");
+  const box   = document.getElementById("cercaEsiti");
+  if (!campo || typeof VADO === "undefined") return;
+  const esc = t => String(t == null ? "" : t)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  let ultima = 0, attesa = null;
+
+  const chiudi = () => { box.hidden = true; box.innerHTML = ""; };
+
+  campo.addEventListener("input", () => {
+    const q = campo.value.trim();
+    clearTimeout(attesa);
+    if (q.length < 2) return chiudi();
+    /* si aspetta un attimo: una richiesta per tasto premuto sarebbe una
+       richiesta ogni cento millisecondi, e nessuna utile */
+    attesa = setTimeout(() => cerca(q, ++ultima), 240);
+  });
+  campo.addEventListener("blur", () => setTimeout(chiudi, 180));
+  campo.addEventListener("focus", () => { if (campo.value.trim().length >= 2) cerca(campo.value.trim(), ++ultima); });
+  addEventListener("keydown", e => { if (e.key === "Escape") chiudi(); });
+
+  async function cerca(q, mio){
+    let r = [];
+    try { r = await VADO.cercaNomi(q, 25); }
+    catch(_){ box.hidden = false; box.innerHTML = '<div class="vuoto">Non riesco a cercare adesso.</div>'; return; }
+    if (mio !== ultima) return;
+    box.hidden = false;
+    if (!r.length){
+      box.innerHTML = '<div class="vuoto">Nessuna spiaggia con questo nome.</div>'; return;
+    }
+    box.innerHTML = r.map(b =>
+      '<a href="spiagge-' + esc(b.regione) + '.html#' + encodeURIComponent(b.sid) + '">' +
+        esc(b.n) + '<small>' + esc(b.com || "") + ' · ' + esc(b.regione_nome) + '</small>' +
+        (b.libera ? '' : '<span class="chiusa" data-chiusa>da sbloccare</span>') +
+      '</a>').join("");
+    /* La targhetta «da sbloccare» si toglie per le regioni che questa persona
+       HA gia': chiedere al database quali sono costa una richiesta sola. */
+    if (VADO.chiSono()) VADO.mieiAccessi().then(a => {
+      if (!a || !a.length) return;
+      const mie = new Set(a.filter(x => x.regione).map(x => x.regione));
+      const paesi = a.filter(x => x.pacchetto).map(x => x.pacchetto.replace("tutto-", ""));
+      box.querySelectorAll("a").forEach((el, i) => {
+        const b = r[i];
+        if (b && (mie.has(b.regione) || paesi.indexOf(b.paese) >= 0)){
+          const t = el.querySelector("[data-chiusa]"); if (t) t.remove();
+        }
+      });
+    }).catch(()=>{});
+  }
+})();
+
 /* La carta è un indice: nessuno zoom, nessun trascinamento. L'unico comportamento
    è il legame fra la sagoma della regione e la sua scheda nella colonna a fianco. */
 const accendi=(k,on)=>{
@@ -769,7 +866,6 @@ document.querySelectorAll(".reg-carta.pronta").forEach(a=>{
   });
 });
 </script>
-<script src="vado-dati.js?v=202609051247"></script>
-<script src="vado-conto.js?v=202609051247"></script>
+<script src="vado-conto.js?v=202609051645"></script>
 </body>
 </html>

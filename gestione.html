@@ -10,8 +10,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="carte-spiagge.css?v=202609051247">
-<script src="vado-dati.js?v=202609051247"></script>
+<link rel="stylesheet" href="carte-spiagge.css?v=202609051645">
+<script src="vado-dati.js?v=202609051645"></script>
 <style>
 /* Questa pagina NON e' protetta dal fatto di essere nascosta: chiunque puo'
    aprirla, e va benissimo. A proteggere sono le regole del database — senza
@@ -49,6 +49,9 @@
 .gest-pat.paese{background:#eef3ff;border-color:#b9c8ef}
 .gest-pat.scaduto{background:#f4f1ec;border-color:var(--tratto);color:var(--grigio);
   text-decoration:line-through}
+.gest-x{background:none;border:1px solid var(--tratto);border-radius:999px;width:24px;height:24px;
+  line-height:1;cursor:pointer;color:var(--grigio);font-size:11px;padding:0}
+.gest-x:hover{color:var(--corallo);border-color:var(--corallo)}
 .gest-pat button{background:none;border:0;cursor:pointer;color:var(--grigio);
   font-size:13px;line-height:1;padding:0 3px;border-radius:50%}
 .gest-pat button:hover{color:#a3352a;background:#fdecea}
@@ -106,7 +109,7 @@
    ========================================================================= */
 const corpo = document.getElementById("corpo");
 const veloSbl = document.getElementById("veloSbl");
-let REGIONI = [], PACCHETTI = [], PROFILI = [], ACCESSI = [], IO = null;
+let REGIONI = [], PACCHETTI = [], PROFILI = [], ACCESSI = [], PARERI = [], IO = null;
 
 const esc = t => String(t == null ? "" : t)
   .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
@@ -135,6 +138,10 @@ async function carica(){
       VADO.chiedi("profili?select=utente,nome,email,ruolo,creato,ultimo_accesso&order=creato"),
       VADO.chiedi("accessi?select=id,utente,regione,pacchetto,concesso_il,scade_il,origine,nota")
     ]);
+    /* I pareri si chiedono a parte e senza far fallire il resto: se questa
+       richiesta va storta, la dashboard deve continuare a mostrare le persone
+       e gli sblocchi, che sono la cosa per cui esiste. */
+    try { PARERI = await VADO.daModerare(60); } catch (_) { PARERI = []; }
   }catch(e){
     return fuori("Non riesco a leggere", "Il servizio non risponde: " + e.message, false);
   }
@@ -177,12 +184,45 @@ function disegna(){
     '</div>' +
     '<p class="gest-sez">Le persone</p>' + noteLibere() + tabellaPersone(perUtente) +
     '<p class="gest-sez" style="margin-top:26px">Le regioni, per quante persone le hanno</p>' +
-    tabellaRegioni(domanda, max);
+    tabellaRegioni(domanda, max) +
+    '<p class="gest-sez" style="margin-top:26px">Gli ultimi pareri</p>' + tabellaPareri();
 
   corpo.querySelectorAll("[data-sblocca]").forEach(b =>
     b.onclick = () => apriSblocco(b.dataset.sblocca));
   corpo.querySelectorAll("[data-revoca]").forEach(b =>
     b.onclick = () => revoca(+b.dataset.revoca, b.dataset.che));
+  corpo.querySelectorAll("[data-par]").forEach(b =>
+    b.onclick = () => togliParere(b.dataset.par, b.dataset.chi, b));
+}
+
+/* ------------------------------------------------------- moderare i pareri
+   Si cancella, non si nasconde: un parere nascosto resta nel database e prima
+   o poi qualcuno se lo ritrova davanti senza sapere perche' era li'. E si
+   cancella per intero — voto e commento insieme — perche' un voto senza il
+   commento che lo spiegava e' un numero senza motivo. */
+function tabellaPareri(){
+  if (!PARERI.length) return '<div class="gest-vuoto">Ancora nessun parere.</div>';
+  return '<table class="gest-tab"><thead><tr>' +
+    '<th>Spiaggia</th><th>Chi</th><th>Voto</th><th style="width:44%">Commento</th>' +
+    '<th class="gest-nascondi">Quando</th><th></th></tr></thead><tbody>' +
+    PARERI.map(r => '<tr>' +
+      '<td>' + esc(r.spiaggia || r.sid) + '</td>' +
+      '<td class="gest-nascondi"><div class="gest-chi">' + esc(r.email || "—") + '</div>' +
+        (r.mostra_nome ? '' : '<span class="gest-ruolo">firmato Anonimo</span>') + '</td>' +
+      '<td class="gest-quando">' + "★".repeat(r.voto) + '</td>' +
+      '<td>' + (r.commento ? esc(r.commento) : '<span class="gest-ruolo">solo voto</span>') + '</td>' +
+      '<td class="gest-nascondi gest-quando">' + giorno(r.creata) + '</td>' +
+      '<td><button type="button" class="gest-x" data-par="' + esc(r.sid) +
+        '" data-chi="' + esc(r.utente) + '" title="Cancella questo parere">✕</button></td>' +
+      '</tr>').join("") + '</tbody></table>';
+}
+
+async function togliParere(sid, utente, bottone){
+  bottone.disabled = true;
+  try { await VADO.togliRecensione(sid, utente); }
+  catch (e) { bottone.disabled = false; return; }
+  PARERI = PARERI.filter(r => !(r.sid === sid && r.utente === utente));
+  carica();
 }
 
 const cifra = (n, et) => '<div class="gest-cifra"><b>'+n+'</b><span>'+et+'</span></div>';
@@ -306,6 +346,6 @@ async function revoca(id, che){
 
 VADO.alCambio(s => { IO = s; carica(); });
 </script>
-<script src="vado-conto.js?v=202609051247"></script>
+<script src="vado-conto.js?v=202609051645"></script>
 </body>
 </html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="description" content="Le spiagge intorno a te, e quelle dove oggi si sta meglio">
+<meta name="theme-color" content="#083c5c">
+<title>Spiagge intorno a me · Vado in spiaggia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="carte-spiagge.css?v=202609051645">
+<script src="vado-dati.js?v=202609051645"></script>
+<script src="vado-recensioni.js?v=202609051645"></script>
+<style>
+.vi-avvio{background:var(--carta);border:1px solid var(--tratto);border-radius:12px;padding:24px;
+  box-shadow:var(--ombra);max-width:560px}
+.vi-avvio p{margin:0 0 16px;font-size:13.5px;line-height:1.65;color:#20536e}
+.vi-barra{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin:0 0 16px}
+.vi-ordine{display:inline-flex;background:var(--carta);border:1px solid var(--tratto);
+  border-radius:999px;padding:3px;gap:2px}
+.vi-ordine button{font-family:var(--dati);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  background:none;border:0;border-radius:999px;padding:7px 15px;cursor:pointer;color:var(--grigio)}
+.vi-ordine button.on{background:var(--profondo);color:#fff}
+.vi-raggio{font-family:var(--dati);font-size:10px;letter-spacing:.09em;color:var(--grigio);
+  display:inline-flex;align-items:center;gap:8px}
+.vi-raggio select{font:inherit;font-size:11px;padding:5px 9px;border-radius:999px;
+  border:1px solid var(--tratto);background:var(--carta);color:var(--profondo)}
+.vi-dove{font-family:var(--dati);font-size:10px;letter-spacing:.06em;color:var(--grigio);margin-left:auto}
+.vi-griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.vi-carta{background:var(--carta);border:1px solid var(--tratto);border-left:3px solid var(--basso);
+  border-radius:11px;padding:14px 16px;box-shadow:var(--ombra);display:flex;flex-direction:column;gap:7px}
+.vi-alto{display:flex;align-items:baseline;gap:10px}
+.vi-nome{font-family:var(--display);font-variation-settings:"SOFT" 30,"WONK" 1,"opsz" 100;
+  font-weight:400;font-size:20px;line-height:1.15;color:var(--profondo);text-decoration:none}
+.vi-nome:hover{color:var(--azzurro)}
+.vi-km{margin-left:auto;font-family:var(--dati);font-size:11px;color:var(--azzurro);white-space:nowrap}
+.vi-dove2{font-family:var(--dati);font-size:10px;letter-spacing:.05em;color:var(--grigio)}
+.vi-oggi{display:flex;flex-wrap:wrap;gap:5px 12px;font-size:12.5px;color:#20536e;align-items:center}
+.vi-oggi b{font-weight:500;color:var(--profondo)}
+.vi-punteggio{display:inline-flex;align-items:center;gap:6px;font-family:var(--dati);font-size:10px;
+  letter-spacing:.08em;text-transform:uppercase;border-radius:999px;padding:3px 10px}
+.vi-chiuse{margin:22px 0 0;background:var(--nebbia);border:1px solid var(--tratto);
+  border-left:3px solid var(--ambra);border-radius:11px;padding:16px 18px}
+.vi-chiuse h3{margin:0 0 8px;font-family:var(--dati);font-size:10px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ambra);font-weight:400}
+.vi-chiuse ul{list-style:none;margin:0 0 12px;padding:0;display:flex;flex-direction:column;gap:6px}
+.vi-chiuse li{font-size:13.5px;color:#20536e}
+.vi-chiuse li b{color:var(--profondo)}
+.vi-chiuse p{margin:0;font-size:12.5px;line-height:1.55;color:var(--grigio)}
+.vi-guasto{font-size:13.5px;line-height:1.6;color:#20536e;background:var(--nebbia);
+  border:1px solid var(--tratto);border-radius:10px;padding:16px;max-width:560px}
+</style>
+</head>
+<body>
+<div class="guscio">
+
+  <header class="testata">
+    <div>
+      <a class="ritorno casa" href="index.html"><svg class="marchio" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#083c5c"/><circle cx="44" cy="20" r="8" fill="#e8b04b"/><path d="M8 40c5 0 5-5 10-5s5 5 10 5 5-5 10-5 5 5 10 5 5-5 8-5" fill="none" stroke="#9ed4ea" stroke-width="6" stroke-linecap="round"/><path d="M8 51c5 0 5-5 10-5s5 5 10 5 5-5 10-5 5 5 10 5 5-5 8-5" fill="none" stroke="#1786bd" stroke-width="6" stroke-linecap="round"/></svg> Home page</a>
+      <h1>Spiagge <em>intorno a me</em></h1>
+    </div>
+    <div class="conto" id="conto"></div>
+  </header>
+
+  <div id="corpo"></div>
+
+  <p class="piede">Dati: EEA · geoBoundaries · ISTAT · GSHHG · Natural Earth · Open-Meteo — immagini: Esri World Imagery, Google Maps. <a href="crediti.html">Crediti e licenze</a></p>
+
+</div>
+
+<script>
+/* =========================================================================
+   Dove sono, e dove si sta meglio oggi.
+
+   Sulla posizione, una cosa sola e vale la pena dirla chiara: non viene
+   salvata da nessuna parte. Entra in una domanda al database — «cosa c'e'
+   intorno a questo punto» — ed esce con una risposta. Non finisce in una
+   tabella, non finisce in questo browser, non finisce in un registro.
+
+   Le spiagge che tornano sono solo quelle delle regioni sbloccate: non lo
+   decide questa pagina, lo decide la regola scritta sulla tabella. Ma il
+   CONTEGGIO delle altre si', ed e' voluto: chi e' fermo in Puglia con la
+   Puglia bloccata deve sapere che a due chilometri ce ne sono trentatre.
+   ========================================================================= */
+const corpo = document.getElementById("corpo");
+const esc = t => String(t == null ? "" : t)
+  .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const LIV_FOLLA = ["Molto basso","Basso","Medio","Alto","Molto alto"];
+const ACC = {auto:"Auto fino alla spiaggia", sterrato:"Auto + sterrato", breve:"Auto + breve tratto",
+             lungo:"Solo a piedi", barca:"Solo in barca", nc:"Accesso non documentato"};
+
+let POS = null, RAGGIO = 30, ORDINE = "vicine", SPIAGGE = [], METEO = {}, CHIUSE = [];
+
+function avvio(testo){
+  corpo.innerHTML =
+    '<div class="vi-avvio"><p>' + testo + '</p>' +
+    '<button type="button" class="conto-vai" id="chiedi">Usa la mia posizione</button></div>';
+  document.getElementById("chiedi").onclick = chiediPosizione;
+}
+
+function chiediPosizione(){
+  if (!navigator.geolocation)
+    return corpo.innerHTML = '<div class="vi-guasto">Questo browser non sa dire dove sei. ' +
+      'Puoi comunque scegliere una regione dalla <a href="index.html">home page</a>.</div>';
+  corpo.innerHTML = '<div class="vi-avvio"><p>Sto chiedendo la posizione al browser…</p></div>';
+  navigator.geolocation.getCurrentPosition(
+    p => { POS = {lat: p.coords.latitude, lon: p.coords.longitude, prec: p.coords.accuracy}; carica(); },
+    e => {
+      const perche = e.code === 1
+        ? 'Hai negato l’accesso alla posizione — o il browser l’ha negato per questo sito. ' +
+          'Puoi cambiarlo dall’icona del lucchetto accanto all’indirizzo.'
+        : 'Non riesco a ottenere la posizione in questo momento.';
+      corpo.innerHTML = '<div class="vi-guasto">' + perche +
+        '<br><br>Intanto puoi scegliere una regione dalla <a href="index.html">home page</a>.</div>';
+    },
+    { enableHighAccuracy: false, timeout: 12000, maximumAge: 120000 });
+}
+
+async function carica(){
+  corpo.innerHTML = '<div class="vi-avvio"><p>Cerco le spiagge nel raggio di ' + RAGGIO + ' km…</p></div>';
+  try{
+    [SPIAGGE, CHIUSE] = await Promise.all([
+      VADO.vicine(POS.lat, POS.lon, RAGGIO, 40),
+      VADO.quanteVicine(POS.lat, POS.lon, RAGGIO)
+    ]);
+  }catch(e){
+    corpo.innerHTML = '<div class="vi-guasto">Non riesco a interrogare il servizio: ' +
+      esc(e.message) + '</div>'; return;
+  }
+  try{ await VADORECE.caricaMedie(SPIAGGE.map(s => s.sid)); }catch(_){}
+  disegna();
+  if (SPIAGGE.length) meteo();      /* arriva dopo, come nelle schede */
+}
+
+/* Le condizioni di TUTTE le spiagge in una richiesta sola: Open-Meteo accetta
+   piu' coordinate insieme. Una per spiaggia sarebbe quaranta richieste. */
+async function meteo(){
+  const s = SPIAGGE.slice(0, 40);
+  const la = s.map(x => x.lat.toFixed(3)).join(","), lo = s.map(x => x.lon.toFixed(3)).join(",");
+  const q = "latitude=" + la + "&longitude=" + lo + "&timezone=auto";
+  try{
+    const [aria, mare] = await Promise.all([
+      fetch("https://api.open-meteo.com/v1/forecast?" + q +
+            "&models=icon_seamless&current=temperature_2m,weather_code,cloud_cover,wind_speed_10m" +
+            "&daily=precipitation_probability_max&forecast_days=1").then(r => r.json()),
+      fetch("https://marine-api.open-meteo.com/v1/marine?" + q +
+            "&current=wave_height,sea_surface_temperature&forecast_days=1").then(r => r.json())
+    ]);
+    const A = Array.isArray(aria) ? aria : [aria], M = Array.isArray(mare) ? mare : [mare];
+    s.forEach((x, i) => {
+      const a = A[i] && A[i].current, m = M[i] && M[i].current;
+      if (!a) return;
+      METEO[x.sid] = {
+        t: a.temperature_2m, nuv: a.cloud_cover, vento: a.wind_speed_10m,
+        pioggia: A[i].daily && A[i].daily.precipitation_probability_max
+                 ? A[i].daily.precipitation_probability_max[0] : null,
+        onda: m ? m.wave_height : null, mare: m ? m.sea_surface_temperature : null
+      };
+    });
+  }catch(_){}
+  disegna();
+}
+
+/* Un punteggio, non una verità: dice quanto la giornata somiglia a una buona
+   giornata di mare. Onda bassa, poco vento, cielo sereno, acqua tiepida. */
+function punteggio(sid){
+  const m = METEO[sid];
+  if (!m) return null;
+  let p = 50;
+  if (m.onda != null)  p += m.onda < 0.3 ? 22 : m.onda < 0.6 ? 12 : m.onda < 1.0 ? 0 : m.onda < 1.5 ? -18 : -32;
+  if (m.vento != null) p += m.vento < 10 ? 12 : m.vento < 18 ? 4 : m.vento < 28 ? -10 : -26;
+  if (m.nuv != null)   p += m.nuv < 25 ? 10 : m.nuv < 60 ? 3 : -8;
+  if (m.pioggia != null) p -= m.pioggia > 60 ? 28 : m.pioggia > 30 ? 12 : 0;
+  if (m.mare != null)  p += m.mare >= 24 ? 10 : m.mare >= 21 ? 5 : m.mare >= 18 ? 0 : -10;
+  if (m.t != null)     p += m.t >= 26 ? 8 : m.t >= 22 ? 4 : m.t >= 18 ? 0 : -12;
+  return Math.max(0, Math.min(100, Math.round(p)));
+}
+const etichettaPunteggio = p =>
+  p == null ? null :
+  p >= 78 ? ["giornata da mare", "var(--verde)"] :
+  p >= 60 ? ["si sta bene",      "var(--verde)"] :
+  p >= 42 ? ["così così",        "var(--ambra)"] :
+            ["meglio un’altra",  "var(--corallo)"];
+
+function disegna(){
+  const ordinate = SPIAGGE.slice();
+  if (ORDINE === "oggi")
+    ordinate.sort((a, b) => (punteggio(b.sid) == null ? -1 : punteggio(b.sid)) -
+                            (punteggio(a.sid) == null ? -1 : punteggio(a.sid)));
+  else ordinate.sort((a, b) => a.distanza - b.distanza);
+
+  const chiuse = (CHIUSE || []).filter(r => !SPIAGGE.some(s => s.regione === r.regione));
+
+  corpo.innerHTML =
+    '<div class="vi-barra">' +
+      '<div class="vi-ordine">' +
+        '<button type="button" data-ord="vicine"' + (ORDINE === "vicine" ? ' class="on"' : '') + '>Più vicine</button>' +
+        '<button type="button" data-ord="oggi"' + (ORDINE === "oggi" ? ' class="on"' : '') + '>Migliori oggi</button>' +
+      '</div>' +
+      '<label class="vi-raggio">nel raggio di <select id="raggio">' +
+        [10,20,30,50,80].map(k => '<option value="' + k + '"' + (k === RAGGIO ? " selected" : "") +
+          '>' + k + ' km</option>').join("") + '</select></label>' +
+      '<span class="vi-dove">posizione approssimata a ±' +
+        Math.round((POS.prec || 0) / 100) / 10 + ' km · non viene salvata</span>' +
+    '</div>' +
+    (ordinate.length
+      ? '<div class="vi-griglia">' + ordinate.map(carta).join("") + '</div>'
+      : '<div class="vi-guasto">Nessuna spiaggia sbloccata entro ' + RAGGIO + ' km.</div>') +
+    (chiuse.length ? invito(chiuse) : "");
+
+  corpo.querySelectorAll("[data-ord]").forEach(b => b.onclick = () => { ORDINE = b.dataset.ord; disegna(); });
+  document.getElementById("raggio").onchange = e => { RAGGIO = +e.target.value; carica(); };
+}
+
+function carta(s){
+  const m = METEO[s.sid], p = punteggio(s.sid), et = etichettaPunteggio(p);
+  const voto = VADORECE.media(s.sid);
+  return '<div class="vi-carta">' +
+    '<div class="vi-alto"><a class="vi-nome" href="spiagge-' + esc(s.regione) + '.html#' +
+      encodeURIComponent(s.sid) + '">' + esc(s.n) + '</a>' +
+      '<span class="vi-km">' + s.distanza + ' km</span></div>' +
+    '<div class="vi-dove2">' + esc(s.com || "") + ' · ' + esc(ACC[s.acc] || ACC.nc) + '</div>' +
+    (et ? '<div><span class="vi-punteggio" style="background:' + et[1] + '18;color:' + et[1] + '">' +
+          et[0] + '</span></div>' : "") +
+    (m ? '<div class="vi-oggi">' +
+        (m.onda != null ? '<span>onda <b>' + m.onda.toFixed(1) + ' m</b></span>' : "") +
+        (m.vento != null ? '<span>vento <b>' + Math.round(m.vento) + '</b> km/h</span>' : "") +
+        (m.mare != null ? '<span>acqua <b>' + Math.round(m.mare) + '°</b></span>' : "") +
+        (m.t != null ? '<span>aria <b>' + Math.round(m.t) + '°</b></span>' : "") +
+      '</div>' : "") +
+    '<div class="vi-oggi">' +
+      (voto ? VADORECE.stelleFisse(voto.media) + '<span class="voto-quanti">' + voto.quanti + '</span>'
+            : '<span class="voto-vuoto">nessun parere</span>') +
+      (s.folla ? '<span style="margin-left:auto" class="vi-dove2">affollamento ' +
+        (LIV_FOLLA[s.folla-1] || "n/c").toLowerCase() + '</span>' : "") +
+    '</div></div>';
+}
+
+function invito(chiuse){
+  const tot = chiuse.reduce((a, r) => a + Number(r.quante), 0);
+  return '<div class="vi-chiuse"><h3>E qui intorno c’è dell’altro</h3><ul>' +
+    chiuse.map(r => '<li><b>' + Number(r.quante) + ' spiagge</b> in ' + esc(r.nome) +
+      ', la più vicina a ' + r.piu_vicina + ' km</li>').join("") + '</ul>' +
+    '<p>' + (tot === 1 ? 'Questa spiaggia è' : 'Queste ' + tot + ' spiagge sono') +
+    ' in regioni che non hai ancora sbloccato: la carta e i nomi si vedono lo stesso, ' +
+    'le schede no. <a href="index.html">Guarda le regioni</a>.</p></div>';
+}
+
+VADO.alCambio(() => {
+  if (POS) carica();
+  else avvio('Ti dico quali spiagge hai intorno, quanto distano e dove oggi si sta meglio. ' +
+    'La posizione la chiede il browser, resta nel tuo browser e non viene salvata da nessuna parte: ' +
+    'serve solo a fare la domanda.');
+});
+</script>
+<script src="vado-conto.js?v=202609051645"></script>
+</body>
+</html>

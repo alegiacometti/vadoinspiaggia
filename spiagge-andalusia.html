@@ -15,9 +15,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="carte-spiagge.css?v=202609051247">
-<script src="configurazione.js?v=202609051247"></script>
-<script src="vado-dati.js?v=202609051247"></script>
+<link rel="stylesheet" href="carte-spiagge.css?v=202609051645">
+<script src="configurazione.js?v=202609051645"></script>
+<script src="vado-dati.js?v=202609051645"></script>
+<script src="vado-recensioni.js?v=202609051645"></script>
+<script src="vado-vento.js?v=202609051645"></script>
 <style>/* misure di questa regione — vedi carte-spiagge.css */
 :root{--colonna-carta:700px;--telaio-h:min(46vh,420px)}</style>
 </head>
@@ -26,7 +28,7 @@
 
   <header class="testata">
     <div>
-      <div class="briciole"><a class="ritorno casa" href="index.html"><svg class="marchio" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#083c5c"/><circle cx="44" cy="20" r="8" fill="#e8b04b"/><path d="M8 40c5 0 5-5 10-5s5 5 10 5 5-5 10-5 5 5 10 5 5-5 8-5" fill="none" stroke="#9ed4ea" stroke-width="6" stroke-linecap="round"/><path d="M8 51c5 0 5-5 10-5s5 5 10 5 5-5 10-5 5 5 10 5 5-5 8-5" fill="none" stroke="#1786bd" stroke-width="6" stroke-linecap="round"/></svg>Home page</a><a class="ritorno" href="index.html#es">← Tutte le regioni: Spagna</a></div>
+      <div class="briciole"><a class="ritorno casa" href="index.html"><svg class="marchio" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#083c5c"/><circle cx="44" cy="20" r="8" fill="#e8b04b"/><path d="M8 40c5 0 5-5 10-5s5 5 10 5 5-5 10-5 5 5 10 5 5-5 8-5" fill="none" stroke="#9ed4ea" stroke-width="6" stroke-linecap="round"/><path d="M8 51c5 0 5-5 10-5s5 5 10 5 5-5 10-5 5 5 10 5 5-5 8-5" fill="none" stroke="#1786bd" stroke-width="6" stroke-linecap="round"/></svg>Home page</a><a class="ritorno" href="index.html#es">← Tutte le regioni: Spagna</a><a class="ritorno vicino" href="vicino.html">◉ Intorno a me</a></div>
       <h1>Le spiagge <em>dell’Andalusia</em> <span class="bandiere"><img class="bandiera" src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag%20of%20Spain.svg?width=96" width="96" alt="Bandiera: Spagna" title="Spagna" loading="lazy" decoding="async" onerror="this.dataset.b?(this.src=this.dataset.b,this.removeAttribute('data-b')):this.remove()"><img class="bandiera" src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag%20of%20Andaluc%C3%ADa.svg?width=96" width="96" alt="Bandiera: Andalusia" title="Andalusia" loading="lazy" decoding="async" onerror="this.dataset.b?(this.src=this.dataset.b,this.removeAttribute('data-b')):this.remove()"></span></h1>
     </div>
       <div class="conto" id="conto"></div>
@@ -175,6 +177,13 @@ const BANDIERA='M-0.42,0.9L-0.42,-9.2L0.42,-9.2L0.42,0.9Z'
 const posEti={W:[-10,3.5,"end"],E:[10,3.5,"start"],N:[0,-11,"middle"],S:[0,17,"middle"]};
 const SCALE=[["E",10,3.5,"start",0],["W",-10,3.5,"end",0],["N",0,-11,"middle",0],["S",0,17,"middle",0],["NE",17,-10,"start",1],["NW",-17,-10,"end",1],["SE",17,17,"start",1],["SW",-17,17,"end",1],["E2",30,3.5,"start",1],["W2",-30,3.5,"end",1],["N2",0,-25,"middle",1],["S2",0,31,"middle",1]];
 let MARKER=[], ETIM=[], BANDE=[];
+/* La costa serve anche a sapere DA CHE PARTE guarda ogni spiaggia: si passa a
+   chi fa quel conto lo stesso contorno che disegna la terra, e la proiezione
+   con cui e' stato costruito. */
+VADOVENTO.costa([typeof TERRA!=="undefined"?TERRA:"", typeof ISOLA!=="undefined"?ISOLA:"",
+                 typeof ISOLE!=="undefined"?ISOLE:""].join(" "),
+                {LON0:LON0, LAT0:LAT0, KX:KX, KY:KY});
+
 function disegnaSegni(){
 document.getElementById("gMarker").innerHTML=SPIAGGE.map((b,i)=>{
   const A=ACCESSI[b.acc]||ACCESSI.nc,c=A.col,p=posEti[b.lato]||posEti.E;
@@ -854,6 +863,47 @@ function maxGiorno(m,campo,giorno){
 }
 const num=(v,d)=> v==null?"—":(d?v.toFixed(d):Math.round(v));
 
+/* Il vento tradotto: non «da NE», ma che cosa vuol dire da NE QUI. */
+function ventoDice(b, c){
+  if (typeof VADOVENTO === "undefined") return "";
+  const esp = VADOVENTO.esposizione(b.lat, b.lon);
+  const g = VADOVENTO.giudizio(esp, c && c.wind_direction_10m, c && c.wind_speed_10m);
+  if (!g) return "";
+  return '<div class="vento-dice ' + g.classe + '"><b>' + g.titolo + '</b>' + g.dice +
+         '<i>la spiaggia guarda a ' + VADOVENTO.bussola(esp) + '</i></div>';
+}
+/* --- manda a chi viene con te -------------------------------------------
+   Si condivide l'indirizzo PUBBLICO della spiaggia, non quello di qui: chi
+   riceve il messaggio quasi sempre non ha un account, e mandargli un muro
+   sarebbe il modo piu' rapido di non farlo mai entrare.
+   Dove il browser sa condividere (i telefoni) si apre il pannello di sistema;
+   dove non sa (i computer) si copia negli appunti e lo si dice. */
+function mandaHtml(b){
+  return '<button type="button" class="manda" data-manda="'+b.sid+'" ' +
+         'title="Manda questa spiaggia" aria-label="Manda questa spiaggia">' +
+         '<svg viewBox="0 0 20 20" aria-hidden="true">' +
+         '<path d="M15 6.5a2.2 2.2 0 100-4.4 2.2 2.2 0 000 4.4zM5 12.2a2.2 2.2 0 100-4.4 2.2 2.2 0 000 4.4z' +
+         'M15 17.9a2.2 2.2 0 100-4.4 2.2 2.2 0 000 4.4zM6.9 9L13 6M6.9 11L13 14"/></svg></button>';
+}
+document.addEventListener("click", async e => {
+  const t = e.target.closest("[data-manda]");
+  if (!t) return;
+  const b = SPIAGGE.find(x => x.sid === t.dataset.manda);
+  if (!b) return;
+  const url = new URL(VADO.paginaSpiaggia(b), location.href).href;
+  const testo = b.n + " — " + b.com + ", su Vado in spiaggia";
+  if (navigator.share) {
+    try { await navigator.share({ title: b.n, text: testo, url: url }); } catch (_) {}
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(url);
+    const era = t.getAttribute("title");
+    t.classList.add("fatto"); t.setAttribute("title", "Indirizzo copiato");
+    setTimeout(() => { t.classList.remove("fatto"); t.setAttribute("title", era); }, 1800);
+  } catch (_) { prompt("Copia questo indirizzo:", url); }
+});
+
 function bloccoLive(b,dati){
   const a=dati&&dati.aria, m=dati&&dati.mare;
   const cam=camDella(b);
@@ -894,6 +944,7 @@ function bloccoLive(b,dati){
     '<div class="live-testa"><span><i class="pulse"></i>'+(quando&&quando.domani?'Domani in spiaggia':'Oggi in spiaggia')+'</span>'+
       '<span>acqua '+(tMare==null?'—':num(tMare)+'°')+'</span></div>'+
     '<div class="andamento">'+grafico+'</div>'+
+    ventoDice(b,c)+
     (ind?'<div class="sintesi"><span class="pallino" style="background:'+ind[1]+'"></span><b>'+ind[0]+'</b>'+
       (grado!=null?'<span class="mare-stato">mare '+stato+'<i>Douglas '+grado+'</i></span>':'')+
       (d.uv_index_max?'<span style="margin-left:auto;font-family:var(--dati);font-size:10px;color:var(--grigio)">UV max '+num(d.uv_index_max[0])+'</span>':'')+'</div>':'')+
@@ -1067,8 +1118,10 @@ function corpo(b){
     return '<span class="sv '+cls+'"><svg viewBox="0 0 20 20">'+ICONE[k]+'</svg><span class="lab">'+et+'</span>'+st+'</span>';}).join("");
   return '<div class="corpo">'+
    '<div class="riga-titolo"><div><h2>'+b.n+'</h2>'+stellaHtml(STELLE.spiagge.has(b.sid), "spiaggia", b.sid, "Salva fra i preferiti")+
+     mandaHtml(b)+
      '<div class="sotto">'+b.com+' · '+gradi(b.lat,b.lat<0?"S":"N")+' '+gradi(b.lon,b.lon<0?"W":"E")+'</div></div>'+
      '<div class="zona">'+ZONE[b.z]+'</div></div>'+
+   '<div class="rec-riassunto" data-riassunto="'+b.sid+'">'+VADORECE.riassunto(b.sid)+'</div>'+
    /* se lì sotto ce n'è più d'una, conviene dirlo: altrimenti sembra che il
       clic non risponda, mentre sta solo scegliendo la prima */
    (function(){const g=(typeof grappoloDi==="function")?grappoloDi(SPIAGGE.indexOf(b)):[];
@@ -1087,7 +1140,8 @@ function corpo(b){
    '</dl>'+
    '<p class="titoletto">Servizi in spiaggia</p><div class="servizi">'+chips+'</div>'+
    '<p class="titoletto">Da sapere</p><p class="nota">'+(b.nota||'Descrizione non ancora disponibile.')+'</p>'+
-   '<div class="tag">'+b.id.map(t=>'<span'+(t==="Bandiera Blu"?' class="bb"':'')+'>'+t+'</span>').join("")+'</div>'+'</div>';
+   '<div class="tag">'+b.id.map(t=>'<span'+(t==="Bandiera Blu"?' class="bb"':'')+'>'+t+'</span>').join("")+'</div>'+
+   '<div id="slotPareri"></div>'+'</div>';
 }
 function vetrinaSat(b,i){
   const bl=bloccato===i;
@@ -1118,6 +1172,11 @@ function mostra(i){
   scheda.querySelector("#btnScheda").onclick=()=>apriScheda(i);
   verificaPano(b, scheda);
   scheda.querySelector("#btnLucchetto").onclick=()=>{ bloccato=(bloccato===i?null:i); mostra(i); attiva(i); };
+  /* I pareri arrivano dopo, come il meteo: la scheda non aspetta la rete per
+     comparire. "mio" e' il numero di questa apertura — se nel frattempo si e'
+     passati a un'altra spiaggia, la risposta che torna qui non vale piu'. */
+  const slotP=scheda.querySelector("#slotPareri");
+  VADORECE.disegna(b.sid, b.n, slotP).catch(()=>{});
   const slot=scheda.querySelector("#slotLive");
   slot.innerHTML='<div class="live"><div class="live-testa"><span><i class="pulse"></i>Adesso in spiaggia</span></div>'+
     '<div class="live-nota">Interrogo il modello meteo-marino…</div></div>';
@@ -1421,6 +1480,106 @@ function serratura(zone, riga){
   document.querySelector("header.testata").insertAdjacentElement("afterend", f);
   const b = f.querySelector(".sblocca-entra");
   if (b) b.onclick = () => { if (window.apriConto) window.apriConto("accedi"); };
+  pareriInVetrina(f);
+  assaggioNellaFascia(f, riga);
+}
+
+/* --- l'assaggio ---------------------------------------------------------
+   Una spiaggia per paese, gratis, scelta da chi guarda. Qui dentro non c'e'
+   nessuna regola: si chiede al database che cosa risulta e si disegna quel
+   che dice. La regola vera e' la chiave primaria della tabella — una riga
+   per (persona, paese) — e quella non si puo' aggirare da qui. */
+async function assaggioNellaFascia(fascia, riga){
+  const dice = fascia.querySelector(".serratura-dice");
+  if (!dice || !riga || !riga.paese) return;
+  if (!VADO.chiSono()){
+    const p = document.createElement("p");
+    p.className = "assaggio-invito";
+    p.innerHTML = 'Con un account <b>una spiaggia per paese è gratis</b>, e la scegli tu: ' +
+                  'la vedi per intera, per sempre, senza pagare niente.';
+    dice.appendChild(p);
+    return;
+  }
+  let mie = [];
+  try { mie = await VADO.mieiAssaggi(); } catch(_) { return; }
+  const gia = mie.find(x => x.paese === riga.paese);
+  const box = document.createElement("div");
+  box.className = "assaggio";
+  if (gia){
+    box.innerHTML = '<p class="assaggio-eti">' + escA(gia.paese_nome) + ' — la tua spiaggia gratuita</p>' +
+      '<p class="assaggio-dice">È <a href="spiagge-' + escA(gia.regione) + '.html#' +
+      encodeURIComponent(gia.sid) + '"><b>' + escA(gia.spiaggia) + '</b></a> (' +
+      escA(gia.regione_nome) + '). Una per paese: per vedere le altre serve sbloccare la regione.</p>';
+    dice.appendChild(box);
+    return;
+  }
+  let nomi = [];
+  try { nomi = await VADO.nomiRegione(REGIONE); } catch(_) { return; }
+  if (!nomi.length) return;
+  box.innerHTML =
+    '<p class="assaggio-eti">' + escA((riga.paesi && riga.paesi.nome) || "Questo paese") +
+    ' — hai ancora la tua spiaggia gratuita</p>' +
+    '<p class="assaggio-dice">Scegline una qui sotto: la vedrai per intera — fondo, accesso, ' +
+    'servizi, meteo e stato del mare — per sempre e senza pagare. Una sola per paese, ' +
+    'quindi scegli quella che ti interessa davvero.</p>' +
+    '<input class="assaggio-cerca" type="search" placeholder="Filtra i nomi…" aria-label="Filtra i nomi">' +
+    '<div class="assaggio-nomi">' + nomi.map(x =>
+      '<button type="button" data-ass="' + escA(x.sid) + '" data-n="' +
+      escA((x.n + " " + (x.com||"")).toLowerCase()) + '">' + escA(x.n) +
+      '<small>' + escA(x.com || "") + '</small></button>').join("") + '</div>' +
+    '<p class="assaggio-esito" data-ass-esito hidden></p>';
+  dice.appendChild(box);
+
+  const cerca = box.querySelector(".assaggio-cerca");
+  cerca.addEventListener("input", () => {
+    const q = cerca.value.trim().toLowerCase();
+    box.querySelectorAll("[data-ass]").forEach(t =>
+      t.hidden = !!q && t.dataset.n.indexOf(q) < 0);
+  });
+  const esito = box.querySelector("[data-ass-esito]");
+  box.querySelectorAll("[data-ass]").forEach(t => t.onclick = async () => {
+    box.querySelectorAll("[data-ass]").forEach(x => x.disabled = true);
+    esito.hidden = false; esito.className = "assaggio-esito"; esito.textContent = "Un momento…";
+    let r;
+    try { r = await VADO.assaggia(t.dataset.ass); }
+    catch(e){ r = { esito: "errore" }; }
+    if (r.esito === "presa" || r.esito === "gia_tua"){
+      /* la spiaggia adesso e' visibile: si ricarica sull'ancora giusta, cosi'
+         la pagina si riapre gia' aperta su quella scheda */
+      location.hash = r.sid;
+      location.reload();
+      return;
+    }
+    box.querySelectorAll("[data-ass]").forEach(x => x.disabled = false);
+    esito.className = "assaggio-esito brutta";
+    esito.textContent =
+      r.esito === "gia_speso" ? "In questo paese hai già scelto " + (r.nome || "un'altra spiaggia") + "."
+      : r.esito === "fuori"   ? "Devi entrare nel tuo account."
+      : "Non ha funzionato: riprova fra poco.";
+  });
+}
+function escA(t){ return String(t == null ? "" : t)
+  .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+/* Gli ultimi pareri di questa regione, dentro la fascia. Arrivano dopo, senza
+   far aspettare niente: se non ce ne sono, o se la richiesta va storta, la
+   fascia resta esattamente com'era. */
+async function pareriInVetrina(fascia){
+  let r = [];
+  try { r = await VADO.recensioniRegione(REGIONE, 3); } catch(_) { return; }
+  if (!r.length) return;
+  const esc = t => String(t == null ? "" : t)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  const dice = fascia.querySelector(".serratura-dice");
+  if (!dice) return;
+  const d = document.createElement("div");
+  d.className = "serratura-pareri";
+  d.innerHTML = '<p class="serratura-eti">Chi c’è stato dice</p>' +
+    r.map(x => '<blockquote>' +
+      (typeof VADORECE !== "undefined" ? VADORECE.stelleFisse(x.voto) : "") +
+      (x.commento ? '<q>' + esc(x.commento) + '</q>' : "") +
+      '<cite>' + esc(x.firma) + ' · ' + esc(x.spiaggia) + '</cite></blockquote>').join("");
+  dice.appendChild(d);
 }
 async function avvia(){
   let d;
@@ -1444,6 +1603,7 @@ async function avvia(){
   }
   ZONE = d.zone; SPIAGGE = d.spiagge;
   STELLE = await VADO.stelleAccese();   /* una richiesta sola, prima di disegnare */
+  await VADORECE.caricaMedie(SPIAGGE.map(x=>x.sid));   /* idem per i voti medi */
   disegnaSegni();          /* i segni sulla carta, e MARKER/ETIM/BANDE */
   legende();               /* le due legende, che contano le spiagge */
   disegnaZone();           /* i pulsanti delle zone */
@@ -1452,6 +1612,41 @@ async function avvia(){
   disegnaElenco(""); vuoto();
   if(stretto()) elencoAperto(false);
   apriDaIndirizzo();       /* se l'indirizzo dice una spiaggia, si apre quella */
+  controllaVetrina();      /* ne ho ricevute meno di quante ne esistono? */
+}
+
+/* --- la vetrina ---------------------------------------------------------
+   Il catalogo dice quante spiagge ha questa regione, ed e' pubblico. Se ne
+   sono arrivate meno, vuol dire che quella che si vede e' la vetrina del
+   paese — l'unica aperta a tutti — e le altre sono da sbloccare. Lo si
+   deduce dai numeri invece di chiederlo: un permesso chiesto due volte e'
+   un permesso che prima o poi si risponde in due modi diversi. */
+async function controllaVetrina(){
+  let riga = null;
+  try { riga = await VADO.dettaglioRegione(REGIONE); } catch(_) { return; }
+  if (!riga || !riga.spiagge || SPIAGGE.length >= riga.spiagge) return;
+  const chi = VADO.chiSono();
+  const f = document.createElement("div");
+  f.className = "serratura vetrina";
+  f.innerHTML =
+    '<div class="serratura-dice">' +
+      '<h2>' + (riga.nome || "Questa regione") + ' — la tua spiaggia gratuita</h2>' +
+      '<p>Questa \u00e8 la spiaggia che hai scelto come assaggio del suo paese, e resta tua: ' +
+        'la scheda che vedi \u00e8 quella vera, completa. Le altre <b>' +
+        (riga.spiagge - SPIAGGE.length) + '</b> di ' + (riga.nome || "questa regione") +
+        ' sono da sbloccare.</p>' +
+      (chi ? '<p class="serratura-chi">Sei entrato come <b>' + chi.email + '</b>.</p>' : '') +
+    '</div>' +
+    '<div class="serratura-fai">' +
+      (chi ? '' : '<button type="button" class="sblocca-entra">Accedi / Registrati</button>') +
+      '<a class="sblocca' + (chi ? '' : ' seconda') + '" href="' + chiediSblocco() + '">Sblocca ' +
+        (riga.nome || "questa regione") + '</a>' +
+    '</div>';
+  document.querySelector("header.testata").insertAdjacentElement("afterend", f);
+  const b = f.querySelector(".sblocca-entra");
+  if (b) b.onclick = () => { if (window.apriConto) window.apriConto("accedi"); };
+  pareriInVetrina(f);
+  assaggioNellaFascia(f, riga);
 }
 avvia();
 /* Se si entra o si esce senza ricaricare, la regione va richiesta di nuovo:
@@ -1459,6 +1654,6 @@ avvia();
 VADO.alCambio((function(){ let primo=true;
   return ()=>{ if(primo){ primo=false; return; } location.reload(); }; })());
 </script>
-<script src="vado-conto.js?v=202609051247"></script>
+<script src="vado-conto.js?v=202609051645"></script>
 </body>
 </html>

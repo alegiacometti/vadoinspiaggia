@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#083c5c">
+<title>Confronta le spiagge · Vado in spiaggia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="carte-spiagge.css?v=202609051645">
+<script src="vado-dati.js?v=202609051645"></script>
+<script src="vado-recensioni.js?v=202609051645"></script>
+<style>
+.cf-cerca{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 8px}
+.cf-cerca input{font:inherit;font-size:14px;padding:9px 13px;border:1px solid var(--tratto);
+  border-radius:999px;background:var(--carta);color:var(--inchiostro);min-width:min(100%,340px)}
+.cf-cerca input:focus{outline:2px solid var(--ambra);outline-offset:1px}
+.cf-quante{font-family:var(--dati);font-size:10px;letter-spacing:.1em;color:var(--grigio)}
+.cf-esiti{list-style:none;margin:0 0 16px;padding:0;display:flex;flex-wrap:wrap;gap:7px}
+.cf-esiti button{font:inherit;font-size:13px;padding:6px 13px;border-radius:999px;cursor:pointer;
+  background:var(--carta);border:1px solid var(--tratto);color:var(--profondo);transition:.15s;
+  display:inline-flex;align-items:baseline;gap:7px}
+.cf-esiti button:hover:not(:disabled){border-color:var(--basso);box-shadow:var(--ombra);color:var(--azzurro)}
+.cf-esiti button:disabled{opacity:.45;cursor:default}
+.cf-esiti small{font-family:var(--dati);font-size:9.5px;letter-spacing:.05em;color:var(--grigio)}
+.cf-scelte{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px;min-height:32px;align-items:center}
+.cf-vuoto{font-size:13px;color:var(--grigio)}
+.cf-gettone{display:inline-flex;align-items:center;gap:8px;background:var(--profondo);color:#fff;
+  border-radius:999px;padding:6px 8px 6px 14px;font-size:13px}
+.cf-gettone button{background:rgba(255,255,255,.16);border:0;color:#fff;width:21px;height:21px;
+  border-radius:999px;cursor:pointer;font-size:11px;line-height:1;padding:0}
+.cf-gettone button:hover{background:var(--corallo)}
+.cf-tabella{width:100%;border-collapse:collapse;background:var(--carta);border:1px solid var(--tratto);
+  border-radius:11px;overflow:hidden;box-shadow:var(--ombra)}
+.cf-tabella th,.cf-tabella td{padding:10px 13px;text-align:left;vertical-align:top;
+  border-bottom:1px solid var(--tratto);font-size:13.5px;line-height:1.5}
+.cf-tabella tr:last-child th,.cf-tabella tr:last-child td{border-bottom:0}
+.cf-tabella th[scope=row]{font-family:var(--dati);font-size:9.5px;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--grigio);font-weight:400;width:150px;background:var(--nebbia);
+  white-space:nowrap}
+.cf-tabella thead th{background:var(--nebbia);vertical-align:bottom}
+.cf-nome{font-family:var(--display);font-variation-settings:"SOFT" 30,"WONK" 1,"opsz" 100;
+  font-weight:400;font-size:19px;line-height:1.15;color:var(--profondo);text-decoration:none;display:block}
+.cf-nome:hover{color:var(--azzurro)}
+.cf-dove{font-family:var(--dati);font-size:9.5px;letter-spacing:.05em;color:var(--grigio);margin-top:3px}
+.cf-si{color:var(--verde)} .cf-forse{color:var(--ambra)} .cf-no{color:var(--secca)}
+.cf-nc{color:var(--grigio);font-family:var(--dati);font-size:10px}
+.cf-acc{display:inline-block;border-radius:999px;padding:3px 10px;font-family:var(--dati);
+  font-size:9.5px;letter-spacing:.08em;text-transform:uppercase}
+.cf-avvolgi{overflow-x:auto}
+@media (max-width:700px){ .cf-tabella th[scope=row]{width:110px;font-size:9px} }
+</style>
+</head>
+<body>
+<div class="guscio">
+
+  <header class="testata">
+    <div>
+      <a class="ritorno casa" href="index.html"><svg class="marchio" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#083c5c"/><circle cx="44" cy="20" r="8" fill="#e8b04b"/><path d="M8 40c5 0 5-5 10-5s5 5 10 5 5-5 10-5 5 5 10 5 5-5 8-5" fill="none" stroke="#9ed4ea" stroke-width="6" stroke-linecap="round"/><path d="M8 51c5 0 5-5 10-5s5 5 10 5 5-5 10-5 5 5 10 5 5-5 8-5" fill="none" stroke="#1786bd" stroke-width="6" stroke-linecap="round"/></svg> Home page</a>
+      <h1>Confronta <em>le spiagge</em></h1>
+    </div>
+    <div class="conto" id="conto"></div>
+  </header>
+
+  <div id="corpo"></div>
+
+  <p class="piede">Dati: EEA · geoBoundaries · ISTAT · GSHHG · Natural Earth · Open-Meteo — immagini: Esri World Imagery, Google Maps. <a href="crediti.html">Crediti e licenze</a></p>
+
+</div>
+
+<script>
+/* =========================================================================
+   Tre spiagge affiancate.
+
+   La ricerca non ha bisogno di sapere che cosa hai sbloccato: chiede le
+   spiagge al database, e il database gli manda solo quelle che puoi vedere.
+   Una regione che non e' tua semplicemente non compare — non c'e' nessun
+   filtro da tenere allineato qui, e quindi nessun filtro che possa sbagliare.
+
+   Tre e non quattro perche' oltre le tre colonne la tabella non ci sta piu'
+   sullo schermo di un telefono, ed e' li' che uno confronta le spiagge:
+   in spiaggia, mentre decide dove andare domani.
+   ========================================================================= */
+const MAX = 3;
+const corpo = document.getElementById("corpo");
+const esc = t => String(t == null ? "" : t)
+  .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
+const ACCESSI = {
+  auto:    {et:"Auto fino alla spiaggia",     col:"#1786bd"},
+  sterrato:{et:"Auto + strada sterrata",      col:"#cf8a13"},
+  breve:   {et:"Auto + breve tratto a piedi", col:"#2f9772"},
+  lungo:   {et:"Solo a piedi",                col:"#dd5b45"},
+  barca:   {et:"Solo in barca",               col:"#6470c4"},
+  nc:      {et:"Accesso non documentato",     col:"#93a6b3"}
+};
+const SERVIZI = [["parcheggio","Parcheggio"],["ristorante","Ristorante"],["bar","Bar"],
+  ["lettini","Lettini"],["docce","Docce"],["wc","WC"],["sorveglianza","Sorveglianza"],
+  ["sport","Sport acquatici"],["cani","Cani ammessi"],["ombra","Ombra naturale"]];
+const LIV_FOLLA = ["Molto basso","Basso","Medio","Alto","Molto alto"];
+
+const CAMPI = "sid,n,com,regione,zona,lat,lon,lung,fondo,folla,acc,camm,park,sv,id";
+let REGIONI = {}, SCELTE = [], ultimaCerca = 0;
+
+/* ------------------------------------------------------------------ impianto */
+async function avvia(){
+  if (!VADO.chiSono()){
+    corpo.innerHTML = '<div class="pref-vuoto"><p style="margin:0 0 16px">' +
+      'Il confronto lavora sulle spiagge delle regioni che hai sbloccato: per usarlo serve un account.</p>' +
+      '<button type="button" class="conto-vai" id="cEntra">Accedi / Registrati</button></div>';
+    document.getElementById("cEntra").onclick = () => window.apriConto && window.apriConto("accedi");
+    return;
+  }
+  corpo.innerHTML =
+    '<div class="cf-cerca"><input id="cerca" type="search" autocomplete="off" ' +
+      'placeholder="Cerca una spiaggia o un comune…"><span class="cf-quante" id="quante"></span></div>' +
+    '<ul class="cf-esiti" id="esiti"></ul>' +
+    '<div class="cf-scelte" id="scelte"></div>' +
+    '<div class="cf-avvolgi" id="tabella"></div>';
+
+  try { (await VADO.chiedi("regioni?select=chiave,nome&order=ordine")).forEach(r => REGIONI[r.chiave] = r.nome); }
+  catch(_){}
+
+  const cerca = document.getElementById("cerca");
+  cerca.addEventListener("input", () => {
+    const q = cerca.value.trim();
+    const mio = ++ultimaCerca;
+    if (q.length < 2){ document.getElementById("esiti").innerHTML = "";
+                       document.getElementById("quante").textContent = ""; return; }
+    setTimeout(async () => {           /* si aspetta un attimo: non una richiesta per tasto */
+      if (mio !== ultimaCerca) return;
+      await cercaSpiagge(q, mio);
+    }, 220);
+  });
+
+  /* Le tre scelte stanno nell'indirizzo: si puo' mandare un confronto a
+     qualcuno, o ritrovarlo domani, senza rifarlo da capo. */
+  const dallIndirizzo = decodeURIComponent((location.hash||"").slice(1)).split(",").filter(Boolean);
+  if (dallIndirizzo.length) await aggiungiTanti(dallIndirizzo.slice(0, MAX));
+  else { disegnaScelte(); disegnaTabella(); }
+}
+
+async function cercaSpiagge(q, mio){
+  const p = "*" + q.replace(/[*(),]/g,"") + "*";
+  let r = [];
+  try{
+    r = await VADO.chiedi("spiagge?or=(n.ilike." + encodeURIComponent(p) +
+        ",com.ilike." + encodeURIComponent(p) + ")&select=sid,n,com,regione&order=n&limit=24");
+  }catch(e){
+    document.getElementById("esiti").innerHTML =
+      '<li class="cf-vuoto">Non riesco a cercare: ' + esc(e.message) + '</li>'; return;
+  }
+  if (mio !== ultimaCerca) return;
+  document.getElementById("quante").textContent =
+    r.length ? r.length + (r.length === 24 ? "+ trovate" : " trovate") : "nessuna trovata";
+  document.getElementById("esiti").innerHTML = r.map(b =>
+    '<li><button type="button" data-agg="' + esc(b.sid) + '"' +
+      (SCELTE.some(x => x.sid === b.sid) ? " disabled" : "") + '>' + esc(b.n) +
+      '<small>' + esc(b.com || "") + (REGIONI[b.regione] ? " · " + esc(REGIONI[b.regione]) : "") +
+      '</small></button></li>').join("") ||
+    '<li class="cf-vuoto">Nessuna spiaggia con questo nome fra le regioni che hai sbloccato.</li>';
+  document.querySelectorAll("[data-agg]").forEach(b => b.onclick = () => aggiungi(b.dataset.agg));
+}
+
+async function prendi(sids){
+  const lista = sids.map(s => '"' + String(s).replace(/"/g,"") + '"').join(",");
+  return VADO.chiedi("spiagge?sid=in.(" + encodeURIComponent(lista) + ")&select=" + CAMPI);
+}
+
+async function aggiungi(sid){
+  if (SCELTE.length >= MAX || SCELTE.some(x => x.sid === sid)) return;
+  const r = await prendi([sid]);
+  if (!r.length) return;
+  SCELTE.push(r[0]);
+  await dopoIlCambio();
+}
+async function aggiungiTanti(sids){
+  try{
+    const r = await prendi(sids);
+    /* si rimette l'ordine dell'indirizzo: in.() risponde come gli pare */
+    SCELTE = sids.map(s => r.find(x => x.sid === s)).filter(Boolean).slice(0, MAX);
+  }catch(_){}
+  await dopoIlCambio();
+}
+function togli(sid){ SCELTE = SCELTE.filter(x => x.sid !== sid); dopoIlCambio(); }
+
+async function dopoIlCambio(){
+  try{ await VADORECE.caricaMedie(SCELTE.map(x => x.sid)); }catch(_){}
+  history.replaceState(null, "", location.pathname +
+    (SCELTE.length ? "#" + SCELTE.map(x => encodeURIComponent(x.sid)).join(",") : ""));
+  disegnaScelte(); disegnaTabella();
+  document.querySelectorAll("[data-agg]").forEach(b =>
+    b.disabled = SCELTE.length >= MAX || SCELTE.some(x => x.sid === b.dataset.agg));
+}
+
+function disegnaScelte(){
+  const d = document.getElementById("scelte");
+  d.innerHTML = SCELTE.length
+    ? SCELTE.map(b => '<span class="cf-gettone">' + esc(b.n) +
+        '<button type="button" data-tog="' + esc(b.sid) + '" aria-label="Togli ' + esc(b.n) + '">✕</button></span>').join("") +
+      (SCELTE.length < MAX ? '<span class="cf-vuoto">puoi aggiungerne ancora ' +
+        (MAX - SCELTE.length) + '</span>' : "")
+    : '<span class="cf-vuoto">Cerca qui sopra e scegli fino a tre spiagge da mettere a confronto.</span>';
+  d.querySelectorAll("[data-tog]").forEach(b => b.onclick = () => togli(b.dataset.tog));
+}
+
+/* ------------------------------------------------------------------ tabella */
+const servizio = v => v == null ? '<span class="cf-nc">n/c</span>'
+  : v >= 1   ? '<span class="cf-si">sì</span>'
+  : v > 0    ? '<span class="cf-forse">stagionale</span>'
+             : '<span class="cf-no">no</span>';
+
+function disegnaTabella(){
+  const t = document.getElementById("tabella");
+  if (SCELTE.length < 2){ t.innerHTML = ""; return; }
+  const col = b => '<th scope="col"><a class="cf-nome" href="spiagge-' + esc(b.regione) +
+    '.html#' + encodeURIComponent(b.sid) + '">' + esc(b.n) + '</a>' +
+    '<div class="cf-dove">' + esc(b.com || "") +
+      (REGIONI[b.regione] ? " · " + esc(REGIONI[b.regione]) : "") + '</div></th>';
+
+  const riga = (et, f) => '<tr><th scope="row">' + et + '</th>' +
+    SCELTE.map(b => '<td>' + f(b) + '</td>').join("") + '</tr>';
+
+  const acc = b => { const a = ACCESSI[b.acc] || ACCESSI.nc;
+    return '<span class="cf-acc" style="background:' + a.col + '18;color:' + a.col + '">' + a.et + '</span>'; };
+
+  t.innerHTML = '<table class="cf-tabella"><thead><tr><th></th>' + SCELTE.map(col).join("") +
+    '</tr></thead><tbody>' +
+    riga("Voto", b => { const m = VADORECE.media(b.sid);
+      return m ? VADORECE.stelleFisse(m.media) + ' <b>' + String(m.media).replace(".",",") + '</b> ' +
+                 '<span class="voto-quanti">(' + m.quanti + ')</span>'
+               : '<span class="cf-nc">nessun parere</span>'; }) +
+    riga("Accesso",     acc) +
+    riga("Tratto a piedi", b => esc(b.camm || "n/c")) +
+    riga("Lunghezza",   b => esc(b.lung || "n/c")) +
+    riga("Fondo",       b => esc(b.fondo || "n/c")) +
+    riga("Affollamento",b => esc(LIV_FOLLA[b.folla-1] || "n/c")) +
+    /* due righe «Parcheggio» di fila — il testo libero e la spunta del
+       servizio — si leggono come un errore. Qui si dice che cosa distingue
+       l'una dall'altra. */
+    riga("Dove si parcheggia", b => esc(b.park || "n/c")) +
+    SERVIZI.map(([k, et]) => riga(et, b => servizio(b.sv ? b.sv[k] : null))).join("") +
+    riga("Etichette",   b => (b.id && b.id.length) ? esc(b.id.join(" · ")) : '<span class="cf-nc">—</span>') +
+    '</tbody></table>';
+}
+
+VADO.alCambio(() => avvia());
+</script>
+<script src="vado-conto.js?v=202609051645"></script>
+</body>
+</html>
