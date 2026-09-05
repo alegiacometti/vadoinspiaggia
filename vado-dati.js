@@ -43,10 +43,30 @@ const VADO = (() => {
     try { s ? localStorage.setItem(CASSETTO, JSON.stringify(s))
             : localStorage.removeItem(CASSETTO); } catch (_) {}
   };
-  const avvisa = () => ascoltatori.forEach(f => { try { f(sessione); } catch (e) { console.warn(e); } });
+  /* Gli ascoltatori vanno svegliati quando cambia CHI sta guardando: entrato,
+     uscito, un altro. NON quando si rinnova soltanto il gettone — quello
+     succede da se' ogni ora, e la pagina di una regione reagisce al cambio
+     ricaricandosi: una ricarica a tradimento mentre uno legge una scheda. */
+  let ultimoChi = null;
+  const avvisa = () => {
+    const ora = (sessione && sessione.utente && sessione.utente.id) || null;
+    if (ora === ultimoChi) return;
+    ultimoChi = ora;
+    ascoltatori.forEach(f => { try { f(sessione); } catch (e) { console.warn(e); } });
+  };
 
   sessione = leggiCassetto();
+  ultimoChi = (sessione && sessione.utente && sessione.utente.id) || null;
   const alCambio = f => { ascoltatori.push(f); f(sessione); };
+
+  /* Un altro pannello aperto sullo stesso sito puo' aver fatto accesso, o
+     essere uscito, o aver rinnovato il gettone. Il cassetto e' in comune:
+     lo si rilegge invece di restare con una sessione vecchia in mano. */
+  window.addEventListener("storage", e => {
+    if (e.key !== CASSETTO) return;
+    sessione = leggiCassetto();
+    avvisa();
+  });
   const chiSono  = () => sessione && sessione.utente || null;
 
   function apriSessione(d) {
@@ -58,7 +78,9 @@ const VADO = (() => {
          solo, un istante nel tempo no. Trenta secondi di margine perche' una
          richiesta partita un attimo prima della scadenza non arrivi scaduta. */
       scade:    Date.now() + ((d.expires_in || 3600) - 30) * 1000,
-      utente:   d.user ? { id: d.user.id, email: d.user.email } : (sessione && sessione.utente) || null
+      utente:   d.user ? { id: d.user.id, email: d.user.email } : (sessione && sessione.utente) || null,
+      /* il ruolo non cambia rinnovando il gettone: non lo si richiede da capo */
+      admin:    (sessione && sessione.admin != null) ? sessione.admin : null
     };
     scriviCassetto(sessione); avvisa(); return sessione;
   }
@@ -81,15 +103,50 @@ const VADO = (() => {
     return d;
   }
 
-  /* Rinnova il gettone se sta per scadere. Se il rinnovo fallisce la sessione
-     e' finita davvero — meglio accorgersene qui e chiedere di rientrare, che
-     lasciare la pagina a chiedere dati con un gettone morto. */
-  async function gettoneVivo() {
-    if (!sessione) return null;
-    if (Date.now() < sessione.scade) return sessione.gettone;
-    try { return apriSessione(await auth("token?grant_type=refresh_token",
-                                        { refresh_token: sessione.rinnovo })).gettone; }
-    catch (_) { apriSessione(null); return null; }
+  /* Rinnova il gettone quando e' scaduto.
+
+     Il gettone di rinnovo si CONSUMA: il servizio ne restituisce uno nuovo e
+     invalida quello appena speso. Quindi puo' essere speso una volta sola —
+     e una pagina non fa mai una richiesta alla volta. All'apertura di una
+     regione ne partono quattro insieme (zone, spiagge, e i due elenchi dei
+     preferiti): se il gettone e' scaduto, tutte e quattro si accorgono
+     insieme che va rinnovato, e tutte e quattro provano a spendere lo stesso
+     gettone. Una vince; le altre si sentono rispondere "gia' usato".
+
+     Era questo il guasto: chi perdeva la corsa buttava via la sessione — e la
+     buttava via per tutti, anche per l'amministratore, che si ritrovava
+     davanti al muro delle regioni bloccate pur essendo entrato.
+
+     Due cose lo tolgono di mezzo:
+       - il rinnovo e' UNO SOLO. Chi lo trova gia' in corso aspetta quello,
+         non ne apre un secondo;
+       - se fallisce, prima di dichiarare morta la sessione si rilegge il
+         cassetto: un altro pannello puo' averla rinnovata un istante prima,
+         e allora la sessione e' viva e la nostra copia era solo vecchia. */
+  let rinnovoInCorso = null;
+
+  async function rinnovaGettone() {
+    const speso = sessione && sessione.rinnovo;
+    try {
+      const s = apriSessione(await auth("token?grant_type=refresh_token",
+                                       { refresh_token: speso }));
+      return s && s.gettone;
+    } catch (_) {
+      const c = leggiCassetto();
+      if (c && c.gettone && c.rinnovo !== speso && Date.now() < c.scade) {
+        sessione = c; avvisa(); return c.gettone;   /* l'ha rinnovata un altro */
+      }
+      apriSessione(null); return null;              /* finita per davvero */
+    }
+  }
+
+  function gettoneVivo() {
+    if (!sessione) return Promise.resolve(null);
+    if (Date.now() < sessione.scade) return Promise.resolve(sessione.gettone);
+    if (!rinnovoInCorso) {
+      rinnovoInCorso = rinnovaGettone().finally(() => { rinnovoInCorso = null; });
+    }
+    return rinnovoInCorso;
   }
 
   /* Dove si atterra dopo aver confermato l'indirizzo o chiesto una nuova
@@ -192,9 +249,8 @@ const VADO = (() => {
 
   /* --------------------------------------------------------------- richieste */
   async function chiedi(percorso, opzioni) {
-    const g = await gettoneVivo();
     const o = opzioni || {};
-    const r = await fetch(BASE + "/rest/v1/" + percorso, {
+    const manda = g => fetch(BASE + "/rest/v1/" + percorso, {
       method: o.metodo || "GET",
       headers: Object.assign({
         "apikey": CHIAVE,
@@ -204,6 +260,19 @@ const VADO = (() => {
          o.intestazioni || {}),
       body: o.corpo ? JSON.stringify(o.corpo) : undefined
     });
+
+    let g = await gettoneVivo();
+    let r = await manda(g);
+    /* 401 con un gettone in mano vuol dire che quel gettone non vale piu':
+       l'orologio di qui e quello del servizio possono non essere d'accordo,
+       e allora "scade" ci ha detto di si' un momento di troppo. Si rinnova e
+       si riprova UNA volta — non di piu', o un gettone morto diventa un giro
+       infinito di richieste. */
+    if (r.status === 401 && g) {
+      if (sessione) sessione.scade = 0;
+      const g2 = await gettoneVivo();
+      if (g2 && g2 !== g) r = await manda(g2);
+    }
     if (!r.ok) throw new Error("HTTP " + r.status + " " + (await r.text()).slice(0, 200));
     if (r.status === 204) return null;
     const t = await r.text();
