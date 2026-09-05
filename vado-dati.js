@@ -153,6 +153,37 @@ const VADO = (() => {
   })();
   const daPosta = () => arrivo;
 
+  /* Tornando dal collegamento della posta i gettoni arrivano nudi: dentro non
+     c'e' chi sei. Senza questo, dopo aver confermato l'indirizzo la sessione
+     e' aperta ma senza nome — il sito sa che sei entrato e non sa chi sei. */
+  async function completaUtente(){
+    if (!sessione || (sessione.utente && sessione.utente.id)) return;
+    try{
+      const r = await fetch(BASE + "/auth/v1/user",
+        { headers: { "apikey": CHIAVE, "Authorization": "Bearer " + sessione.gettone } });
+      if (!r.ok) return;
+      const u = await r.json();
+      sessione.utente = { id: u.id, email: u.email };
+      scriviCassetto(sessione); avvisa();
+    }catch(_){}
+  }
+  if (arrivo) completaUtente();
+
+  /* Sei un amministratore? Serve solo a decidere se mostrare il collegamento
+     alla gestione: a decidere davvero e' il database, che a chi non lo e'
+     risponde vuoto qualunque cosa mostri questa pagina. Si chiede una volta
+     per sessione e si tiene da parte — non a ogni pagina aperta. */
+  async function sonoAdmin(){
+    if (!sessione || !sessione.utente) return false;
+    if (sessione.admin != null) return sessione.admin;
+    try{
+      const r = await chiedi("profili?select=ruolo&utente=eq." + sessione.utente.id);
+      sessione.admin = !!(r[0] && r[0].ruolo === "admin");
+    }catch(_){ sessione.admin = false; }
+    scriviCassetto(sessione);
+    return sessione.admin;
+  }
+
   async function esci() {
     const g = sessione && sessione.gettone;
     apriSessione(null);
@@ -237,7 +268,7 @@ const VADO = (() => {
 
   return { regione, catalogo, dettaglioRegione, chiedi, BASE,
            iscriviti, accedi, esci, scordata, alCambio, chiSono,
-           nuovaPassword, daPosta,
+           nuovaPassword, daPosta, sonoAdmin,
            preferitiSpiagge, preferitiZone, salvaSpiaggia, togliSpiaggia,
            salvaZona, togliZona, mieiAccessi };
 })();

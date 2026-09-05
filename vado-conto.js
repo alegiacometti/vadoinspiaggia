@@ -157,6 +157,17 @@
     b.type = "button"; b.className = "conto-esci"; b.textContent = "Esci";
     b.addEventListener("click", () => VADO.esci());
     dove.append(chi, b);
+
+    /* Il collegamento alla gestione compare solo a chi amministra — e solo
+       quando non ci si e' gia' dentro. Non e' una protezione: la pagina resta
+       aperta a chiunque e sono le regole del database a non dargli niente.
+       Serve a non dover ricordare a memoria un indirizzo. */
+    if (!/gestione\.html$/.test(location.pathname)) VADO.sonoAdmin().then(si => {
+      if (!si || !dove.contains(b)) return;
+      const g = document.createElement("a");
+      g.className = "conto-gest"; g.href = "gestione.html"; g.textContent = "Gestione";
+      dove.insertBefore(g, b);
+    });
   });
 
   /* ---------------------------------------------- si torna dalla posta

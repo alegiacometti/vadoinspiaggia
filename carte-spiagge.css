@@ -501,6 +501,10 @@ button.f[data-s="bb"][aria-pressed="true"]{background:var(--azzurro);border-colo
 .conto-entra:hover{background:var(--azzurro);border-color:var(--azzurro)}
 .conto-esci{background:var(--carta);color:var(--grigio);border:1px solid var(--tratto)}
 .conto-esci:hover{color:var(--azzurro);border-color:var(--basso)}
+.conto-gest{font-family:var(--dati);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  text-decoration:none;border-radius:999px;padding:6px 13px;transition:.16s;
+  background:var(--carta);color:var(--azzurro);border:1px solid var(--basso)}
+.conto-gest:hover{background:var(--nebbia);border-color:var(--azzurro)}
 
 .velo-conto{border:0;padding:0;background:transparent;max-width:100%}
 .velo-conto::backdrop{background:rgba(8,60,92,.5);backdrop-filter:blur(4px)}
