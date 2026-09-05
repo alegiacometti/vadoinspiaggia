@@ -54,6 +54,14 @@ h1 em{font-style:normal;font-variation-settings:inherit;color:inherit}
   padding:4px 13px 4px 10px;font-family:var(--dati);font-size:10px;letter-spacing:.12em;
   text-transform:uppercase;transition:.16s}
 .ritorno:hover,.ritorno:focus-visible{color:var(--azzurro);border-color:var(--basso);box-shadow:var(--ombra)}
+/* Home page: lo stesso pulsante, con dentro il segno del sito. Il bordo
+   sinistro si stringe perche' il quadratino porta gia' il suo margine. */
+.ritorno.casa{padding:3px 14px 3px 4px;color:var(--profondo)}
+.ritorno.casa .marchio{width:21px;height:21px;border-radius:6px;display:block;flex:none}
+/* Sulle pagine regionali i ritorni sono due — al sito e al paese — e stanno
+   sulla stessa riga, nell'ordine in cui si e' arrivati fin qui. */
+.briciole{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 10px}
+.briciole .ritorno{margin:0}
 
 .strumenti{display:flex;flex-wrap:wrap;gap:16px 26px;align-items:flex-start;margin-bottom:18px}
 .gruppo{display:flex;flex-direction:column;gap:8px}
