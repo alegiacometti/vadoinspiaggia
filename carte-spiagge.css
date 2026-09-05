@@ -501,6 +501,36 @@ button.f[data-s="bb"][aria-pressed="true"]{background:var(--azzurro);border-colo
 .conto-entra:hover{background:var(--azzurro);border-color:var(--azzurro)}
 .conto-esci{background:var(--carta);color:var(--grigio);border:1px solid var(--tratto)}
 .conto-esci:hover{color:var(--azzurro);border-color:var(--basso)}
+/* ---------- preferiti ----------
+   La stellina e' un pulsante, non un'icona: ha un'etichetta per chi non vede lo
+   schermo, e cambia stato senza ricaricare niente. Chi non e' entrato la vede
+   lo stesso — cliccandola si apre l'accesso — perche' nascondere la stellina a
+   chi non ha un account e' il modo migliore per non fargli mai venire voglia
+   di farsene uno. */
+.stella{background:none;border:0;cursor:pointer;padding:2px 4px;line-height:1;
+  font-size:19px;color:var(--secca);transition:.15s;border-radius:6px}
+.stella:hover{color:var(--ambra);background:var(--nebbia)}
+.stella.on{color:var(--ambra)}
+.stella:focus-visible{outline:2px solid var(--ambra);outline-offset:1px}
+.riga-titolo .stella{font-size:22px;margin-left:2px}
+.elenco h4 .stella{font-size:14px;float:right;margin:-3px -4px 0 0;color:var(--basso)}
+.elenco h4 .stella.on{color:var(--ambra)}
+
+.pref-vuoto{background:var(--carta);border:1px solid var(--tratto);border-radius:10px;
+  padding:26px 22px;text-align:center;color:var(--grigio);font-size:13.5px;line-height:1.6;
+  box-shadow:var(--ombra)}
+.pref-griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.pref-carta{background:var(--carta);border:1px solid var(--tratto);border-left:3px solid var(--basso);
+  border-radius:10px;padding:13px 15px;box-shadow:var(--ombra);display:flex;flex-direction:column;gap:5px}
+.pref-carta.persa{border-left-color:var(--secca);background:var(--nebbia)}
+.pref-alto{display:flex;align-items:baseline;gap:9px}
+.pref-nome{font-family:var(--display);font-variation-settings:"SOFT" 30,"WONK" 1,"opsz" 100;
+  font-weight:400;font-size:21px;line-height:1.1;color:var(--profondo);text-decoration:none}
+.pref-nome:hover{color:var(--azzurro)}
+.pref-alto .stella{margin-left:auto}
+.pref-dove{font-family:var(--dati);font-size:10px;letter-spacing:.05em;color:var(--grigio)}
+.pref-persa{font-size:12.5px;line-height:1.5;color:var(--grigio)}
+.pref-persa a{color:var(--azzurro)}
 .conto-gest{font-family:var(--dati);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
   text-decoration:none;border-radius:999px;padding:6px 13px;transition:.16s;
   background:var(--carta);color:var(--azzurro);border:1px solid var(--basso)}

@@ -246,8 +246,31 @@ const VADO = (() => {
      Due elenchi separati, spiagge e zone, come sono separati nel database:
      una zona salvata e' un tratto di costa intero, non la somma delle sue
      spiagge. */
-  const preferitiSpiagge = () => chiedi("preferiti_spiagge?select=sid,aggiunto,nota&order=aggiunto.desc");
-  const preferitiZone    = () => chiedi("preferiti_zone?select=regione,zona,aggiunto,nota&order=aggiunto.desc");
+  /* Le spiagge salvate arrivano con dentro la loro scheda, chiesta in una volta
+     sola invece che una per una. Attenzione a un caso che sembra un errore e non
+     lo e': se la regione non e' piu' tua, la scheda torna VUOTA mentre il
+     preferito resta. E' giusto — il ricordo e' tuo, il contenuto no — e la
+     pagina lo dice invece di far sparire la riga senza spiegazioni. */
+  const preferitiSpiagge = () => chiedi(
+    "preferiti_spiagge?select=sid,aggiunto,nota,spiagge(n,com,regione,zona,lat,lon,acc,lung,fondo)" +
+    "&order=aggiunto.desc");
+  const preferitiZone = () => chiedi(
+    "preferiti_zone?select=regione,zona,aggiunto,nota,zone(etichetta),regioni(nome,paese)" +
+    "&order=aggiunto.desc");
+
+  /* Solo gli identificativi: serve ad accendere le stelline sulla pagina di una
+     regione senza scaricare tutte le schede salvate. */
+  const stelleAccese = async () => {
+    if (!chiSono()) return { spiagge: new Set(), zone: new Set() };
+    try {
+      const [sp, zo] = await Promise.all([
+        chiedi("preferiti_spiagge?select=sid"),
+        chiedi("preferiti_zone?select=regione,zona")
+      ]);
+      return { spiagge: new Set(sp.map(x => x.sid)),
+               zone: new Set(zo.map(x => x.regione + "/" + x.zona)) };
+    } catch (_) { return { spiagge: new Set(), zone: new Set() }; }
+  };
 
   const salvaSpiaggia = sid => chiedi("preferiti_spiagge", {
     metodo: "POST", corpo: { utente: chiSono().id, sid },
@@ -269,6 +292,6 @@ const VADO = (() => {
   return { regione, catalogo, dettaglioRegione, chiedi, BASE,
            iscriviti, accedi, esci, scordata, alCambio, chiSono,
            nuovaPassword, daPosta, sonoAdmin,
-           preferitiSpiagge, preferitiZone, salvaSpiaggia, togliSpiaggia,
+           preferitiSpiagge, preferitiZone, stelleAccese, salvaSpiaggia, togliSpiaggia,
            salvaZona, togliZona, mieiAccessi };
 })();

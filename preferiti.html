@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#083c5c">
+<title>Le mie spiagge · Vado in spiaggia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="carte-spiagge.css">
+<script src="vado-dati.js"></script>
+<style>
+.mie-sez{margin:26px 0 12px;font-family:var(--dati);font-size:10px;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--azzurro)}
+.mie-sez:first-of-type{margin-top:0}
+</style>
+</head>
+<body>
+<div class="guscio">
+
+  <header class="testata">
+    <div>
+      <a class="ritorno" href="index.html">← Il sito</a>
+      <h1>Le mie <em>spiagge</em></h1>
+    </div>
+    <div class="conto" id="conto"></div>
+  </header>
+
+  <div id="corpo"></div>
+
+  <p class="piede">Dati: EEA · geoBoundaries · ISTAT · GSHHG · Natural Earth · Open-Meteo — immagini: Esri World Imagery, Google Maps. <a href="crediti.html">Crediti e licenze</a></p>
+
+</div>
+
+<script>
+/* =========================================================================
+   Quel che una persona ha salvato. Le righe arrivano gia' con la scheda
+   dentro, in una richiesta sola.
+
+   Il caso che vale la pena curare: una spiaggia salvata quando la regione era
+   sbloccata, e la regione poi non lo e' piu'. Il preferito RESTA — il ricordo
+   e' tuo, il contenuto no — ma la scheda torna vuota. Farla sparire sarebbe la
+   scelta peggiore: uno cercherebbe una spiaggia che aveva salvato e non la
+   troverebbe piu', senza sapere perche'.
+   ========================================================================= */
+const corpo = document.getElementById("corpo");
+const esc = t => String(t == null ? "" : t)
+  .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
+let REGIONI = {};
+
+async function carica(){
+  if (!VADO.chiSono()){
+    corpo.innerHTML =
+      '<div class="pref-vuoto"><p style="margin:0 0 16px">Le spiagge che salvi restano legate al tuo ' +
+      'account: le ritrovi su qualunque computer, e non si perdono cambiando telefono.</p>' +
+      '<button type="button" class="conto-vai" id="pEntra">Accedi / Registrati</button></div>';
+    document.getElementById("pEntra").onclick = () => window.apriConto && window.apriConto("accedi");
+    return;
+  }
+  corpo.innerHTML = '<div class="pref-vuoto">Un momento…</div>';
+  let spiagge, zone, reg;
+  try{
+    [spiagge, zone, reg] = await Promise.all([
+      VADO.preferitiSpiagge(), VADO.preferitiZone(),
+      VADO.chiedi("regioni?select=chiave,nome&order=ordine")
+    ]);
+  }catch(e){
+    corpo.innerHTML = '<div class="pref-vuoto">Non riesco a leggere i preferiti: ' + esc(e.message) + '</div>';
+    return;
+  }
+  reg.forEach(r => REGIONI[r.chiave] = r.nome);
+
+  if (!spiagge.length && !zone.length){
+    corpo.innerHTML =
+      '<div class="pref-vuoto">Non hai ancora salvato niente.<br>' +
+      'Sulla scheda di una spiaggia, e accanto al nome di una zona nell’elenco, ' +
+      'c’è una stellina: premila e la ritrovi qui.</div>';
+    return;
+  }
+
+  corpo.innerHTML =
+    (zone.length ? '<p class="mie-sez">Tratti di costa · ' + zone.length + '</p>' +
+      '<div class="pref-griglia">' + zone.map(cartaZona).join("") + '</div>' : "") +
+    (spiagge.length ? '<p class="mie-sez">Spiagge · ' + spiagge.length + '</p>' +
+      '<div class="pref-griglia">' + spiagge.map(cartaSpiaggia).join("") + '</div>' : "");
+
+  corpo.querySelectorAll("[data-togli-s]").forEach(b => b.onclick = async () => {
+    b.disabled = true; await VADO.togliSpiaggia(b.dataset.togliS); carica(); });
+  corpo.querySelectorAll("[data-togli-z]").forEach(b => b.onclick = async () => {
+    b.disabled = true; const [r,z] = b.dataset.togliZ.split("/");
+    await VADO.togliZona(r, z); carica(); });
+}
+
+function cartaZona(p){
+  const nomeReg = (p.regioni && p.regioni.nome) || REGIONI[p.regione] || p.regione;
+  const eti = (p.zone && p.zone.etichetta) || p.zona;
+  return '<div class="pref-carta"><div class="pref-alto">' +
+    '<a class="pref-nome" href="spiagge-' + esc(p.regione) + '.html">' + esc(eti) + '</a>' +
+    '<button type="button" class="stella on" data-togli-z="' + esc(p.regione + "/" + p.zona) +
+      '" aria-label="Togli dai preferiti" title="Togli dai preferiti">★</button></div>' +
+    '<div class="pref-dove">' + esc(nomeReg) + '</div></div>';
+}
+
+function cartaSpiaggia(p){
+  const b = p.spiagge;
+  if (!b) return '<div class="pref-carta persa"><div class="pref-alto">' +
+    '<span class="pref-nome" style="color:var(--grigio)">Spiaggia non visibile</span>' +
+    '<button type="button" class="stella on" data-togli-s="' + esc(p.sid) +
+      '" aria-label="Togli dai preferiti">★</button></div>' +
+    '<p class="pref-persa">L’avevi salvata quando la sua regione era sbloccata. ' +
+    'Il preferito resta: torna a vedersi appena la regione è di nuovo tua.</p></div>';
+  return '<div class="pref-carta"><div class="pref-alto">' +
+    '<a class="pref-nome" href="spiagge-' + esc(b.regione) + '.html#' + esc(p.sid) + '">' +
+      esc(b.n) + '</a>' +
+    '<button type="button" class="stella on" data-togli-s="' + esc(p.sid) +
+      '" aria-label="Togli dai preferiti" title="Togli dai preferiti">★</button></div>' +
+    '<div class="pref-dove">' + esc(b.com || "") +
+      (REGIONI[b.regione] ? ' · ' + esc(REGIONI[b.regione]) : "") + '</div>' +
+    (b.fondo || b.lung ? '<div class="pref-dove">' +
+      esc([b.fondo, b.lung].filter(Boolean).join(" · ")) + '</div>' : "") +
+    '</div>';
+}
+
+VADO.alCambio(() => carica());
+</script>
+<script src="vado-conto.js"></script>
+</body>
+</html>

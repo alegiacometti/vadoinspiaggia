@@ -162,11 +162,19 @@
        quando non ci si e' gia' dentro. Non e' una protezione: la pagina resta
        aperta a chiunque e sono le regole del database a non dargli niente.
        Serve a non dover ricordare a memoria un indirizzo. */
-    if (!/gestione\.html$/.test(location.pathname)) VADO.sonoAdmin().then(si => {
-      if (!si || !dove.contains(b)) return;
-      const g = document.createElement("a");
-      g.className = "conto-gest"; g.href = "gestione.html"; g.textContent = "Gestione";
-      dove.insertBefore(g, b);
+    const qui = p => new RegExp(p + "$").test(location.pathname);
+    const collega = (dove2, href, testo) => {
+      const a = document.createElement("a");
+      a.className = "conto-gest"; a.href = href; a.textContent = testo;
+      dove2.insertBefore(a, b);
+    };
+    /* «Le mie spiagge» a chiunque sia entrato; «Gestione» solo a chi amministra.
+       Nessuno dei due e' una protezione: la pagina resta aperta a tutti e sono
+       le regole del database a non dare niente a chi non deve. Servono a non
+       far ricordare a memoria un indirizzo. */
+    if (!qui("preferiti\\.html")) collega(dove, "preferiti.html", "Le mie spiagge");
+    if (!qui("gestione\\.html")) VADO.sonoAdmin().then(si => {
+      if (si && dove.contains(b)) collega(dove, "gestione.html", "Gestione");
     });
   });
 

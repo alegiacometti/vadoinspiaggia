@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="description" content="Da dove vengono i dati, le carte e le immagini di Vado in spiaggia, e con quali licenze">
+<meta name="theme-color" content="#083c5c">
+<title>Crediti e licenze · Vado in spiaggia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="carte-spiagge.css">
+<style>
+.cr{max-width:760px}
+.cr h2{font-family:var(--display);font-variation-settings:"SOFT" 30,"WONK" 1,"opsz" 100;
+  font-weight:400;font-size:25px;line-height:1.15;color:var(--profondo);
+  margin:34px 0 4px;letter-spacing:-.012em}
+.cr h2:first-of-type{margin-top:0}
+.cr .sotto{font-family:var(--dati);font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--azzurro);margin:0 0 14px}
+.cr p{font-size:14px;line-height:1.65;color:#20536e;margin:0 0 12px}
+.cr a{color:var(--azzurro)}
+.cr dl{margin:0 0 14px;background:var(--carta);border:1px solid var(--tratto);
+  border-radius:10px;box-shadow:var(--ombra);overflow:hidden}
+.cr dl>div{display:grid;grid-template-columns:minmax(150px,26%) 1fr;gap:0;
+  border-bottom:1px solid var(--tratto)}
+.cr dl>div:last-child{border-bottom:0}
+.cr dt{padding:12px 14px;background:var(--nebbia);font-weight:500;color:var(--profondo);
+  font-size:13.5px;border-right:1px solid var(--tratto)}
+.cr dd{margin:0;padding:12px 14px;font-size:13.5px;line-height:1.6;color:#20536e}
+.cr dd .lic{display:block;margin-top:5px;font-family:var(--dati);font-size:10px;
+  letter-spacing:.05em;color:var(--grigio)}
+@media (max-width:620px){ .cr dl>div{grid-template-columns:1fr}
+  .cr dt{border-right:0;border-bottom:1px solid var(--tratto)} }
+</style>
+</head>
+<body>
+<div class="guscio">
+
+  <header class="testata">
+    <div>
+      <a class="ritorno" href="index.html">← Il sito</a>
+      <h1>Crediti <em>e licenze</em></h1>
+    </div>
+    <div class="conto" id="conto"></div>
+  </header>
+
+  <div class="cr">
+
+    <p>Questo sito non ha rilevato niente sul posto: mette insieme dati pubblici,
+    carte pubbliche e servizi altrui, e li disegna. Qui c'è da dove viene ogni
+    cosa, e con quale licenza — perché quasi tutte quelle licenze permettono il
+    riuso <em>a condizione</em> che si dica da chi viene.</p>
+
+    <h2>Dove sono le spiagge</h2>
+    <p class="sotto">posizioni, nomi, qualità dell'acqua</p>
+    <dl>
+      <div><dt>Agenzia europea dell'ambiente (EEA)</dt>
+        <dd>Il censimento delle acque di balneazione: coordinate, nome ufficiale e
+          classificazione della qualità dell'acqua di fine stagione. È la fonte
+          principale per Italia, Francia, Spagna, Portogallo, Slovenia, Croazia,
+          Malta, Albania e Grecia.
+          <a href="https://www.eea.europa.eu/themes/water/europes-seas-and-coasts/assessments/state-of-bathing-water" target="_blank" rel="noopener">eea.europa.eu</a>
+          <span class="lic">Riuso consentito con indicazione della fonte (EEA data policy)</span></dd></div>
+      <div><dt>IZOR — Institut za oceanografiju i ribarstvo</dt>
+        <dd>Le schede-profilo delle spiagge croate: fondo, servizi, accesso,
+          larghezza, Bandiere Blu.
+          <a href="https://vrtlac.izor.hr" target="_blank" rel="noopener">vrtlac.izor.hr</a></dd></div>
+      <div><dt>Morsko dobro · Istituto di sanità pubblica</dt>
+        <dd>L'atlante dei bagni montenegrini e il monitoraggio settimanale della
+          qualità dell'acqua, per il Montenegro, che non è nel censimento europeo.
+          <a href="https://www.morskodobro.me" target="_blank" rel="noopener">morskodobro.me</a></dd></div>
+      <div><dt>Agencija za vodno područje Jadranskog mora</dt>
+        <dd>Il monitoraggio delle acque di balneazione per la costa bosniaca.
+          <a href="https://avpjm.jadran.ba" target="_blank" rel="noopener">avpjm.jadran.ba</a></dd></div>
+      <div><dt>Gazetteer geografici pubblici</dt>
+        <dd>GeoNames, Wikipedia, Mapcarta e atlanti di spiagge, incrociati su due o
+          tre fonti, dove il monitoraggio europeo non arriva — Montenegro, parte
+          di Malta e dell'Albania. Ogni scheda dichiara la propria fonte, e porta
+          l'etichetta «fuori dal monitoraggio UE».</dd></div>
+      <div><dt>FEE — Foundation for Environmental Education</dt>
+        <dd>L'elenco delle Bandiere Blu.
+          <a href="https://www.blueflag.global" target="_blank" rel="noopener">blueflag.global</a></dd></div>
+    </dl>
+
+    <h2>Come sono disegnate le carte</h2>
+    <p class="sotto">contorni, coste, confini</p>
+    <dl>
+      <div><dt>geoBoundaries</dt>
+        <dd>I contorni di regioni, province e comuni di tutti i paesi del sito.
+          <a href="https://www.geoboundaries.org" target="_blank" rel="noopener">geoboundaries.org</a>
+          <span class="lic">CC BY 4.0</span></dd></div>
+      <div><dt>ISTAT · openpolis</dt>
+        <dd>I limiti amministrativi italiani, per i confini fra regioni.
+          <a href="https://www.istat.it/it/archivio/222527" target="_blank" rel="noopener">istat.it</a></dd></div>
+      <div><dt>GSHHG</dt>
+        <dd>La linea di costa di tutto il mondo, alla risoluzione piena, da cui
+          vengono coste, isole e isolotti. Di Paul Wessel e Walter H. F. Smith.
+          <a href="https://www.soest.hawaii.edu/pwessel/gshhg/" target="_blank" rel="noopener">soest.hawaii.edu</a>
+          <span class="lic">LGPL</span></dd></div>
+      <div><dt>Natural Earth</dt>
+        <dd>I contorni dei paesi che fanno da sfondo alla carta d'insieme.
+          <a href="https://www.naturalearthdata.com" target="_blank" rel="noopener">naturalearthdata.com</a>
+          <span class="lic">Dominio pubblico</span></dd></div>
+    </dl>
+
+    <h2>Meteo e stato del mare</h2>
+    <dl>
+      <div><dt>Open-Meteo</dt>
+        <dd>Previsioni di cielo, temperatura, vento, onda e temperatura del mare,
+          dal modello <b>ICON-EU</b> del servizio meteorologico tedesco (DWD),
+          maglia di 7 km. Un modello solo per tutti i paesi, così due spiagge di
+          due stati diversi restano confrontabili.
+          <a href="https://open-meteo.com" target="_blank" rel="noopener">open-meteo.com</a>
+          <span class="lic">CC BY 4.0</span></dd></div>
+      <div><dt>Scala Douglas</dt>
+        <dd>Lo stato del mare è espresso nei dieci gradi della scala Douglas, la
+          stessa dei bollettini nautici.</dd></div>
+    </dl>
+
+    <h2>Immagini e collegamenti</h2>
+    <dl>
+      <div><dt>Esri World Imagery</dt>
+        <dd>La vista aerea in apertura di ogni scheda, centrata sulle coordinate
+          della spiaggia. Immagini di Maxar ed Earthstar Geographics.
+          <a href="https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9" target="_blank" rel="noopener">arcgis.com</a></dd></div>
+      <div><dt>Google Maps</dt>
+        <dd>Foto, recensioni, indicazioni stradali, mappa satellitare e Street View.
+          Le foto non sono scaricabili senza una chiave a pagamento: i pulsanti
+          aprono la scheda del luogo su Google.</dd></div>
+      <div><dt>Wikimedia Commons</dt>
+        <dd>Le bandiere dei paesi.
+          <a href="https://commons.wikimedia.org" target="_blank" rel="noopener">commons.wikimedia.org</a></dd></div>
+      <div><dt>Webcam</dt>
+        <dd>Compaiono soltanto dove ne esiste una puntata su quella spiaggia o
+          sulla sua baia, e restano dei rispettivi gestori.</dd></div>
+    </dl>
+
+    <h2>Caratteri</h2>
+    <dl>
+      <div><dt>Fraunces · Archivo · IBM Plex Mono</dt>
+        <dd>Distribuiti da Google Fonts.
+          <span class="lic">SIL Open Font License 1.1</span></dd></div>
+    </dl>
+
+    <h2>Tre cose che si leggono facilmente male</h2>
+    <p><b>Le linee azzurre al largo non sono isobate.</b> Sono linee equidistanti
+    dalla costa, calcolate a scopo grafico: non indicano la profondità e non vanno
+    usate per navigare.</p>
+    <p><b>L'onda è quella del largo.</b> Le previsioni vengono da un modello, non
+    da boe: sotto costa, e soprattutto nelle baie chiuse, l'onda reale può essere
+    molto più bassa di quella indicata.</p>
+    <p><b>Servizi, parcheggi e «cani ammessi» cambiano ogni stagione.</b> Dipendono
+    da concessioni e ordinanze comunali: dove non risulta un divieto o un permesso
+    esplicito, la voce è segnata come parziale — cioè da verificare sul posto.</p>
+
+    <p class="avvertenza" style="margin-top:24px"><b>Avvertenza</b>
+      Le informazioni riportate provengono da fonti pubbliche e da modelli
+      previsionali, sono fornite a puro titolo indicativo e possono essere
+      incomplete, imprecise o non aggiornate. Non si assume alcuna responsabilità
+      per errori, omissioni o per le decisioni prese sulla base di questi dati.
+      Il mare è un ambiente potenzialmente pericoloso: verifica sempre le
+      condizioni sul posto, rispetta le bandiere e le indicazioni dei bagnini e
+      valuta con prudenza le spiagge non sorvegliate e gli accessi fuori strada.
+    </p>
+
+  </div>
+</div>
+<script src="vado-dati.js"></script>
+<script src="vado-conto.js"></script>
+</body>
+</html>

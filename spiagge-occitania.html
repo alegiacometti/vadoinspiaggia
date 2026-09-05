@@ -78,20 +78,11 @@
         Non si assume alcuna responsabilità per errori, omissioni o per le decisioni prese sulla base di questi dati.
         Il mare è un ambiente potenzialmente pericoloso: verifica sempre le condizioni sul posto, rispetta le bandiere e le
         indicazioni dei bagnini e valuta con prudenza le spiagge non sorvegliate e gli accessi fuori strada.
+      
+        L’onda indicata è prevista al largo da un modello, non misurata da una boa: sotto costa, e soprattutto nelle baie chiuse, l’onda reale può essere molto più bassa.
+        Le linee azzurre al largo sono equidistanti dalla costa, a scopo grafico: non sono isobate, non indicano la profondità e non vanno usate per navigare.
       </p>
-      <p class="piede">
-        Meteo, vento e onda da <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0), aggiornati al momento dell'apertura della scheda.
-        Sono previsioni da modello, non misure di boa: sotto costa, e soprattutto nelle baie chiuse, l'onda reale può essere molto più bassa di quella indicata.
-L'immagine di apertura è la vista aerea reale del punto (Esri World Imagery — Maxar, Earthstar Geographics), centrata sulle coordinate della spiaggia.
-        Foto, recensioni, mappa e Street View arrivano da Google Maps: le foto non sono scaricabili senza una chiave API a pagamento, quindi i pulsanti aprono direttamente la scheda del luogo,
-        mentre mappa satellitare e Street View sono incorporati nella “scheda completa”.
-        La webcam appare soltanto quando ne esiste una puntata su quella spiaggia o sulla sua baia. Servizi e parcheggi da fonti pubbliche recenti: cambiano ogni stagione.
-        Contorno della regione e confini con Spagna, Andorra e le altre regioni francesi da dati IGN (limiti amministrativi) e Natural Earth; batimetriche calcolate come linee equidistanti dalla costa.
-        Le regioni confinanti sono sfumate per distinguere la costa vera dal confine di terra, disegnato tratteggiato.
-        Le linee azzurre al largo sono equidistanti dalla costa, a scopo grafico: non sono isobate e non indicano la profondità.
-        La voce “cani ammessi” dipende da ordinanze comunali che cambiano ogni stagione: dove non risulta un divieto o un permesso
-        esplicito è segnata come parziale, cioè da verificare sul posto.
-      </p>
+      <p class="piede">Dati: EEA · geoBoundaries · ISTAT · GSHHG · Natural Earth · Open-Meteo — immagini: Esri World Imagery, Google Maps. <a href="crediti.html">Crediti e licenze</a></p>
     </div>
   </div>
 </div>
@@ -1073,7 +1064,7 @@ function corpo(b){
       st=(v==null)?'<span class="st">n/c</span>':((v>0&&v<1)?'<span class="st">stag.</span>':"");
     return '<span class="sv '+cls+'"><svg viewBox="0 0 20 20">'+ICONE[k]+'</svg><span class="lab">'+et+'</span>'+st+'</span>';}).join("");
   return '<div class="corpo">'+
-   '<div class="riga-titolo"><div><h2>'+b.n+'</h2>'+
+   '<div class="riga-titolo"><div><h2>'+b.n+'</h2>'+stellaHtml(STELLE.spiagge.has(b.sid), "spiaggia", b.sid, "Salva fra i preferiti")+
      '<div class="sotto">'+b.com+' · '+gradi(b.lat,b.lat<0?"S":"N")+' '+gradi(b.lon,b.lon<0?"W":"E")+'</div></div>'+
      '<div class="zona">'+ZONE[b.z]+'</div></div>'+
    /* se lì sotto ce n'è più d'una, conviene dirlo: altrimenti sembra che il
@@ -1215,6 +1206,55 @@ MARKER.forEach(m=>{
 });
 }
 
+
+/* ------------------------- preferiti -------------------------
+   STELLE tiene quel che questa persona ha gia' salvato: si chiede una volta
+   sola all'apertura, non una per spiaggia. Le stelline si disegnano comunque,
+   anche da slegati: chi non ha un account, premendola, si trova davanti
+   l'accesso — ed e' esattamente il momento in cui gli e' venuta voglia. */
+let STELLE = { spiagge: new Set(), zone: new Set() };
+
+function stellaHtml(acceso, tipo, chiave, etichetta){
+  return '<button type="button" class="stella' + (acceso ? ' on' : '') + '"' +
+         ' data-stella="' + tipo + '" data-chiave="' + chiave + '"' +
+         ' aria-pressed="' + (acceso ? 'true' : 'false') +
+         '" title="' + (acceso ? 'Togli dai preferiti' : etichetta) +
+         '" aria-label="' + (acceso ? 'Togli dai preferiti' : etichetta) + '">' +
+         (acceso ? '\u2605' : '\u2606') + '</button>';
+}
+
+async function premiStella(b){
+  if (!VADO.chiSono()){ if (window.apriConto) window.apriConto("accedi"); return; }
+  const tipo = b.dataset.stella, chiave = b.dataset.chiave;
+  const acceso = b.classList.contains("on");
+  b.disabled = true;
+  try{
+    if (tipo === "spiaggia"){
+      if (acceso){ await VADO.togliSpiaggia(chiave); STELLE.spiagge.delete(chiave); }
+      else       { await VADO.salvaSpiaggia(chiave); STELLE.spiagge.add(chiave); }
+    } else {
+      const z = chiave.split("/")[1];
+      if (acceso){ await VADO.togliZona(REGIONE, z); STELLE.zone.delete(chiave); }
+      else       { await VADO.salvaZona(REGIONE, z); STELLE.zone.add(chiave); }
+    }
+    /* si aggiornano TUTTE le stelline con quella chiave, non solo quella
+       premuta: la stessa spiaggia puo' essere sullo schermo due volte */
+    document.querySelectorAll('[data-stella="'+tipo+'"][data-chiave="'+chiave+'"]').forEach(x=>{
+      x.classList.toggle("on", !acceso);
+      x.textContent = acceso ? '\u2606' : '\u2605';
+      x.setAttribute("aria-pressed", acceso ? "false" : "true");
+      const t = acceso ? (tipo === "spiaggia" ? "Salva fra i preferiti" : "Salva questo tratto di costa")
+                       : "Togli dai preferiti";
+      x.title = t; x.setAttribute("aria-label", t);
+    });
+  }catch(e){ console.warn("preferito non salvato:", e); }
+  b.disabled = false;
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-stella]");
+  if (b){ e.preventDefault(); premiStella(b); }
+});
+
 /* ======================= ELENCO E FILTRI ======================= */
 let fAcc=new Set(), fSrv=new Set(), ESCLUSE=new Set();
 const elenco=document.getElementById("elenco"), conta=document.getElementById("conta");
@@ -1234,7 +1274,7 @@ function disegnaElenco(filtro){
     const voci=SPIAGGE.map((b,i)=>({b,i})).filter(({b,i})=>b.z===z && !ESCLUSE.has(i) &&
       (!q||(b.n+" "+b.com+" "+b.id.join(" ")).toLowerCase().includes(q)));
     if(!voci.length) return; n+=voci.length;
-    html+='<h4>'+et+' · '+voci.length+'</h4><ul>'+voci.map(({b,i})=>
+    html+='<h4>'+stellaHtml(STELLE.zone.has(REGIONE+"/"+z), "zona", REGIONE+"/"+z, "Salva questo tratto di costa")+et+' · '+voci.length+'</h4><ul>'+voci.map(({b,i})=>
       '<li data-i="'+i+'" tabindex="0">'+segnoElenco(b)+
       b.n+'<small>'+b.com.split(" · ")[0]+'</small></li>').join("")+'</ul>';
   });
@@ -1368,6 +1408,7 @@ async function avvia(){
     return;
   }
   ZONE = d.zone; SPIAGGE = d.spiagge;
+  STELLE = await VADO.stelleAccese();   /* una richiesta sola, prima di disegnare */
   disegnaSegni();          /* i segni sulla carta, e MARKER/ETIM/BANDE */
   legende();               /* le due legende, che contano le spiagge */
   disegnaZone();           /* i pulsanti delle zone */
