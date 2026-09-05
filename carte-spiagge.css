@@ -507,13 +507,23 @@ button.f[data-s="bb"][aria-pressed="true"]{background:var(--azzurro);border-colo
    lo stesso — cliccandola si apre l'accesso — perche' nascondere la stellina a
    chi non ha un account e' il modo migliore per non fargli mai venire voglia
    di farsene uno. */
+/* Il colore va scelto per essere VISTO. --secca (#c9e5f3) su carta bianca fa
+   un rapporto di contrasto di 1,2: la stellina c'era, era disegnata, si poteva
+   perfino premere — semplicemente non si vedeva. Una cosa invisibile e' una
+   cosa che non esiste. */
 .stella{background:none;border:0;cursor:pointer;padding:2px 4px;line-height:1;
-  font-size:19px;color:var(--secca);transition:.15s;border-radius:6px}
+  font-size:19px;color:var(--grigio);transition:.15s;border-radius:6px}
 .stella:hover{color:var(--ambra);background:var(--nebbia)}
 .stella.on{color:var(--ambra)}
 .stella:focus-visible{outline:2px solid var(--ambra);outline-offset:1px}
-.riga-titolo .stella{font-size:22px;margin-left:2px}
-.elenco h4 .stella{font-size:14px;float:right;margin:-3px -4px 0 0;color:var(--basso)}
+/* La stellina va ACCANTO al nome, non sotto: l'h2 e' un blocco, e senza
+   questo il pulsante finiva a capo, da solo, senza piu' niente vicino che
+   dicesse a che cosa si riferisse. Il nome e la stellina su una riga; le
+   coordinate, che sono un'altra cosa, vanno a capo per conto loro. */
+.riga-titolo>div:first-child{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 4px}
+.riga-titolo>div:first-child>.sotto{flex-basis:100%}
+.riga-titolo .stella{font-size:22px;margin-left:0}
+.elenco h4 .stella{font-size:15px;float:right;margin:-4px -4px 0 0;color:var(--azzurro)}
 .elenco h4 .stella.on{color:var(--ambra)}
 
 .pref-vuoto{background:var(--carta);border:1px solid var(--tratto);border-radius:10px;

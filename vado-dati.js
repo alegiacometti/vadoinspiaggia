@@ -323,8 +323,14 @@ const VADO = (() => {
   const preferitiSpiagge = () => chiedi(
     "preferiti_spiagge?select=sid,aggiunto,nota,spiagge(n,com,regione,zona,lat,lon,acc,lung,fondo)" +
     "&order=aggiunto.desc");
+  /* Il nome della regione NON si chiede qui. preferiti_zone punta a "zone"
+     (regione + chiave), non a "regioni": una chiave esterna che non esiste non
+     si puo' seguire, e PostgREST rispondeva 400 all'intera richiesta — cioe'
+     la pagina dei preferiti non mostrava piu' niente, nemmeno le spiagge, per
+     un nome che la pagina aveva gia' in mano: il catalogo delle regioni lo
+     carica per conto suo. */
   const preferitiZone = () => chiedi(
-    "preferiti_zone?select=regione,zona,aggiunto,nota,zone(etichetta),regioni(nome,paese)" +
+    "preferiti_zone?select=regione,zona,aggiunto,nota,zone(etichetta)" +
     "&order=aggiunto.desc");
 
   /* Solo gli identificativi: serve ad accendere le stelline sulla pagina di una
