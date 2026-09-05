@@ -10,8 +10,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="carte-spiagge.css">
-<script src="vado-dati.js"></script>
+<link rel="stylesheet" href="carte-spiagge.css?v=202609051201">
+<script src="vado-dati.js?v=202609051201"></script>
 <style>
 /* Questa pagina NON e' protetta dal fatto di essere nascosta: chiunque puo'
    aprirla, e va benissimo. A proteggere sono le regole del database — senza
@@ -25,6 +25,8 @@
   line-height:1;color:var(--profondo)}
 .gest-cifra span{font-family:var(--dati);font-size:9.5px;letter-spacing:.11em;
   text-transform:uppercase;color:var(--grigio)}
+.gest-nota{margin:-6px 0 12px;font-size:12.5px;line-height:1.55;color:var(--grigio)}
+.gest-nota b{color:var(--profondo);font-weight:500}
 .gest-sez{margin:0 0 12px;font-family:var(--dati);font-size:10px;letter-spacing:.15em;
   text-transform:uppercase;color:var(--azzurro)}
 .gest-tab{width:100%;border-collapse:collapse;background:var(--carta);
@@ -173,7 +175,7 @@ function disegna(){
       cifra(vivi.length, vivi.length === 1 ? "sblocco attivo" : "sblocchi attivi") +
       cifra(ACCESSI.length - vivi.length, "scaduti") +
     '</div>' +
-    '<p class="gest-sez">Le persone</p>' + tabellaPersone(perUtente) +
+    '<p class="gest-sez">Le persone</p>' + noteLibere() + tabellaPersone(perUtente) +
     '<p class="gest-sez" style="margin-top:26px">Le regioni, per quante persone le hanno</p>' +
     tabellaRegioni(domanda, max);
 
@@ -191,6 +193,19 @@ function nomeDi(a){
   return p ? p.nome : a.pacchetto;
 }
 
+/* Una regione "libera" la vede chiunque, anche chi non ha un account: non e'
+   uno sblocco di nessuno, e infatti nella riga di una persona non compare.
+   Senza dirlo, pero', sembra un difetto — uno toglie lo sblocco delle Marche e
+   le Marche restano aperte. Si dice qui, dove si guarda. */
+function noteLibere(){
+  const l = REGIONI.filter(r => r.libera);
+  if (!l.length) return "";
+  return '<p class="gest-nota">' +
+    (l.length === 1 ? '<b>' + esc(l[0].nome) + '</b> è libera per tutti'
+                    : '<b>' + l.map(r => esc(r.nome)).join(", ") + '</b> sono libere per tutti') +
+    ': si vede senza account e senza sblocco, quindi non compare qui fra gli sblocchi di nessuno. ' +
+    'Per chiuderla si toglie il segno «libera» alla regione, non l\'accesso alla persona.</p>';
+}
 function tabellaPersone(perUtente){
   if (!PROFILI.length) return '<div class="gest-vuoto">Ancora nessun iscritto.</div>';
   return '<table class="gest-tab"><thead><tr>' +
@@ -291,6 +306,6 @@ async function revoca(id, che){
 
 VADO.alCambio(s => { IO = s; carica(); });
 </script>
-<script src="vado-conto.js"></script>
+<script src="vado-conto.js?v=202609051201"></script>
 </body>
 </html>
