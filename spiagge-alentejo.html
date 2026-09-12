@@ -15,11 +15,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="carte-spiagge.css?v=202609120830">
-<script src="configurazione.js?v=202609120830"></script>
-<script src="vado-dati.js?v=202609120830"></script>
-<script src="vado-recensioni.js?v=202609120830"></script>
-<script src="vado-vento.js?v=202609120830"></script>
+<link rel="stylesheet" href="carte-spiagge.css?v=202609121655">
+<script src="configurazione.js?v=202609121655"></script>
+<script src="vado-dati.js?v=202609121655"></script>
+<script src="vado-recensioni.js?v=202609121655"></script>
+<script src="vado-vento.js?v=202609121655"></script>
 <style>/* misure di questa regione — vedi carte-spiagge.css */
 :root{--colonna-carta:640px;--telaio-h:min(46vh,440px)}</style>
 </head>
@@ -1029,11 +1029,23 @@ function legaGiorni(cont,dati){
 /* Immagine aerea reale della spiaggia da Esri World Imagery (senza chiave),
    ritagliata e centrata sulle coordinate. Nessuna foto "generica" fuori luogo. */
 const TILE="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/";
+/* ---- il ritaglio aereo della spiaggia ------------------------------------
+   Le immagini stanno nel sito, in spiagge/<prefisso>/<sid>.jpg: sono ritagli
+   di ortofoto pubbliche, prese dal servizio ufficiale del paese, con licenza
+   che ne consente l'uso. Il prefisso si ricava dal codice della spiaggia, che
+   e' unico: nessun dato in piu' da portarsi dietro.
+   Dove non ne abbiamo ancora — l'Italia continentale, in attesa delle tessere
+   AGEA — HA_FOTO resta falso e il riquadro tiene il mosaico di prima. */
+const HA_FOTO = true;
+const CREDITO_FOTO = "DGT · OrtoSat 2023 · CC BY 4.0";
+const fotoDi = b => "spiagge/" + b.sid.slice(0, b.sid.lastIndexOf("-")) + "/" + b.sid + ".jpg";
+const ritaglio = b => '<img class="ortofoto" src="' + fotoDi(b) + '" alt="Vista aerea di '
+  + escA(b.n) + '" loading="lazy" decoding="async">';
 function tessere(b,z){
   const n=Math.pow(2,z), la=b.lat*Math.PI/180;
   const cx=((b.lon+180)/360*n)*256;
   const cy=((1-Math.log(Math.tan(la)+1/Math.cos(la))/Math.PI)/2*n)*256;
-  const W=1024,H=576, x0=cx-W/2, y0=cy-H/2;
+  const W=1024,H=683, x0=cx-W/2, y0=cy-H/2;
   let out="",k=0;
   for(let ty=Math.floor(y0/256); ty<=Math.floor((y0+H)/256); ty++)
     for(let tx=Math.floor(x0/256); tx<=Math.floor((x0+W)/256); tx++){
@@ -1227,11 +1239,11 @@ function corpo(b){
 function vetrinaSat(b,i){
   const bl=bloccato===i;
   return '<div class="vetrina" id="vetrina">'+
-    '<div class="tela">'+tessere(b,16)+'</div><div class="mirino"></div>'+
+    '<div class="tela">'+(HA_FOTO?ritaglio(b):tessere(b,16))+'</div><div class="mirino"></div>'+
     '<button type="button" class="lucchetto'+(bl?' on':'')+'" id="btnLucchetto" '+
       'title="'+(bl?'La scheda resta fissa anche passando su altre spiagge':'Fissa questa scheda')+'">'+
       (bl?'● Scheda fissata':'○ Fissa scheda')+'</button>'+
-    '<span class="sat-eti">Vista aerea · '+b.n+'</span>'+
+    '<span class="sat-eti">Vista aerea · '+b.n+'<i>'+CREDITO_FOTO+'</i></span>'+
     '<a class="apri-foto" href="'+gFoto(b)+'" target="_blank" rel="noopener" '+
       'aria-label="Foto e recensioni di '+b.n+' su Google"><span>Foto e recensioni ↗</span></a></div>'+
    '<div class="azioni">'+
@@ -1247,9 +1259,16 @@ function mostra(i){
   scheda.hidden=false;
   scheda.innerHTML=vetrinaSat(b,i)+corpo(b);
   const tela=scheda.querySelector(".tela");
-  let rotte=0;
-  tela.querySelectorAll("img").forEach(t=>t.onerror=()=>{ if(++rotte>=2 && scheda.querySelector("#vetrina"))
+  /* Tre livelli, dal migliore al peggiore: il ritaglio ufficiale; se manca,
+     il mosaico satellitare; se non arriva neanche quello, la veduta
+     schematica. Il riquadro non resta mai vuoto. */
+  const legaTessere=()=>{ let rotte=0;
+    tela.querySelectorAll("img").forEach(t=>t.onerror=()=>{ if(++rotte>=2 && scheda.querySelector("#vetrina"))
     scheda.querySelector("#vetrina").outerHTML='<a class="vetrina-veduta" href="'+gFoto(b)+'" target="_blank" rel="noopener" aria-label="Foto e recensioni di '+b.n+' su Google">'+veduta(b)+'<span>Foto e recensioni ↗</span></a>'+'<div class="credito">Immagine satellitare non raggiungibile: qui sopra una veduta schematica.</div>'; });
+  };
+  const primaFoto=tela.querySelector("img.ortofoto");
+  if(primaFoto) primaFoto.onerror=()=>{ tela.innerHTML=tessere(b,16); legaTessere(); };
+  else legaTessere();
   scheda.querySelector("#btnScheda").onclick=()=>apriScheda(i);
   verificaPano(b, scheda);
   scheda.querySelector("#btnLucchetto").onclick=()=>{ bloccato=(bloccato===i?null:i); mostra(i); attiva(i); };
@@ -2152,6 +2171,6 @@ avvia();
 VADO.alCambio((function(){ let primo=true;
   return ()=>{ if(primo){ primo=false; return; } location.reload(); }; })());
 </script>
-<script src="vado-conto.js?v=202609120830"></script>
+<script src="vado-conto.js?v=202609121655"></script>
 </body>
 </html>

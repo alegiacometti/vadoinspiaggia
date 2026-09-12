@@ -232,10 +232,13 @@ svg.carta.trascino{cursor:grabbing}
 .pannello{position:sticky;top:20px}
 .scheda[hidden]{display:none}
 .scheda{background:var(--carta);border:1px solid var(--tratto);border-radius:10px;overflow:hidden;box-shadow:var(--ombra)}
-.vetrina{position:relative;aspect-ratio:16/9;overflow:hidden;background:#0d3b52;border-bottom:1px solid var(--tratto)}
+.vetrina{position:relative;aspect-ratio:3/2;overflow:hidden;background:#0d3b52;border-bottom:1px solid var(--tratto)}
 .vetrina>svg{display:block;width:100%;height:auto}
 .tela{position:absolute;inset:0}
-.tela img{position:absolute;width:25%;height:44.4445%;object-fit:cover}
+.tela img{position:absolute;width:25%;height:37.4817%;object-fit:cover}
+/* Il ritaglio ufficiale riempie il riquadro da solo: non e' un pezzo di
+   mosaico, quindi non segue le percentuali delle tessere. */
+.tela img.ortofoto{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .mirino{position:absolute;left:50%;top:50%;width:32px;height:32px;margin:-16px 0 0 -16px;border:2px solid #fff;
   border-radius:50%;box-shadow:0 0 0 2px rgba(8,60,92,.5),0 0 16px rgba(0,0,0,.4);pointer-events:none}
 .mirino::after{content:"";position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2.5px;background:#fff;border-radius:50%}
@@ -244,6 +247,7 @@ svg.carta.trascino{cursor:grabbing}
   padding:5px 11px;border-radius:999px;cursor:pointer;transition:.15s}
 .lucchetto:hover{background:rgba(8,60,92,.78)}
 .lucchetto.on{background:#fff;color:var(--profondo);border-color:#fff;font-weight:600}
+.sat-eti i{display:block;font-style:normal;font-size:8px;opacity:.72;letter-spacing:.05em}
 .sat-eti{position:absolute;left:10px;bottom:8px;font-family:var(--dati);font-size:9px;letter-spacing:.08em;
   text-transform:uppercase;color:#fff;background:rgba(8,60,92,.5);padding:3px 8px;border-radius:4px}
 /* La foto porta dove porta «Foto e recensioni». L'etichetta in basso a destra
