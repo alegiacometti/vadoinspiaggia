@@ -10,8 +10,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="carte-spiagge.css?v=202609121737">
-<script src="vado-dati.js?v=202609121737"></script>
+<link rel="stylesheet" href="carte-spiagge.css?v=202609121901">
+<script src="vado-dati.js?v=202609121901"></script>
 <style>
 /* Questa pagina NON e' protetta dal fatto di essere nascosta: chiunque puo'
    aprirla, e va benissimo. A proteggere sono le regole del database — senza
@@ -43,6 +43,10 @@
 .gest-ruolo{font-family:var(--dati);font-size:9px;letter-spacing:.08em;text-transform:uppercase;
   border:1px solid var(--tratto);border-radius:999px;padding:2px 8px;color:var(--grigio)}
 .gest-ruolo.admin{background:var(--profondo);color:#fff;border-color:var(--profondo)}
+.gest-ruoli{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:4px}
+button.gest-ruolo{cursor:pointer;background:#fff;font-family:var(--dati);transition:.14s}
+button.gest-ruolo:hover{background:var(--schiuma);border-color:var(--azzurro);color:var(--azzurro)}
+button.gest-ruolo:focus-visible{outline:2px solid var(--ambra);outline-offset:2px}
 .gest-sbl{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .gest-pat{display:inline-flex;align-items:center;gap:6px;font-size:12px;
   background:var(--schiuma);border:1px solid var(--basso);border-radius:999px;padding:3px 6px 3px 11px}
@@ -191,6 +195,8 @@ function disegna(){
     b.onclick = () => apriSblocco(b.dataset.sblocca));
   corpo.querySelectorAll("[data-revoca]").forEach(b =>
     b.onclick = () => revoca(+b.dataset.revoca, b.dataset.che));
+  corpo.querySelectorAll("[data-ruolo]").forEach(b =>
+    b.onclick = () => cambiaRuolo(b.dataset.ruolo, b.dataset.a, b.dataset.chi));
   corpo.querySelectorAll("[data-par]").forEach(b =>
     b.onclick = () => togliParere(b.dataset.par, b.dataset.chi, b));
 }
@@ -246,6 +252,22 @@ function noteLibere(){
     ': si vede senza account e senza sblocco, quindi non compare qui fra gli sblocchi di nessuno. ' +
     'Per chiuderla si toglie il segno «libera» alla regione, non l\'accesso alla persona.</p>';
 }
+/* Il proprio ruolo non si tocca da qui. Chi si declassa per sbaglio non ha
+   nessuno a cui chiedere di rimetterlo: dovrebbe entrare nella console di
+   Supabase. Se davvero serve, lo fa un altro amministratore.
+   Il database ha comunque la sua rete — un trigger rifiuta di lasciare il
+   sito senza nessun amministratore — ma una porta che non si vede e' meglio
+   di un errore che arriva dopo. */
+function bottoneRuolo(p){
+  const io = VADO.chiSono();
+  if (io && p.utente === io.id) return '<span class="gest-ruolo">sei tu</span>';
+  const admin = p.ruolo === "admin";
+  return '<button type="button" class="gest-ruolo tocca" data-ruolo="' + p.utente +
+    '" data-a="' + (admin ? "utente" : "admin") +
+    '" data-chi="' + esc(p.email || p.nome || "questa persona") + '">' +
+    (admin ? "togli i permessi" : "rendi amministratore") + '</button>';
+}
+
 function tabellaPersone(perUtente){
   if (!PROFILI.length) return '<div class="gest-vuoto">Ancora nessun iscritto.</div>';
   return '<table class="gest-tab"><thead><tr>' +
@@ -256,7 +278,9 @@ function tabellaPersone(perUtente){
         .sort((a,b) => (a.pacchetto?0:1) - (b.pacchetto?0:1));
       return '<tr>' +
         '<td><div class="gest-chi">' + esc(p.email || p.nome || "—") + '</div>' +
-          (p.ruolo === "admin" ? '<span class="gest-ruolo admin">amministratore</span>' : '') + '</td>' +
+          '<div class="gest-ruoli">' +
+          (p.ruolo === "admin" ? '<span class="gest-ruolo admin">amministratore</span>' : '') +
+          bottoneRuolo(p) + '</div></td>' +
         '<td class="gest-nascondi gest-quando">' + giorno(p.creato) + '</td>' +
         '<td class="gest-nascondi gest-quando">' + giorno(p.ultimo_accesso) + '</td>' +
         '<td><div class="gest-sbl">' +
@@ -335,6 +359,30 @@ document.getElementById("sblVai").onclick = async function(){
   this.disabled = false; this.textContent = era;
 };
 
+/* ----------------------------------------------------- nominare un admin
+   Dare i permessi non e' come sbloccare una regione, e la domanda lo dice:
+   chi accetta diventa pari a chi concede, e potra' togliere i permessi anche
+   a chi glieli ha dati. Meglio leggerlo prima che scoprirlo dopo. */
+async function cambiaRuolo(utente, a, chi){
+  const avviso = a === "admin"
+    ? "Rendere «" + chi + "» amministratore?\n\n" +
+      "Potra' fare tutto quello che fai tu: vedere gli iscritti, sbloccare e " +
+      "revocare le regioni a chiunque, cancellare i pareri, e nominare altri " +
+      "amministratori — compreso togliere i permessi a te."
+    : "Togliere i permessi di amministratore a «" + chi + "»?\n\n" +
+      "Torna un utente normale. Le regioni che ha sbloccato restano sue.";
+  if (!confirm(avviso)) return;
+  try{
+    await VADO.chiedi("profili?utente=eq." + utente, { metodo:"PATCH", corpo:{ ruolo:a },
+      intestazioni:{ "Prefer":"return=minimal" } });
+    await carica();
+  }catch(e){
+    /* Il messaggio del database e' scritto per essere letto: quando rifiuta
+       di lasciare il sito senza amministratori lo dice in italiano. */
+    alert(e.message.slice(0,300));
+  }
+}
+
 async function revoca(id, che){
   if (!confirm("Togliere «" + che + "»?")) return;
   try{
@@ -346,6 +394,6 @@ async function revoca(id, che){
 
 VADO.alCambio(s => { IO = s; carica(); });
 </script>
-<script src="vado-conto.js?v=202609121737"></script>
+<script src="vado-conto.js?v=202609121901"></script>
 </body>
 </html>
