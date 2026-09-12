@@ -201,16 +201,20 @@ svg.carta.trascino{cursor:grabbing}
 .carta.nomi .marker.spento .nome{opacity:0}
 .marker.spento{opacity:.13;pointer-events:none}
 
-.cerca{display:flex;align-items:center;gap:9px;border:1px solid var(--tratto);border-top:0;background:var(--carta);padding:9px 12px;margin-top:-1px}
+.cerca{display:flex;align-items:center;gap:9px;border:1px solid var(--tratto);border-radius:10px;
+  background:var(--carta);padding:9px 12px;box-shadow:var(--ombra)}
+.cerca:focus-within{border-color:var(--basso);box-shadow:0 0 0 3px rgba(23,134,189,.10)}
+.cerca .lente{flex:none;width:15px;height:15px;fill:none;stroke:var(--basso);stroke-width:1.9;stroke-linecap:round}
 .cerca input{flex:1;background:none;border:0;color:var(--inchiostro);
   font-family:var(--dati);font-size:12.5px;letter-spacing:.01em;outline:none}
 .cerca input::placeholder{color:#9ab7c6}
 .cerca span{font-family:var(--dati);font-size:10px;color:var(--grigio);white-space:nowrap}
-.tendina{display:none;background:none;border:0;color:var(--azzurro);font-size:15px;line-height:1;
+.tendina{display:block;background:none;border:0;color:var(--azzurro);font-size:15px;line-height:1;
   padding:4px 2px 4px 8px;cursor:pointer}
 .elenco.chiuso{display:none}
-.elenco{max-height:290px;overflow-y:auto;border:1px solid var(--tratto);border-top:0;border-radius:0 0 10px 10px;
-  background:var(--carta);scrollbar-width:thin;scrollbar-color:var(--basso) transparent}
+.elenco{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:30;max-height:min(58vh,420px);
+  overflow-y:auto;border:1px solid var(--tratto);border-radius:10px;background:var(--carta);
+  box-shadow:0 18px 40px -14px rgba(8,60,92,.45);scrollbar-width:thin;scrollbar-color:var(--basso) transparent}
 .elenco::-webkit-scrollbar{width:8px}
 .elenco::-webkit-scrollbar-thumb{background:var(--basso);border-radius:8px}
 .elenco h4{position:sticky;top:0;margin:0;font-family:var(--dati);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
@@ -416,15 +420,10 @@ svg.grafico{display:block;width:100%;min-width:520px;height:auto}
   /* la colonna sparisce come contenitore: carta, scheda ed elenco diventano riordinabili */
   .colonna-carta{display:contents}
   .carta-cont{order:1}
-  .cerca{order:2}
-  .elenco{order:3;max-height:44vh}
-  .pannello{order:4;position:static}
-  .elenco.chiuso+*{margin-top:0}
-  .cerca:has(+.elenco.chiuso){border-radius:10px}
-  .tendina{display:block}
+  .pannello{order:2;position:static}
+  .elenco{max-height:56vh}
   .telaio{height:48vh;min-height:300px}
   /* una passata verticale del dito scorre la pagina; due dita zoomano la carta */
-  svg.carta{touch-action:pan-y}
   .filtri{max-width:none}
   .azioni a,.azioni button{flex:1 1 45%}
 }
@@ -454,6 +453,72 @@ svg.grafico{display:block;width:100%;min-width:520px;height:auto}
   .riga-titolo{flex-direction:column;gap:6px}
   .zona{text-align:left;max-width:none;padding-top:0}
 }
+/* ---------- insegna del sito e firma ---------- */
+/* Si chiama «insegna» e non «marchio» perche' .marchio e' gia' preso: e' il
+   quadratino dentro il pulsante Home page (riga 60). Due classi con lo stesso
+   nome e scopi diversi non danno errore, danno un guaio silenzioso. */
+.insegna{display:inline-flex;align-items:center;gap:9px;margin:0 0 10px;font-family:var(--dati);
+  font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--azzurro)}
+.insegna svg{flex:none;width:26px;height:12px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round}
+.firma{display:flex;align-items:center;justify-content:center;gap:11px;flex-wrap:wrap;
+  margin:38px 0 0;padding-top:20px;border-top:1px solid var(--tratto);
+  font-family:var(--dati);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--grigio)}
+.firma b{color:var(--azzurro);font-weight:400}
+.firma span{letter-spacing:.05em;text-transform:none;font-size:10.5px}
+.firma svg{flex:none;width:26px;height:12px;fill:none;stroke:var(--basso);stroke-width:1.7;stroke-linecap:round}
+
+/* ---------- ricerca in testata ---------- */
+.ricerca{position:relative;margin-left:auto;flex:1 1 300px;max-width:420px;min-width:240px}
+@media (max-width:700px){.ricerca{margin-left:0;max-width:none}}
+
+.giorni div[data-g]{cursor:pointer;transition:background .14s}
+.giorni div[data-g]:hover{background:var(--nebbia)}
+.giorni div.scelto{background:var(--schiuma);box-shadow:inset 0 2px 0 var(--azzurro)}
+
+/* ---------- il cursore delle ore ---------- */
+.tempo{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid var(--tratto);
+  background:var(--nebbia);font-family:var(--dati);font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--grigio)}
+.tempo[hidden]{display:none}
+.tempo input[type=range]{flex:1;min-width:0;accent-color:var(--azzurro);height:18px;cursor:pointer}
+.tempo .ora{color:var(--profondo);letter-spacing:.05em;text-transform:none;
+  font-size:11px;min-width:82px;text-align:right}
+.tempo button{background:none;border:1px solid var(--tratto);border-radius:999px;color:var(--azzurro);
+  font-family:var(--dati);font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  padding:4px 9px;cursor:pointer;transition:.16s}
+.tempo button:hover{border-color:var(--basso);background:var(--carta)}
+.tempo button[hidden]{display:none}
+@media (max-width:700px){.tempo{gap:7px;padding:7px 10px}.tempo label{display:none}.tempo .ora{min-width:70px;font-size:10.5px}}
+
+/* ---------- onda e vento sulla carta ---------- */
+.comandi button[aria-pressed="true"]{background:var(--azzurro);color:#fff;border-color:var(--azzurro)}
+.comandi button.clima svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round}
+.cl{pointer-events:none}
+.cl-onda{fill:none;stroke:currentColor;stroke-width:2.3;stroke-linecap:round;
+  vector-effect:non-scaling-stroke;opacity:.9}
+.onda-g path{animation:ondeggia 2.8s ease-in-out infinite;animation-delay:var(--rit,0s);
+  transform-box:fill-box;transform-origin:center}
+@keyframes ondeggia{0%,100%{transform:translateY(0)}50%{transform:translateY(calc(-1 * var(--amp,2.2px)))}}
+.cl-scia{stroke:currentColor;stroke-width:2.4;stroke-linecap:round;vector-effect:non-scaling-stroke;
+  stroke-dasharray:5 13;animation-name:scorri;animation-timing-function:linear;animation-iteration-count:infinite;opacity:.92}
+@keyframes scorri{from{stroke-dashoffset:18}to{stroke-dashoffset:0}}
+.cl-punta{fill:currentColor;opacity:.92}
+.cl-eti{font-family:var(--dati);font-size:9.5px;fill:currentColor;letter-spacing:.04em;
+  paint-order:stroke;stroke:rgba(255,255,255,.92);stroke-width:2.6px;stroke-linejoin:round}
+/* In basso a sinistra: in alto a destra copriva i pulsanti dello zoom, che con
+   tre strati sono diventati sei e occupano tutta la colonna. */
+.clima-eti{position:absolute;left:10px;bottom:10px;z-index:2;max-width:min(52%,250px);
+  background:rgba(255,255,255,.95);border:1px solid var(--tratto);border-radius:9px;
+  padding:6px 9px;font-family:var(--dati);font-size:8.5px;letter-spacing:.03em;color:var(--grigio);
+  box-shadow:var(--ombra);pointer-events:none;line-height:1.55}
+.clima-eti[hidden]{display:none}
+.clima-eti b{display:block;font-weight:400;color:var(--profondo);letter-spacing:.1em;
+  text-transform:uppercase;margin-bottom:1px}
+.clima-eti i{font-style:normal;display:inline-flex;align-items:center;gap:3px;margin-right:7px;white-space:nowrap}
+.clima-eti i::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--pal,#ccc)}
+@media (max-width:700px){.clima-eti{font-size:8.5px;padding:6px 8px;left:8px;bottom:8px}}
+
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 /* --- bandierine di stato e regione --- */

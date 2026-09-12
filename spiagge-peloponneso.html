@@ -11,15 +11,15 @@
 <meta property="og:site_name" content="Vado in spiaggia">
 <meta property="og:title" content="Le spiagge del Peloponneso">
 <meta property="og:description" content="Le spiagge del Peloponneso: 191 spiagge in 5 zone costiere, con carta navigabile, meteo, stato del mare, accessi, servizi e parcheggi.">
-<title>Le spiagge del Peloponneso · carta, meteo e mare in tempo reale</title>
+<title>Vado in spiaggia · le spiagge del Peloponneso · carta, meteo e mare</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="carte-spiagge.css?v=202609052234">
-<script src="configurazione.js?v=202609052234"></script>
-<script src="vado-dati.js?v=202609052234"></script>
-<script src="vado-recensioni.js?v=202609052234"></script>
-<script src="vado-vento.js?v=202609052234"></script>
+<link rel="stylesheet" href="carte-spiagge.css?v=202609120556">
+<script src="configurazione.js?v=202609120556"></script>
+<script src="vado-dati.js?v=202609120556"></script>
+<script src="vado-recensioni.js?v=202609120556"></script>
+<script src="vado-vento.js?v=202609120556"></script>
 <style>/* misure di questa regione — vedi carte-spiagge.css */
 :root{--colonna-carta:620px;--telaio-h:min(72vh,780px)}</style>
 </head>
@@ -28,9 +28,19 @@
 
   <header class="testata">
     <div>
+      <p class="insegna"><svg viewBox="0 0 26 12" aria-hidden="true"><path d="M1 8.5c2.4 0 2.4-4 4.8-4s2.4 4 4.8 4 2.4-4 4.8-4 2.4 4 4.8 4 2.4-4 4.8-4"/></svg> Vado in spiaggia</p>
       <div class="briciole"><a class="ritorno casa" href="index.html"><svg class="marchio" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#083c5c"/><circle cx="44" cy="20" r="8" fill="#e8b04b"/><path d="M8 40c5 0 5-5 10-5s5 5 10 5 5-5 10-5 5 5 10 5 5-5 8-5" fill="none" stroke="#9ed4ea" stroke-width="6" stroke-linecap="round"/><path d="M8 51c5 0 5-5 10-5s5 5 10 5 5-5 10-5 5 5 10 5 5-5 8-5" fill="none" stroke="#1786bd" stroke-width="6" stroke-linecap="round"/></svg>Home page</a><a class="ritorno" href="index.html#gr">← Tutte le regioni: Grecia</a><a class="ritorno vicino" href="vicino.html">◉ Intorno a me</a></div>
       <h1>Le spiagge <em>del Peloponneso</em> <span class="bandiere"><img class="bandiera" src="https://commons.wikimedia.org/wiki/Special:FilePath/Flag%20of%20Greece.svg?width=96" width="96" alt="Bandiera: Greece" title="Greece" loading="lazy" decoding="async" onerror="this.dataset.b?(this.src=this.dataset.b,this.removeAttribute('data-b')):this.remove()"></span></h1>
     </div>
+      <div class="ricerca">
+        <div class="cerca">
+          <svg class="lente" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.6" cy="8.6" r="5.8"/><path d="M12.9 12.9L18 18"/></svg>
+          <input id="cerca" type="search" autocomplete="off" placeholder="Cerca una spiaggia o un comune…" aria-label="Cerca una spiaggia">
+          <span id="conta"></span>
+          <button type="button" class="tendina" id="apriElenco" aria-expanded="false" aria-label="Mostra o nascondi l'elenco">▾</button>
+        </div>
+        <div class="elenco chiuso" id="elenco"></div>
+      </div>
       <div class="conto" id="conto"></div>
   </header>
 
@@ -48,28 +58,33 @@
           <svg class="carta" id="carta" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"
                role="img" aria-label="Carta del Peloponneso con le spiagge">
             <g id="gGriglia"></g><g id="gBatim"></g><g id="gVicine"></g><g id="gTerra"></g>
-            <g id="gCime"></g><g id="gPaesi"></g><g id="gMarker"></g><g id="gQui"></g>
+            <g id="gCime"></g><g id="gPaesi"></g><g id="gClima"></g><g id="gMarker"></g><g id="gQui"></g>
           </svg>
           <div class="comandi">
             <button type="button" id="zPiu" aria-label="Ingrandisci" title="Ingrandisci">+</button>
             <button type="button" id="zMeno" aria-label="Riduci" title="Riduci">−</button>
             <button type="button" class="fit" id="zFit" aria-label="Tutta la regione" title="Tutta la regione">⤢</button>
             <button type="button" class="qui" id="zQui" aria-label="La mia posizione" title="La mia posizione">◎</button>
+            <button type="button" class="clima" id="tOnda" aria-pressed="false" aria-label="Onda sulla carta" title="Onda sulla carta"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 9c3 0 3-4 6-4s3 4 6 4 3-4 6-4M2 16c3 0 3-4 6-4s3 4 6 4 3-4 6-4"/></svg></button>
+            <button type="button" class="clima" id="tVento" aria-pressed="false" aria-label="Vento sulla carta" title="Vento sulla carta"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8h9a3 3 0 1 0-3-3M3 13h13a3 3 0 1 1-3 3M3 18h7"/></svg></button>
+            <button type="button" class="clima" id="tMeteo" aria-pressed="false" aria-label="Cielo sulla carta" title="Cielo e temperatura sulla carta"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.6" cy="8.6" r="3.2"/><path d="M8.6 2.6v1.5M2.6 8.6h1.5M4.3 4.3l1.1 1.1M12.9 4.3l-1.1 1.1M10.2 20.4a3.7 3.7 0 01-.3-7.3 5.1 5.1 0 019.7 1.2 3.1 3.1 0 01-.5 6.1z"/></svg></button>
           </div>
           <div class="bussola" id="bussola">scala —</div>
           <div class="avviso-qui" id="avvisoQui" hidden></div>
+          <div class="clima-eti" id="climaEti" hidden></div>
+        </div>
+        <div class="tempo" id="tempo" hidden>
+          <label for="oraSlider">ora</label>
+          <input type="range" id="oraSlider" min="0" max="71" step="1" value="0"
+                 aria-label="Ora da mostrare sulla carta, da ieri a domani">
+          <span class="ora" id="oraEti"></span>
+          <button type="button" id="tAdesso" hidden>adesso</button>
         </div>
         <div class="legenda">
           <div class="lg-riga" id="lgMisure"></div>
           <div class="lg-riga lg-colonna" id="lgColori"></div>
         </div>
       </div>
-      <div class="cerca">
-        <input id="cerca" type="search" placeholder="Cerca una spiaggia o un comune…" aria-label="Cerca">
-        <span id="conta"></span>
-        <button type="button" class="tendina" id="apriElenco" aria-expanded="true" aria-label="Mostra o nascondi l'elenco">▾</button>
-      </div>
-      <div class="elenco" id="elenco"></div>
     </div>
 
     <div class="pannello">
@@ -87,6 +102,8 @@
       <p class="piede">Dati: EEA · geoBoundaries · ISTAT · GSHHG · Natural Earth · Open-Meteo — immagini: Esri World Imagery, Google Maps. <a href="crediti.html">Crediti e licenze</a></p>
     </div>
   </div>
+
+  <p class="firma"><svg viewBox="0 0 26 12" aria-hidden="true"><path d="M1 8.5c2.4 0 2.4-4 4.8-4s2.4 4 4.8 4 2.4-4 4.8-4 2.4 4 4.8 4 2.4-4 4.8-4"/></svg><b>Vado in spiaggia</b><span>carte, meteo e mare · Peloponneso</span></p>
 </div>
 
 <script>
@@ -360,16 +377,28 @@ let vista={...PIENO}, zonaAttiva=null, anim=null;
 function aspetta(bb){const r=telaio.getBoundingClientRect(),ar=(r.width||400)/(r.height||700);
   let{x,y,w,h}=bb; if(w/h<ar){const nw=h*ar;x-=(nw-w)/2;w=nw;}else{const nh=w/ar;y-=(nh-h)/2;h=nh;} return{x,y,w,h};}
 function applicaVista(v){
+  /* Una larghezza nulla o negativa non è un'inquadratura: il viewBox la rifiuta
+     e la carta sparirebbe. Capita solo per stati degeneri — un telaio ancora
+     senza misura, un pizzico con le due dita nello stesso punto — e lì è giusto
+     tenersi l'ultima inquadratura buona invece di disegnare il vuoto. */
+  if(!(v.w>0)||!(v.h>0)) return;
   svg.setAttribute("viewBox",v.x.toFixed(1)+" "+v.y.toFixed(1)+" "+v.w.toFixed(1)+" "+v.h.toFixed(1));
-  /* Il segno cresce appena appena quando ci si avvicina: abbastanza per
-     restare comodo da toccare, non tanto da coprire la spiaggia. */
-  /* Il segno ha la taglia che gli lascia la vicina più prossima: mai così
-     piccolo da non poterlo cliccare, mai così grande da coprire la costa. */
+  /* Il segno segue l'ingrandimento: a tutta regione è un puntino — la costa si
+     legge come una fila di spiagge e non come una catena di bolle sovrapposte —
+     e cresce fino alla taglia piena quando ci si avvicina.
+     Prima la taglia veniva dalla distanza fra le due spiagge più vicine: dove
+     le spiagge sono fitte quel calcolo finiva sempre sotto il minimo, e il
+     segno restava della stessa misura a ogni zoom. */
   const rt=telaio.getBoundingClientRect();
   const perU=Math.min((rt.width||600)/v.w,(rt.height||600)/v.h)||1;
-  const rPx=Math.max(3.5,Math.min(TAGLIA.segno, 0.58*PASSO*perU));
+  const z=PIENO.w/v.w;                               // 1 a tutta regione, cresce avvicinandosi
+  const rPx=Math.max(2, Math.min(TAGLIA.segno, 2+(TAGLIA.segno-2)*Math.min(1,(z-1)/5)));
   const s=Math.max(.02,Math.min(8,(rPx/perU)/SEGNO_BASE));
+  /* Il cerchio invisibile del clic non rimpicciolisce insieme al segno: resta
+     largo come un polpastrello, altrimenti da lontano non si prenderebbe più. */
+  const rTocco=Math.max(9, 10/(s*perU||1));
   MARKER.forEach((m,i)=>{const b=SPIAGGE[i];
+    const t=m.querySelector("circle"); if(t) t.setAttribute("r",rTocco.toFixed(1));
     m.setAttribute("transform","translate("+px(b.lon).toFixed(1)+","+py(b.lat).toFixed(1)+") scale("+s.toFixed(3)+")");});
   /* I nomi compaiono quando la carta è abbastanza vicina da farceli stare: sotto
      il 55% della larghezza totale. Prima dipendevano dall'aver scelto una zona,
@@ -377,6 +406,7 @@ function applicaVista(v){
   svg.classList.add("nomi");
   adattaTesti(v,s);
   if(typeof disegnaQui==="function") disegnaQui();
+  if(typeof aggiornaClima==="function") aggiornaClima(v);
 }
 function vaiA(bb){
   const t=aspetta(bb),d={...vista},rid=!!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);
@@ -458,6 +488,21 @@ addEventListener("pointermove",e=>{
 ["pointerup","pointercancel"].forEach(t=>addEventListener(t,()=>{
   trascino=null; svg.classList.remove("trascino");
 }));
+/* Doppio tocco (o doppio clic) sulla carta: si torna alla vista d'insieme. Sul
+   telefono è il gesto che si prova per primo quando ci si è persi dentro
+   l'ingrandimento, e non faceva niente. Sul segno di una spiaggia no: lì il
+   secondo tocco serve a passare alla successiva del grappolo. */
+let ultimoTocco=0, puntoTocco=null;
+svg.addEventListener("pointerup",e=>{
+  if(mosso>=4) return;                            // era un trascinamento, non un tocco
+  if(e.target.closest && e.target.closest(".marker")) return;
+  const ora=performance.now();
+  if(ora-ultimoTocco<320 && puntoTocco &&
+     Math.hypot(e.clientX-puntoTocco[0], e.clientY-puntoTocco[1])<28){
+    ultimoTocco=0; puntoTocco=null; selezionaZona(null); return;
+  }
+  ultimoTocco=ora; puntoTocco=[e.clientX,e.clientY];
+});
 const distanza=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
 const medio=t=>[(t[0].clientX+t[1].clientX)/2,(t[0].clientY+t[1].clientY)/2];
 svg.addEventListener("touchstart",e=>{ if(e.touches.length===2){ trascino=null;
@@ -572,7 +617,11 @@ function vaiAllaPosizione(){
   }, {enableHighAccuracy:true, timeout:12000, maximumAge:60000});
 }
 document.getElementById("zQui").addEventListener("click",vaiAllaPosizione);
-addEventListener("resize",()=>{applicaVista(vista=aspetta(zonaAttiva?bboxZona(zonaAttiva):PIENO));aggiornaScala();});
+/* Sul telefono la barra del browser che compare e scompare cambia l'altezza
+   della finestra, e il browser spara un «resize». Rimettere la vista d'insieme
+   qui voleva dire che ogni scorrimento cancellava l'ingrandimento: si rifà solo
+   la proporzione dell'inquadratura, tenendo dove si era. */
+addEventListener("resize",()=>{applicaVista(vista=aspetta(vista));aggiornaScala();});
 applicaVista(vista=aspetta(PIENO)); aggiornaScala();
 
 /* ======================= METEO E MARE ======================= */
@@ -927,7 +976,7 @@ function bloccoLive(b,dati){
       const cd=codiceDiurno(a.hourly,g);
       const pp=pioggiaDiurna(a.hourly,g);
       /* sempre cinque celle: la pioggia sta dentro quella del cielo, non ne aggiunge una */
-      giorni+='<div><b>'+(i===0?"oggi":G[dt.getDay()])+'</b>'+
+      giorni+='<div data-g="'+g+'"'+(quando&&g===quando.giorno?' class="scelto"':'')+'><b>'+(i===0?"oggi":G[dt.getDay()])+'</b>'+
         '<span class="ic">'+icona(cd!=null?cd:d.weather_code[i])+(pp>=25?'<i class="pio">'+pp+'%</i>':'')+'</span>'+
         '<span class="t">'+num(d.temperature_2m_max[i])+'°<i> / '+num(d.temperature_2m_min[i])+'°</i></span>'+
         '<span class="o">'+(om==null?'—':num(om,1)+' m')+'</span>'+
@@ -948,6 +997,32 @@ function bloccoLive(b,dati){
     '<div class="live-nota">Open-Meteo · modello ICON-EU (DWD), maglia 7 km · ogni casella è la media delle sue ore; le direzioni sono mediate come versori · '+
       'l\'onda è quella del largo: nelle baie chiuse è spesso molto più bassa · lo stato del mare segue la scala Douglas</div>'+
   '</div>';
+}
+
+/* Le sette caselle si possono premere: il grafico orario si ridisegna sul
+   giorno scelto. È la stessa funzione della giornata di oggi, con un'altra
+   data — il grafico c'era già, mancava il modo di sceglierne il giorno. */
+const oggiISO=()=>{const a=new Date();
+  return a.getFullYear()+"-"+String(a.getMonth()+1).padStart(2,"0")+"-"+String(a.getDate()).padStart(2,"0");};
+const GIORNI_L=["Domenica","Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato"];
+function etichettaGiorno(g){
+  const o=oggiISO();
+  if(g===o) return "Oggi in spiaggia";
+  const d=new Date(g+"T12:00:00");
+  if(Math.round((d-new Date(o+"T12:00:00"))/86400000)===1) return "Domani in spiaggia";
+  return GIORNI_L[d.getDay()]+" in spiaggia";
+}
+function legaGiorni(cont,dati){
+  const g=cont.querySelector(".giorni"); if(!g||!dati||!dati.aria) return;
+  g.addEventListener("click",e=>{
+    const c=e.target.closest("div[data-g]"); if(!c) return;
+    const gr=cont.querySelector(".andamento"); if(!gr) return;
+    const dis=andamento(dati.aria,dati.mare,c.dataset.g,c.dataset.g===oggiISO());
+    gr.innerHTML=dis||'<p class="live-nota">Per questo giorno il dettaglio ora per ora non c\'è.</p>';
+    g.querySelectorAll("div[data-g]").forEach(x=>x.classList.toggle("scelto",x===c));
+    const t=cont.querySelector(".live-testa span");
+    if(t) t.innerHTML='<i class="pulse"></i>'+etichettaGiorno(c.dataset.g);
+  });
 }
 
 /* ======================= VISTA SATELLITARE + GOOGLE ======================= */
@@ -1175,7 +1250,7 @@ function mostra(i){
   const slot=scheda.querySelector("#slotLive");
   slot.innerHTML='<div class="live"><div class="live-testa"><span><i class="pulse"></i>Adesso in spiaggia</span></div>'+
     '<div class="live-nota">Interrogo il modello meteo-marino…</div></div>';
-  condizioni(b).then(d=>{ if(mio===richiesta && slot.isConnected) slot.innerHTML=bloccoLive(b,d); })
+  condizioni(b).then(d=>{ if(mio===richiesta && slot.isConnected){ slot.innerHTML=bloccoLive(b,d); legaGiorni(slot,d); } })
                .catch(()=>{ if(mio===richiesta && slot.isConnected) slot.innerHTML=bloccoLive(b,null); });
 }
 
@@ -1214,7 +1289,7 @@ function apriScheda(i){
   const lf=v.querySelector("#liveFoglio");
   lf.innerHTML='<div class="live"><div class="live-testa"><span><i class="pulse"></i>Adesso in spiaggia</span></div>'+
     '<div class="live-nota">Interrogo il modello meteo-marino…</div></div>';
-  condizioni(b).then(d=>{ if(lf.isConnected) lf.innerHTML=bloccoLive(b,d); });
+  condizioni(b).then(d=>{ if(lf.isConnected){ lf.innerHTML=bloccoLive(b,d); legaGiorni(lf,d); } });
 }
 addEventListener("keydown",e=>{ if(e.key==="Escape") chiudiScheda(); });
 
@@ -1341,8 +1416,17 @@ const stretto=()=>window.innerWidth<=960;
 function portaAllaScheda(){ if(stretto()) setTimeout(()=>{
   try{scheda.scrollIntoView({behavior:"smooth",block:"start"});}catch(_){scheda.scrollIntoView();} },80); }
 elenco.addEventListener("mouseover",e=>{const l=e.target.closest("li");if(l&&bloccato===null&&!stretto()){const i=+l.dataset.i;mostra(i);attiva(i);}});
-elenco.addEventListener("click",e=>{const l=e.target.closest("li");if(!l)return;const i=+l.dataset.i;
-  bloccato=i;mostra(i);attiva(i);if(!zonaAttiva)selezionaZona(SPIAGGE[i].z);portaAllaScheda();});
+/* Dalla ricerca alla spiaggia in un colpo solo: scheda aperta, segno acceso,
+   carta portata sul punto e tendina richiusa. Prima il clic apriva la scheda
+   ma lasciava la carta dov'era. */
+function apriDaRicerca(i){
+  const b=SPIAGGE[i]; if(!b) return;
+  bloccato=i; mostra(i); attiva(i);
+  const l=Math.max(ZMIN,PIENO.w*0.10);
+  vaiA({x:px(b.lon)-l/2, y:py(b.lat)-l*0.5*(PIENO.h/PIENO.w), w:l, h:l*(PIENO.h/PIENO.w)});
+  elencoAperto(false); portaAllaScheda();
+}
+elenco.addEventListener("click",e=>{const l=e.target.closest("li");if(!l)return;apriDaRicerca(+l.dataset.i);});
 elenco.addEventListener("keydown",e=>{const l=e.target.closest("li");if(l&&e.key==="Enter"){e.preventDefault();l.click();}});
 
 /* --- arrivare da un collegamento -------------------------------------
@@ -1385,10 +1469,17 @@ function elencoAperto(v){
   btnElenco.textContent=v?"▴":"▾";
 }
 btnElenco.onclick=()=>elencoAperto(elenco.classList.contains("chiuso"));
-document.getElementById("cerca").addEventListener("input",e=>{
-  disegnaElenco(e.target.value);
-  if(e.target.value) elencoAperto(true);
+const inpCerca=document.getElementById("cerca");
+inpCerca.addEventListener("input",e=>{ disegnaElenco(e.target.value); elencoAperto(true); });
+inpCerca.addEventListener("focus",()=>elencoAperto(true));
+inpCerca.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){ elencoAperto(false); inpCerca.blur(); return; }
+  if(e.key!=="Enter") return;
+  const p=elenco.querySelector("li");            // Invio apre il primo risultato
+  if(p){ e.preventDefault(); apriDaRicerca(+p.dataset.i); }
 });
+/* La tendina è sospesa sopra la pagina: un clic fuori la richiude. */
+document.addEventListener("click",e=>{ if(!e.target.closest(".ricerca")) elencoAperto(false); });
 
 const contA=document.getElementById("filtriAccesso");
 contA.innerHTML=Object.entries(ACCESSI).map(([k,a])=>
@@ -1641,6 +1732,10 @@ async function avvia(){
   disegnaZone();           /* i pulsanti delle zone */
   legaSegni();             /* i comandi appesi a ogni segno */
   applicaVista(vista=aspetta(PIENO)); aggiornaScala();
+  /* Un secondo giro al fotogramma dopo: alla prima passata il browser non ha
+     ancora misurato le scritte, quindi nessun nome risultava sovrapposto e
+     quel risultato vuoto restava in cache. */
+  requestAnimationFrame(()=>{ ultimoF=""; applicaVista(vista); });
   disegnaElenco(""); vuoto();
   if(stretto()) elencoAperto(false);
   apriDaIndirizzo();       /* se l'indirizzo dice una spiaggia, si apre quella */
@@ -1677,12 +1772,365 @@ async function controllaVetrina(){
   assaggioNellaFascia(f, riga);
   contaPaese(f, riga);
 }
+/* ======================= ONDA E VENTO SULLA CARTA =======================
+   Due strati facoltativi disegnati sul mare: quanto è alta l'onda adesso e da
+   dove soffia il vento. Il valore è quello della singola spiaggia, portata cinque
+   chilometri al largo — sotto costa il modello d'onda non dà niente — e tutte e
+   centocinquantotto stanno in due sole chiamate, perché Open-Meteo accetta le
+   coordinate in fila.
+   Quanti se ne vedono lo decide lo zoom: a tutta regione ne basta uno ogni tanti
+   pixel, avvicinandosi compaiono gli altri fino a uno per spiaggia. Prima c'era
+   un valore solo per zona, e due spiagge affacciate su mari opposti mostravano
+   lo stesso numero.
+   var e senza valore iniziale, non let: applicaVista chiama aggiornaClima prima
+   che questo blocco venga eseguito, e una const non ancora inizializzata darebbe
+   errore mentre un «=1» qui cancellerebbe la scala già calcolata. */
+/* var, non let: aggiornaClima legge «clima» già alla prima applicaVista, e una
+   let non ancora dichiarata farebbe errore invece di risultare vuota. */
+var clima=null, climaInCorso=null, ondaOn=false, ventoOn=false, meteoOn=false, firmaClima="";
+
+/* Il posto di ogni spiaggia sulla carta: da qui il glifo verrà scostato verso il
+   mare. Le coordinate da chiedere al modello sono quelle della spiaggia stessa,
+   le identiche che usa la scheda. */
+/* Pigro, non calcolato subito: in questa versione del sito le spiagge
+   arrivano dal database e la carta si disegna dopo, quindi allo scorrere
+   dello script SPIAGGE e' ancora vuoto. Si ricalcola da se' se il numero
+   delle spiagge cambia. */
+let _PUNTI=null;
+function PUNTI_(){ if(!_PUNTI||_PUNTI.length!==SPIAGGE.length)
+    _PUNTI=SPIAGGE.map((b,i)=>({i, x:px(b.lon), y:py(b.lat)}));
+  return _PUNTI; }
+
+/* Da che parte è il mare. Il campo «lato» è una bussola a quattro direzioni:
+   dove la costa gira — il Gargano, il tacco, le lagune — indica l'entroterra, e
+   il glifo finiva disegnato sui campi. Qui la risposta la dà la carta stessa:
+   si tira un raggio in sedici direzioni e si tengono quelle che restano fuori
+   dalla terra a nove, venti e trentaquattro unità; la loro media è la direzione
+   del mare aperto. Su un'isola sono libere tutte e la media si annulla: lì torna
+   buono il «lato» dichiarato. */
+/* Stessa ragione: il contorno della terra viene disegnato dal codice, non
+   sta nell'HTML. Si cerca alla prima domanda e si tiene. */
+let _TERRE=null;
+function TERRE_(){ if(!_TERRE||!_TERRE.length)
+    _TERRE=[...document.querySelectorAll("#gTerra path.terra, #gTerra path.isolotto")];
+  return _TERRE; }
+const PUNTO_SVG=svg.createSVGPoint();
+function inTerra(x,y){
+  PUNTO_SVG.x=x; PUNTO_SVG.y=y;
+  return TERRE_().some(p=>{ try{ return p.isPointInFill(PUNTO_SVG); }catch(_){ return false; } });
+}
+/* Quanto vale, su questa carta, una distanza tarata su una carta da mille
+   unità di larghezza. Le 59 regioni vanno da 291 a 1719: senza questo, i raggi
+   con cui si cerca il mare sarebbero giusti solo in Puglia. */
+/* Il ripiego per le isole, dove tutte le direzioni sono libere: la bussola a
+   quattro punte del campo «lato». Sta qui dentro e non fuori perche' fuori non
+   c'e': esisteva solo in due pagine su cinquantanove. */
+const LATO_VERSO={N:[1,0],S:[-1,0],E:[0,1],W:[0,-1]};
+const U=PIENO.w/1000;
+const BUSSOLA=[]; for(let a=0;a<16;a++) BUSSOLA.push([Math.cos(a*Math.PI/8),-Math.sin(a*Math.PI/8)]);
+/* Quanta acqua c'è davanti alla spiaggia, in unità di carta: si cammina verso il
+   largo finché non si torna a toccare terra — la sponda di fronte in un golfo, un
+   isolotto — e ci si ferma un po' prima. È questo, non un tetto uguale per tutti,
+   a dire quanto lontano si può portare il cartellino: davanti a Bari il mare è
+   aperto per centinaia di chilometri, dentro il golfo di Manfredonia molto meno. */
+function acquaDavanti(b,ux,uy){
+  const x=px(b.lon), y=py(b.lat);
+  /* Il tetto della sonda è un quarto della larghezza della regione, non un numero
+     assoluto: così la stessa riga vale per una carta di qualsiasi scala. Anche il
+     passo lo è: U porta le distanze di questa carta alla scala su cui sono state
+     tarate (mille unità di larghezza). */
+  let d=10*U; const fine=PIENO.w*0.25, passo=10*U;
+  while(d<fine && !inTerra(x+ux*d, y+uy*d)) d+=passo;
+  return Math.max(14*U, d-18*U);
+}
+function versoIlMare(b){
+  const x=px(b.lon), y=py(b.lat); let sx=0, sy=0;
+  for(const u of BUSSOLA){
+    if(inTerra(x+u[0]*9*U,y+u[1]*9*U)||inTerra(x+u[0]*20*U,y+u[1]*20*U)||inTerra(x+u[0]*34*U,y+u[1]*34*U)) continue;
+    sx+=u[0]; sy+=u[1];
+  }
+  const n=Math.hypot(sx,sy);
+  if(n<0.6){ const d=LATO_VERSO[b.lato]||[0,1]; return [d[1],-d[0]]; }
+  return [sx/n, sy/n];
+}
+
+/* Le stesse serie orarie che legge la scheda: stesse coordinate — la spiaggia,
+   non un punto al largo — stessi campi, stesso modello. Prima la carta chiedeva
+   il campo «current», che è un'altra cosa dall'ora in corso della serie: i due
+   numeri non coincidevano mai del tutto.
+   Un giorno indietro e due avanti fanno settantadue ore, circa settecento
+   kilobyte in due chiamate: abbastanza per il cursore, poco per la rete. */
+let ORE=[], VERSO_ARIA=[], oraScelta=0, oraAdesso=0;
+
+function climaDati(){
+  if(climaInCorso) return climaInCorso;
+  const la=SPIAGGE.map(b=>b.lat.toFixed(4)).join(","), lo=SPIAGGE.map(b=>b.lon.toFixed(4)).join(",");
+  const coda="&timezone=auto&past_days=1&forecast_days=2";
+  climaInCorso=Promise.all([
+    json("https://marine-api.open-meteo.com/v1/marine?latitude="+la+"&longitude="+lo+
+         "&hourly=wave_height"+coda,20000),
+    json("https://api.open-meteo.com/v1/forecast?latitude="+la+"&longitude="+lo+
+         "&hourly=wind_speed_10m,wind_direction_10m,weather_code,temperature_2m"+coda+"&models="+MODELLO,20000)
+  ]).then(([m,a])=>{
+    /* con più coordinate Open-Meteo risponde con un elenco, con una sola con un oggetto */
+    const lista=x=>Array.isArray(x)?x:(x?[x]:[]);
+    const M=lista(m), A=lista(a);
+    /* Se una delle due risposte non arriva — capita: sono richieste grosse e il
+       servizio ha un limite al minuto — il buco non si tiene in cache, altrimenti
+       resterebbe senza vento per tutta la sessione. Al prossimo tocco riprova. */
+    if(!M.length||!A.length) climaInCorso=null;
+    const orario=x=>(x&&x.hourly)||{};
+    ORE=orario(M[0]).time||orario(A[0]).time||[];
+    /* le due serie hanno lo stesso passo, ma l'ora dell'aria si cerca per data:
+       se un giorno partissero da ore diverse i due strati resterebbero allineati */
+    const tA=orario(A[0]).time||[];
+    VERSO_ARIA=ORE.map(t=>tA.indexOf(t));
+    clima=PUNTI_().map((p,i)=>{
+      const [ux,uy]=versoIlMare(SPIAGGE[i]);           // una volta sola, alla prima accensione
+      const maxOff=acquaDavanti(SPIAGGE[i],ux,uy);
+      const hm=orario(M[i]), ha=orario(A[i]);
+      return {...p, ux, uy, maxOff, h:null, v:null, d:null, w:null, t:null,
+        H:hm.wave_height||[], V:ha.wind_speed_10m||[], D:ha.wind_direction_10m||[],
+        W:ha.weather_code||[], T:ha.temperature_2m||[]};
+    });
+    oraAdesso=indiceOraCorrente(); oraScelta=oraAdesso; valoriDellOra();
+    return clima;
+  });
+  return climaInCorso;
+}
+function indiceOraCorrente(){
+  const a=new Date();
+  const iso=a.getFullYear()+"-"+String(a.getMonth()+1).padStart(2,"0")+"-"+
+            String(a.getDate()).padStart(2,"0")+"T"+String(a.getHours()).padStart(2,"0")+":00";
+  const i=ORE.indexOf(iso);
+  return i<0 ? Math.min(24,Math.max(0,ORE.length-1)) : i;
+}
+/* Dall'ora scelta si ricavano i tre numeri che i glifi già sanno leggere: così
+   il resto del disegno non cambia di una riga. */
+function valoriDellOra(){
+  const k=oraScelta, ka=VERSO_ARIA[k];
+  clima.forEach(c=>{
+    c.h = c.H[k]==null?null:c.H[k];
+    c.v = (ka>=0&&c.V[ka]!=null)?c.V[ka]:null;
+    c.d = (ka>=0&&c.D[ka]!=null)?c.D[ka]:null;
+    c.w = (ka>=0&&c.W[ka]!=null)?c.W[ka]:null;
+    c.t = (ka>=0&&c.T[ka]!=null)?c.T[ka]:null;
+  });
+}
+const GIORNI_B=["dom","lun","mar","mer","gio","ven","sab"];
+function etichettaOra(k){
+  const t=ORE[k]; if(!t) return "";
+  const g=t.slice(0,10), o=oggiISO();
+  const d=new Date(g+"T12:00:00"), salto=Math.round((d-new Date(o+"T12:00:00"))/86400000);
+  const q = salto===0?"oggi" : salto===-1?"ieri" : salto===1?"domani" : GIORNI_B[d.getDay()];
+  return q+" "+t.slice(11,16);
+}
+
+/* ---------------------------------------------------------------------------
+   UN CARTELLINO SOLO PER SPIAGGIA
+   Gli strati accesi non si spartiscono più la carta ciascuno per conto proprio:
+   si impilano dentro lo stesso disegno — cielo in alto, onda in mezzo, vento in
+   basso — ancorato al punto della spiaggia. Con due strati le sovrapposizioni si
+   potevano ancora scansare tenendoli su due fasce; con tre non bastava più.
+   Così invece non c'è niente da scansare: c'è un disegno solo per posto, e la
+   distanza minima fra un posto e l'altro è l'ingombro vero del cartellino, che
+   cresce e cala da sé quando si accendono o si spengono gli strati.
+   --------------------------------------------------------------------------- */
+const ancora=(c,offPx)=>'data-x="'+c.x.toFixed(1)+'" data-y="'+c.y.toFixed(1)+
+  '" data-ux="'+c.ux.toFixed(3)+'" data-uy="'+c.uy.toFixed(3)+
+  '" data-max="'+c.maxOff.toFixed(1)+'" data-off="'+offPx.toFixed(1)+'"';
+
+/* --- cielo: la stessa icona della scheda, con la temperatura di quell'ora --- */
+const ALTO_METEO=26, LARGO_METEO=46;
+function bloccoMeteo(c){
+  const g=GLIFI[(WMO[c.w]||["","coperto"])[1]];
+  return '<g class="meteo-g">'+
+    '<g transform="translate(-24,-12)">'+g+'</g>'+
+    (c.t==null?"":'<text class="cl-eti" x="4" y="4.5">'+Math.round(c.t)+'°</text>')+'</g>';
+}
+
+/* --- onda: due creste sfasate, più curve quanto più l'onda è alta --- */
+const ALTO_ONDA=18, LARGO_ONDA=24;
+function bloccoOnda(c,i){
+  const h=c.h, col=statoMare(h)[1];
+  const a=h==null?1.6:Math.max(1.6,Math.min(5.4,1.6+h*2.8));
+  const d="M-11,0 q5.5,-"+a.toFixed(1)+" 11,0 t11,0";
+  const r=(i%5)*0.3;
+  /* Mare calmo: creste piatte che salgono appena, ogni tre secondi e mezzo.
+     Mare agitato: creste alte che battono in poco più di un secondo. Il ritmo si
+     vede prima del colore, ed è la cosa che si cerca guardando la carta. */
+  const f=Math.min(1,(h||0)/2.2);
+  const dur=(3.5-f*2.3).toFixed(2), amp=(1.2+f*3.2).toFixed(1);
+  const cresta=(dy,rit)=>'<g transform="translate(0,'+dy+')"><path class="cl-onda" d="'+d+
+    '" style="animation-delay:'+rit.toFixed(2)+'s;animation-duration:'+dur+'s;--amp:'+amp+'px"/></g>';
+  return '<g class="onda-g" style="color:'+col+'">'+cresta(-3.2,r)+cresta(3.2,r+0.5)+'</g>';
+}
+
+/* --- vento: le scie corrono dalla coda alla punta, cioè nel verso in cui soffia.
+       La direzione di Open-Meteo è quella di provenienza, e l'etichetta la dice. --- */
+const ALTO_VENTO=44, LARGO_VENTO=44;
+function bloccoVento(c){
+  const v=c.v, d=c.d;
+  const col=v==null?"#9fb6c3":(v<12?"#2f9772":v<22?"#cf8a13":"#dd5b45");
+  /* Da tre secondi e mezzo con l'aria ferma a poco più di mezzo secondo sopra i
+     quaranta all'ora: la differenza si legge senza guardare il numero. */
+  const dur=(3.6-Math.min(1,(v||0)/40)*2.9).toFixed(2);
+  let scie="";
+  [-8,0,8].forEach((off,k)=>{ scie+='<line class="cl-scia" x1="'+off+'" y1="13" x2="'+off+'" y2="-11" '+
+    'style="animation-duration:'+dur+'s;animation-delay:'+(k*0.36).toFixed(2)+'s"/>'; });
+  return '<g class="vento-g" style="color:'+col+'">'+
+    '<g transform="translate(0,-6) rotate('+(((d+180)%360)).toFixed(0)+')">'+scie+
+      '<path class="cl-punta" d="M0,-18 l5.2,9 h-10.4 Z"/></g>'+
+    '<text class="cl-eti" y="19" text-anchor="middle">da '+dirTxt(d)+
+      (v==null?"":" "+Math.round(v))+'</text></g>';
+}
+
+/* I blocchi accesi, impilati e centrati sull'ancora. */
+function cartellino(c,i,offPx,alto){
+  let y=-alto/2, o="";
+  const posa=(h,s)=>{ o+='<g transform="translate(0,'+(y+h/2).toFixed(1)+')">'+s+'</g>'; y+=h; };
+  if(meteoOn) posa(ALTO_METEO,bloccoMeteo(c));
+  if(ondaOn)  posa(ALTO_ONDA,bloccoOnda(c,i));
+  if(ventoOn) posa(ALTO_VENTO,bloccoVento(c));
+  return '<g class="cl" '+ancora(c,offPx)+'>'+o+'</g>';
+}
+
+/* Quali spiagge disegnare: quelle dentro l'inquadratura che hanno il dato di
+   tutti gli strati accesi, e i cui cartellini non si toccano. Il confronto è fra
+   rettangoli, non fra distanze: un cartellino è alto e stretto, e misurarlo con
+   un cerchio lo sprecherebbe in larghezza. La soglia è in pixel di schermo, così
+   è lo zoom a decidere la risoluzione: la stessa soglia, a carta ingrandita, vale
+   molti meno metri, e i valori compaiono via via che ci si avvicina. */
+function scegliPunti(perU,v,largPx,altPx,offPx){
+  const dw=largPx/perU, dh=altPx/perU, mx=v.w*0.06, presi=[];
+  for(const c of clima){
+    if(meteoOn&&c.w==null) continue;
+    if(ondaOn&&c.h==null) continue;
+    if(ventoOn&&c.d==null) continue;
+    /* si misura dove il cartellino finisce davvero, non dove sta la spiaggia: sul
+       Salento le due coste sono vicine e i disegni dei due mari si incontrerebbero */
+    const off=Math.min(offPx/perU, c.maxOff);
+    /* Dove l'acqua non basta a starci comodo — una baia stretta, un golfo — la
+       spiaggia si salta: fra centocinquantotto candidate ce n'è sempre un'altra
+       lì accanto con il mare aperto davanti, e a carta ingrandita ci sta anche
+       questa, perché lo stesso scostamento vale molti meno metri. */
+    if(off*perU < offPx-14) continue;
+    const gx=c.x+c.ux*off, gy=c.y+c.uy*off;
+    if(gx<v.x-mx||gx>v.x+v.w+mx||gy<v.y-mx||gy>v.y+v.h+mx) continue;
+    /* La direzione del mare e' una media di raggi liberi: in mare aperto non
+       sbaglia, in un fiordo puo' puntare alla sponda di fronte. Qui non si
+       indovina, si guarda: se il cartellino cadrebbe sulla terra, quella
+       spiaggia si salta e ne prende il posto una accanto. */
+    if(inTerra(gx,gy)) continue;
+    if(presi.some(q=>Math.abs(q.gx-gx)<dw && Math.abs(q.gy-gy)<dh)) continue;
+    presi.push({...c,gx,gy});
+  }
+  return presi;
+}
+function disegnaClima(v){
+  const g=document.getElementById("gClima"); if(!g) return;
+  if(!clima||(!ondaOn&&!ventoOn&&!meteoOn)){ g.innerHTML=""; firmaClima=""; return; }
+  const w=v||vista, rt=telaio.getBoundingClientRect();
+  const perU=Math.min((rt.width||600)/w.w,(rt.height||600)/w.h)||1;
+  const f=climaPx()/SEGNO_BASE;                      // unità di carta → pixel, a questo zoom
+  const alto=(meteoOn?ALTO_METEO:0)+(ondaOn?ALTO_ONDA:0)+(ventoOn?ALTO_VENTO:0);
+  const largo=Math.max(meteoOn?LARGO_METEO:0, ondaOn?LARGO_ONDA:0, ventoOn?LARGO_VENTO:0);
+  /* Più il cartellino è alto, più va portato al largo: la striscia d'acqua
+     fra la costa e il suo bordo di sotto resta la stessa. */
+  const offPx=alto*f/2+ARIA;
+  const punti=scegliPunti(perU,w,largo*f+10,alto*f+8,offPx);
+  /* Si ridisegna solo quando la scelta cambia davvero: altrimenti a ogni
+     fotogramma dello zoom le animazioni ripartirebbero da capo. */
+  const firma=(meteoOn?"m":"")+(ondaOn?"o":"")+(ventoOn?"v":"")+"|"+punti.map(c=>c.i).join();
+  if(firma!==firmaClima){
+    g.innerHTML=punti.map((c,n)=>cartellino(c,n,offPx,alto)).join("");
+    firmaClima=firma;
+    if(!climaEti.hidden) mostraEti(etichettaClima(punti.length));
+  }
+  scalaClima(perU);
+}
+/* Dello zoom al cartellino cambia solo quanti se ne vedono, mai quanto è grande. */
+function aggiornaClima(v){
+  if(clima&&(ondaOn||ventoOn||meteoOn)) disegnaClima(v);
+}
+/* I cartellini restano della stessa taglia sullo schermo a ogni ingrandimento:
+   sono una misura, non un luogo, e devono leggersi uguali da lontano e da vicino.
+   Se crescessero come i segni delle spiagge, da vicino si coprirebbero fra loro
+   proprio quando servono distinti. */
+/* Su un telefono la carta è alta quanto un terzo di quella del portatile, e un
+   cartellino di taglia fissa se ne mangiava un quarto. La taglia segue il lato
+   corto del telaio: sotto i 520 pixel cala, fino a due terzi. */
+function climaPx(){
+  const r=telaio.getBoundingClientRect();
+  const corto=Math.min(r.width||600,r.height||600);
+  return 5.8*Math.max(0.62,Math.min(1,corto/520));
+}
+/* Quanto il cartellino sta al largo: quel tanto che basta a lasciare fra la costa
+   e il suo bordo di sotto una striscia d'acqua sempre uguale, ventidue pixel. Il
+   solo limite è l'acqua che c'è davvero davanti a quella spiaggia — prima era un
+   tetto uguale per tutti, e su uno schermo stretto valeva così pochi pixel che il
+   cartellino finiva addosso alla costa. */
+const ARIA=22;
+function scalaClima(perU){
+  const s=Math.max(.02,Math.min(8,(climaPx()/perU)/SEGNO_BASE));
+  const g=document.getElementById("gClima"); if(!g||!g.firstChild) return;
+  g.querySelectorAll("g.cl").forEach(e=>{
+    const off=Math.min(+e.dataset.off/perU, +e.dataset.max);
+    const x=+e.dataset.x+ +e.dataset.ux*off, y=+e.dataset.y+ +e.dataset.uy*off;
+    e.setAttribute("transform","translate("+x.toFixed(1)+","+y.toFixed(1)+") scale("+s.toFixed(3)+")");
+  });
+}
+
+const climaEti=document.getElementById("climaEti");
+function mostraEti(t){ climaEti.innerHTML=t; climaEti.hidden=!t; }
+function etichettaClima(n){
+  let t="";
+  if(meteoOn) t+='<b>Cielo e temperatura</b>';
+  if(ondaOn) t+='<b'+(t?' style="margin-top:4px"':'')+'>Onda · più alta, più veloce</b>'+
+    '<i style="--pal:#2f9772">fino a 0,5 m</i><i style="--pal:#7bb03a">0,5-1</i>'+
+    '<i style="--pal:#cf8a13">1-1,5</i><i style="--pal:#dd5b45">oltre 1,5</i>';
+  if(ventoOn) t+='<b'+(t?' style="margin-top:4px"':'')+'>Vento · da dove soffia</b>'+
+    '<i style="--pal:#2f9772">fino a 12</i><i style="--pal:#cf8a13">12-22</i>'+
+    '<i style="--pal:#dd5b45">oltre 22 km/h</i>';
+  return t+'<span style="display:block;margin-top:3px;opacity:.8">'+
+    (ORE.length?etichettaOra(oraScelta):'')+(n?' · '+n+'/'+PUNTI_().length+' spiagge':'')+'</span>';
+}
+const barraTempo=document.getElementById("tempo"), cursore=document.getElementById("oraSlider"),
+      etiOra=document.getElementById("oraEti"), btnAdesso=document.getElementById("tAdesso");
+function aggiornaOra(){
+  cursore.max=Math.max(0,ORE.length-1);
+  cursore.value=oraScelta;
+  etiOra.textContent=etichettaOra(oraScelta);
+  btnAdesso.hidden=(oraScelta===oraAdesso);
+  valoriDellOra(); firmaClima=""; disegnaClima();
+  if(!climaEti.hidden) mostraEti(etichettaClima());
+}
+cursore.addEventListener("input",()=>{ oraScelta=+cursore.value; aggiornaOra(); });
+btnAdesso.addEventListener("click",()=>{ oraScelta=oraAdesso; aggiornaOra(); });
+
+function premiClima(btn,quale){
+  btn.addEventListener("click",async()=>{
+    if(quale==="onda") ondaOn=!ondaOn; else if(quale==="vento") ventoOn=!ventoOn; else meteoOn=!meteoOn;
+    btn.setAttribute("aria-pressed",String(quale==="onda"?ondaOn:quale==="vento"?ventoOn:meteoOn));
+    if(!ondaOn&&!ventoOn&&!meteoOn){ disegnaClima(); mostraEti(""); barraTempo.hidden=true; return; }
+    if(!clima) mostraEti('<b>Mare, vento e cielo</b>Interrogo il modello…');
+    await climaDati();
+    if(!clima||clima.every(c=>c.H.length===0&&c.D.length===0)){
+      mostraEti('<b>Mare, vento e cielo</b>Dati non raggiungibili: serve la connessione.'); return; }
+    barraTempo.hidden=false;
+    mostraEti(etichettaClima()); aggiornaOra();
+  });
+}
+premiClima(document.getElementById("tOnda"),"onda");
+premiClima(document.getElementById("tVento"),"vento");
+premiClima(document.getElementById("tMeteo"),"meteo");
+
 avvia();
 /* Se si entra o si esce senza ricaricare, la regione va richiesta di nuovo:
    e' cambiato chi sta chiedendo. */
 VADO.alCambio((function(){ let primo=true;
   return ()=>{ if(primo){ primo=false; return; } location.reload(); }; })());
 </script>
-<script src="vado-conto.js?v=202609052234"></script>
+<script src="vado-conto.js?v=202609120556"></script>
 </body>
 </html>
