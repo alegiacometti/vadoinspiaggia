@@ -561,6 +561,14 @@ button.f[data-s="bb"][aria-pressed="true"]{background:var(--azzurro);border-colo
 .corpo .grappolo{margin:.35rem 0 0;padding:6px 9px;border-left:3px solid var(--azzurro);
   background:#f2f9fc;font-size:.78rem;line-height:1.45;color:var(--profondo)}
 .corpo .grappolo b{font-weight:700}
+/* I nomi delle spiagge nascoste sotto lo stesso segno: si leggono e si
+   premono, cosi' non c'e' piu' niente da spiegare. */
+.corpo .grappolo .vicina{display:inline-block;margin:4px 4px 0 0;padding:3px 9px;
+  border:1px solid var(--basso);border-radius:999px;background:#fff;color:var(--blu);
+  font-family:inherit;font-size:.95em;line-height:1.3;cursor:pointer;transition:.14s}
+.corpo .grappolo .vicina:hover{background:var(--azzurro);border-color:var(--azzurro);color:#fff}
+.corpo .grappolo .vicina:focus-visible{outline:2px solid var(--azzurro);outline-offset:2px}
+.corpo .grappolo span{display:block;margin-top:5px;color:var(--grigio);font-size:.92em}
 
 
 /* ---------- entrare, uscire, iscriversi ----------

@@ -20,7 +20,9 @@
   velo.className = "velo-conto";
   velo.innerHTML =
     '<form method="dialog" class="foglio-conto">' +
-      '<button class="chiudi" value="x" aria-label="Chiudi">✕</button>' +
+      /* type="button": senza, dentro un form vale «invia», e il browser
+         si ferma sul campo obbligatorio vuoto invece di chiudere. */
+      '<button type="button" class="chiudi" aria-label="Chiudi">✕</button>' +
       '<div class="conto-schede" role="tablist">' +
         '<button type="button" data-s="accedi"    class="on">Accedi</button>' +
         '<button type="button" data-s="registrati">Registrati</button>' +
@@ -43,6 +45,11 @@
       '<button type="button" class="conto-vai" data-vai>Accedi</button>' +
     '</form>';
   document.body.appendChild(velo);
+
+  /* La X e' un pulsante normale e chiude, punto. Si chiude anche cliccando
+     fuori dal foglio: il <dialog> riceve il clic sullo sfondo, il foglio no. */
+  velo.querySelector(".chiudi").addEventListener("click", () => velo.close());
+  velo.addEventListener("click", e => { if (e.target === velo) velo.close(); });
 
   const f       = velo.querySelector("form");
   const nota    = velo.querySelector("[data-nota]");

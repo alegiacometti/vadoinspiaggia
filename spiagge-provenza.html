@@ -15,11 +15,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="carte-spiagge.css?v=202609120556">
-<script src="configurazione.js?v=202609120556"></script>
-<script src="vado-dati.js?v=202609120556"></script>
-<script src="vado-recensioni.js?v=202609120556"></script>
-<script src="vado-vento.js?v=202609120556"></script>
+<link rel="stylesheet" href="carte-spiagge.css?v=202609120830">
+<script src="configurazione.js?v=202609120830"></script>
+<script src="vado-dati.js?v=202609120830"></script>
+<script src="vado-recensioni.js?v=202609120830"></script>
+<script src="vado-vento.js?v=202609120830"></script>
 <style>/* misure di questa regione — vedi carte-spiagge.css */
 :root{--colonna-carta:660px;--telaio-h:min(62vh,600px)}</style>
 </head>
@@ -1197,10 +1197,21 @@ function corpo(b){
    '<div class="rec-riassunto" data-riassunto="'+b.sid+'">'+VADORECE.riassunto(b.sid)+'</div>'+
    /* se lì sotto ce n'è più d'una, conviene dirlo: altrimenti sembra che il
       clic non risponda, mentre sta solo scegliendo la prima */
-   (function(){const g=(typeof grappoloDi==="function")?grappoloDi(SPIAGGE.indexOf(b)):[];
-     return g.length>1 ? '<p class="grappolo">In questo punto ci sono <b>'+g.length+
-       '</b> spiagge: clicca ancora sul segno per passare alla successiva'+
-       (g.length>6?', oppure ingrandisci la carta per separarle':'')+'.</p>' : "";})()+
+   /* Le spiagge che sulla carta cadono sotto lo stesso punto: invece di
+      chiedere un clic al buio, si scrivono i nomi e ci si va premendoli. */
+   (function(){
+     const mio=SPIAGGE.indexOf(b);
+     const g=(typeof grappoloDi==="function")?grappoloDi(mio):[];
+     const altri=g.filter(j=>j!==mio);
+     if(!altri.length) return "";
+     const una=altri.length===1;
+     return '<p class="grappolo"><b>'+(una?'Qui sotto ce n\'è un\'altra':
+       'Qui sotto ce ne sono altre '+altri.length)+'</b>, '+
+       (una?'nascosta':'nascoste')+' dietro lo stesso segno: '+
+       altri.map(j=>'<button type="button" class="vicina" data-vai-a="'+j+'">'+
+         escA(SPIAGGE[j].n)+'</button>').join(" ")+
+       (altri.length>5?' <span>Ingrandisci la carta per separarle.</span>':'')+'</p>';
+   })()+
    '<div class="badge-accesso" style="background:'+a.col+'14;border:1px solid '+a.col+'4d;color:'+a.col+'">'+
      '<span class="glifo">'+a.glifo+'</span> '+a.et+'</div>'+
    '<div id="slotLive"></div>'+
@@ -1387,6 +1398,16 @@ async function premiStella(b){
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-stella]");
   if (b){ e.preventDefault(); premiStella(b); }
+});
+
+/* I nomi delle spiagge nascoste dietro lo stesso segno: premendoli si apre
+   quella, senza muovere la carta — chi guarda sa gia' dove sta. */
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-vai-a]");
+  if (!t) return;
+  const j = +t.dataset.vaiA;
+  if (!SPIAGGE[j]) return;
+  bloccato = j; mostra(j); attiva(j);
 });
 
 /* ======================= ELENCO E FILTRI ======================= */
@@ -2134,6 +2155,6 @@ avvia();
 VADO.alCambio((function(){ let primo=true;
   return ()=>{ if(primo){ primo=false; return; } location.reload(); }; })());
 </script>
-<script src="vado-conto.js?v=202609120556"></script>
+<script src="vado-conto.js?v=202609120830"></script>
 </body>
 </html>
