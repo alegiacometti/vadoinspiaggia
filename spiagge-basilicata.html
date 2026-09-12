@@ -15,11 +15,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="carte-spiagge.css?v=202609121655">
-<script src="configurazione.js?v=202609121655"></script>
-<script src="vado-dati.js?v=202609121655"></script>
-<script src="vado-recensioni.js?v=202609121655"></script>
-<script src="vado-vento.js?v=202609121655"></script>
+<link rel="stylesheet" href="carte-spiagge.css?v=202609121737">
+<script src="configurazione.js?v=202609121737"></script>
+<script src="vado-dati.js?v=202609121737"></script>
+<script src="vado-recensioni.js?v=202609121737"></script>
+<script src="vado-vento.js?v=202609121737"></script>
 <style>/* misure di questa regione — vedi carte-spiagge.css */
 :root{--colonna-carta:600px;--telaio-h:min(68vh,660px)}</style>
 </head>
@@ -1039,8 +1039,8 @@ const TILE="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/M
    e' unico: nessun dato in piu' da portarsi dietro.
    Dove non ne abbiamo ancora — l'Italia continentale, in attesa delle tessere
    AGEA — HA_FOTO resta falso e il riquadro tiene il mosaico di prima. */
-const HA_FOTO = false;
-const CREDITO_FOTO = "Esri World Imagery";
+const HA_FOTO = true;
+const CREDITO_FOTO = "Copernicus Sentinel data 2025";
 const fotoDi = b => "spiagge/" + b.sid.slice(0, b.sid.lastIndexOf("-")) + "/" + b.sid + ".jpg";
 const ritaglio = b => '<img class="ortofoto" src="' + fotoDi(b) + '" alt="Vista aerea di '
   + escA(b.n) + '" loading="lazy" decoding="async">';
@@ -2174,6 +2174,6 @@ avvia();
 VADO.alCambio((function(){ let primo=true;
   return ()=>{ if(primo){ primo=false; return; } location.reload(); }; })());
 </script>
-<script src="vado-conto.js?v=202609121655"></script>
+<script src="vado-conto.js?v=202609121737"></script>
 </body>
 </html>
