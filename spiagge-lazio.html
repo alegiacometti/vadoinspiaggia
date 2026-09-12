@@ -15,11 +15,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="carte-spiagge.css?v=202609121737">
-<script src="configurazione.js?v=202609121737"></script>
-<script src="vado-dati.js?v=202609121737"></script>
-<script src="vado-recensioni.js?v=202609121737"></script>
-<script src="vado-vento.js?v=202609121737"></script>
+<link rel="stylesheet" href="carte-spiagge.css?v=202609122113">
+<script src="configurazione.js?v=202609122113"></script>
+<script src="vado-dati.js?v=202609122113"></script>
+<script src="vado-recensioni.js?v=202609122113"></script>
+<script src="vado-segnala.js?v=202609122113"></script>
+<script src="vado-vento.js?v=202609122113"></script>
 <style>/* misure di questa regione — vedi carte-spiagge.css */
 :root{--colonna-carta:520px;--telaio-h:min(74vh,720px)}</style>
 </head>
@@ -1261,6 +1262,8 @@ function vetrinaSat(b,i){
      '<a data-pano href="'+gPano(b)+'" target="_blank" rel="noopener">Street View</a>'+
      '<a href="'+gVia(b)+'" target="_blank" rel="noopener">Indicazioni</a>'+
      '<button type="button" id="btnScheda">Scheda completa</button>'+
+     '<button type="button" data-segnala="'+escA(b.sid)+'" '+
+       'data-sg-nome="'+escA(b.n)+'" data-sg-reg="'+REGIONE+'">Segnala un errore</button>'+
    '</div>';
 }
 let richiesta=0, corrente=null;
@@ -2181,6 +2184,6 @@ avvia();
 VADO.alCambio((function(){ let primo=true;
   return ()=>{ if(primo){ primo=false; return; } location.reload(); }; })());
 </script>
-<script src="vado-conto.js?v=202609121737"></script>
+<script src="vado-conto.js?v=202609122113"></script>
 </body>
 </html>

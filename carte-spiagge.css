@@ -870,3 +870,44 @@ a.conto-chi:hover{color:var(--azzurro)}
   background:#eaf6ee;color:#1f6b45;border:1px solid #bfe3cd;border-radius:8px;
   padding:9px 13px;margin:0 0 14px}
 .conto-benvenuto.brutto{background:#fdecea;color:#a3352a;border-color:#f3c6c0}
+
+/* ---------------- segnalare un errore ----------------------------------
+   Stessa finestra della scheda, stretta: e' un modulo di tre righe, non una
+   pagina. Il <dialog> porta il suo sfondo, quindi il velo qui non colora
+   niente — lo fa ::backdrop. */
+.segnala-velo{border:0;padding:0;background:transparent;max-width:100%}
+.segnala-velo::backdrop{background:rgba(8,60,92,.5);backdrop-filter:blur(4px)}
+.segnala-foglio{width:min(94vw,470px);max-width:none}
+.segnala-corpo{padding:16px 18px}
+.segnala-nota{margin:0 0 14px;font-size:13.5px;line-height:1.55;color:var(--grigio)}
+.segnala-campo{display:block;margin:0 0 12px}
+.segnala-campo>span{display:block;font-family:var(--dati);font-size:10px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--grigio);margin:0 0 5px}
+.segnala-campo select,.segnala-campo textarea{width:100%;box-sizing:border-box;font:inherit;
+  font-size:14px;color:var(--blu);background:#fff;border:1px solid var(--basso);border-radius:9px;
+  padding:9px 11px;transition:border-color .14s,box-shadow .14s}
+.segnala-campo textarea{resize:vertical;min-height:88px;line-height:1.5}
+.segnala-campo select:focus,.segnala-campo textarea:focus{outline:0;border-color:var(--azzurro);
+  box-shadow:0 0 0 3px rgba(23,134,189,.16)}
+.segnala-esito{margin:10px 0 0;font-size:13px;line-height:1.5;padding:9px 11px;border-radius:9px}
+.segnala-esito.bene{background:#e8f6ec;color:#1c6b36;border:1px solid #b6dfc3}
+.segnala-esito.male{background:#fdecea;color:#8d2b22;border:1px solid #f2c2bc}
+.segnala-entra{font:inherit;font-size:13.5px;color:var(--azzurro);background:none;border:0;
+  padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.segnala-entra:hover{color:var(--profondo)}
+
+/* ---------------- le segnalazioni nella pagina di gestione ------------- */
+.gest-segn{display:grid;gap:10px}
+.gest-segn-riga{border:1px solid var(--tratto);border-radius:10px;padding:11px 13px;background:#fff}
+.gest-segn-riga.letta{background:var(--nebbia);opacity:.72}
+.gest-segn-capo{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 6px}
+.gest-segn-capo b{font-size:14px}
+.gest-segn-genere{font-family:var(--dati);font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+  background:var(--schiuma);border:1px solid var(--basso);border-radius:999px;padding:2px 8px;color:var(--blu)}
+.gest-segn-testo{margin:0;font-size:14px;line-height:1.55;white-space:pre-wrap}
+.gest-segn-pie{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:9px 0 0}
+.gest-segn-pie button{font-family:var(--dati);font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;
+  border:1px solid var(--tratto);border-radius:999px;background:#fff;color:var(--grigio);
+  padding:4px 10px;cursor:pointer;transition:.14s}
+.gest-segn-pie button:hover{border-color:var(--azzurro);color:var(--azzurro);background:var(--schiuma)}
+.gest-segn-pie a{font-size:12px;color:var(--azzurro)}

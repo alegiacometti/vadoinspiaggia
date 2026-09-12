@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="carte-spiagge.css?v=202609121737">
-<script src="vado-dati.js?v=202609121737"></script>
+<link rel="stylesheet" href="carte-spiagge.css?v=202609122113">
+<script src="vado-dati.js?v=202609122113"></script>
 <style>/* misure di questa pagina — vedi carte-spiagge.css */
 :root{--colonna-carta:820px;--telaio-h:min(41vh,380px)}
 
@@ -175,11 +175,20 @@ svg.carta{transition:none}
 .testata .barra-stato{margin:0 0 9px}
 .testata .ritorno{margin:0}
 @media (max-width:860px){
-  .carta-cont{max-width:none}
+  /* margin-inline:auto su un elemento di griglia lo fa restringere al
+     contenuto invece di occupare la colonna: sul telefono la carta si
+     accontentava di 302 pixel su 364 disponibili. Qui la colonna se la
+     prende tutta. */
+  .carta-cont{max-width:none;margin-inline:0;width:100%}
   /* anche stretti conviene il rapporto giusto: allungare il telaio non
      ingrandisce la carta di un pixel — con "meet" la carta e' gia' larga
-     quanto il telaio — aggiunge solo mare vuoto sopra e sotto. */
-  .telaio{height:auto;aspect-ratio:2.171;min-height:210px}
+     quanto il telaio — aggiunge solo mare vuoto sopra e sotto.
+     Il min-height pero' comandava sulla larghezza: sotto i 456 pixel di
+     schermo il rapporto lo allargava oltre la finestra, e la parte destra
+     della carta finiva fuori senza che niente lo facesse capire — la pagina
+     non scorreva nemmeno di lato. Ora la larghezza non supera mai lo
+     schermo e l'altezza la segue. */
+  .telaio{height:auto;aspect-ratio:2.171;min-height:0;max-width:100%}
   .stati,.regioni{grid-template-columns:1fr}
 }
 </style>
@@ -866,6 +875,6 @@ document.querySelectorAll(".reg-carta.pronta").forEach(a=>{
   });
 });
 </script>
-<script src="vado-conto.js?v=202609121737"></script>
+<script src="vado-conto.js?v=202609122113"></script>
 </body>
 </html>

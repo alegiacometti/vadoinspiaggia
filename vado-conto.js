@@ -49,7 +49,19 @@
   /* La X e' un pulsante normale e chiude, punto. Si chiude anche cliccando
      fuori dal foglio: il <dialog> riceve il clic sullo sfondo, il foglio no. */
   velo.querySelector(".chiudi").addEventListener("click", () => velo.close());
-  velo.addEventListener("click", e => { if (e.target === velo) velo.close(); });
+  /* Chiudere cliccando fuori dal foglio e' comodo, ma il clic va giudicato da
+     DOVE E' COMINCIATO, non da dove finisce. Chi seleziona con il mouse il
+     testo di un campo — per esempio per cancellare l'indirizzo gia' scritto —
+     spesso trascina un dito oltre il bordo del foglio e lascia sullo sfondo:
+     il browser consegna allora un "click" il cui bersaglio e' il velo, e la
+     finestra spariva in faccia a chi stava solo cancellando una parola.
+     Si chiude solo se anche la pressione era sullo sfondo. */
+  let giuSulVelo = false;
+  velo.addEventListener("pointerdown", e => { giuSulVelo = (e.target === velo); });
+  velo.addEventListener("click", e => {
+    if (e.target === velo && giuSulVelo) velo.close();
+    giuSulVelo = false;
+  });
 
   const f       = velo.querySelector("form");
   const nota    = velo.querySelector("[data-nota]");

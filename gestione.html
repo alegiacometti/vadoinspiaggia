@@ -10,8 +10,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="carte-spiagge.css?v=202609121901">
-<script src="vado-dati.js?v=202609121901"></script>
+<link rel="stylesheet" href="carte-spiagge.css?v=202609122113">
+<script src="vado-dati.js?v=202609122113"></script>
 <style>
 /* Questa pagina NON e' protetta dal fatto di essere nascosta: chiunque puo'
    aprirla, e va benissimo. A proteggere sono le regole del database — senza
@@ -130,6 +130,7 @@ function fuori(titolo, testo, conPulsante){
   if (b) b.onclick = () => window.apriConto && window.apriConto("accedi");
 }
 
+let SEGN = [];
 async function carica(){
   if (!VADO.chiSono())
     return fuori("Questa pagina è riservata",
@@ -146,6 +147,12 @@ async function carica(){
        richiesta va storta, la dashboard deve continuare a mostrare le persone
        e gli sblocchi, che sono la cosa per cui esiste. */
     try { PARERI = await VADO.daModerare(60); } catch (_) { PARERI = []; }
+    /* Come i pareri: se questa richiesta va storta la dashboard deve
+       continuare a mostrare le persone e gli sblocchi. */
+    try {
+      SEGN = await VADO.chiedi("segnalazioni?select=id,sid,regione,spiaggia,utente," +
+        "genere,testo,creato,letta&order=creato.desc&limit=200");
+    } catch (_) { SEGN = []; }
   }catch(e){
     return fuori("Non riesco a leggere", "Il servizio non risponde: " + e.message, false);
   }
@@ -189,6 +196,7 @@ function disegna(){
     '<p class="gest-sez">Le persone</p>' + noteLibere() + tabellaPersone(perUtente) +
     '<p class="gest-sez" style="margin-top:26px">Le regioni, per quante persone le hanno</p>' +
     tabellaRegioni(domanda, max) +
+    '<p class="gest-sez" style="margin-top:26px">' + titoloSegnalazioni() + '</p>' + elencoSegnalazioni() +
     '<p class="gest-sez" style="margin-top:26px">Gli ultimi pareri</p>' + tabellaPareri();
 
   corpo.querySelectorAll("[data-sblocca]").forEach(b =>
@@ -197,6 +205,10 @@ function disegna(){
     b.onclick = () => revoca(+b.dataset.revoca, b.dataset.che));
   corpo.querySelectorAll("[data-ruolo]").forEach(b =>
     b.onclick = () => cambiaRuolo(b.dataset.ruolo, b.dataset.a, b.dataset.chi));
+  corpo.querySelectorAll("[data-segn-letta]").forEach(b =>
+    b.onclick = () => segnaLetta(+b.dataset.segnLetta, b.dataset.come === "1"));
+  corpo.querySelectorAll("[data-segn-via]").forEach(b =>
+    b.onclick = () => buttaSegnalazione(+b.dataset.segnVia));
   corpo.querySelectorAll("[data-par]").forEach(b =>
     b.onclick = () => togliParere(b.dataset.par, b.dataset.chi, b));
 }
@@ -299,6 +311,66 @@ function tabellaPersone(perUtente){
     }).join("") + '</tbody></table>';
 }
 
+/* ------------------------------------------------------- le segnalazioni
+   Arrivano dalle schede delle spiagge. Si leggono, si segnano come lette, e
+   quando sono servite si buttano: tenerle per sempre vuol dire ritrovarsi fra
+   un anno con una lista che nessuno guarda piu'. */
+const GENERI_SEGN = {
+  posizione: "posizione", dati: "dati", servizi: "servizi",
+  immagine: "immagine",  altro: "altro"
+};
+function titoloSegnalazioni(){
+  const nuove = SEGN.filter(s => !s.letta).length;
+  if (!SEGN.length) return "Le segnalazioni";
+  return "Le segnalazioni" + (nuove ? " · " + nuove + (nuove === 1 ? " da leggere" : " da leggere") : "");
+}
+/* Se il profilo non si trova non si inventa niente: si mostra solo la data.
+   Scrivere "un iscritto che non c'e' piu'" sarebbe una deduzione, e per giunta
+   quasi sempre sbagliata. */
+function chiScrisse(u){
+  const p = PROFILI.find(x => x.utente === u);
+  return p ? (p.email || p.nome || "") : "";
+}
+function elencoSegnalazioni(){
+  if (!SEGN.length)
+    return '<div class="gest-vuoto">Nessuna segnalazione. Il pulsante sta in fondo a ogni scheda.</div>';
+  return '<div class="gest-segn">' + SEGN.map(s => {
+    const pag = s.regione ? 'spiagge-' + s.regione + '.html#' + encodeURIComponent(s.sid) : null;
+    return '<div class="gest-segn-riga' + (s.letta ? ' letta' : '') + '">' +
+      '<div class="gest-segn-capo">' +
+        '<b>' + esc(s.spiaggia || s.sid) + '</b>' +
+        '<span class="gest-segn-genere">' + esc(GENERI_SEGN[s.genere] || s.genere) + '</span>' +
+        '<span class="gest-quando">' + giorno(s.creato) +
+          (chiScrisse(s.utente) ? ' · ' + esc(chiScrisse(s.utente)) : '') + '</span>' +
+      '</div>' +
+      '<p class="gest-segn-testo">' + esc(s.testo) + '</p>' +
+      '<div class="gest-segn-pie">' +
+        (pag ? '<a href="' + pag + '" target="_blank" rel="noopener">apri la scheda ↗</a>' : '') +
+        '<button type="button" data-segn-letta="' + s.id + '" data-come="' + (s.letta ? '0' : '1') + '">' +
+          (s.letta ? 'segna da rivedere' : 'segna come letta') + '</button>' +
+        '<button type="button" data-segn-via="' + s.id + '">cancella</button>' +
+      '</div></div>';
+  }).join("") + '</div>';
+}
+async function segnaLetta(id, come){
+  try{
+    await VADO.chiedi("segnalazioni?id=eq." + id, { metodo:"PATCH", corpo:{ letta: come },
+      intestazioni:{ "Prefer":"return=minimal" } });
+    const s = SEGN.find(x => x.id === id); if (s) s.letta = come;
+    disegna();
+  }catch(e){ alert("Non ha funzionato: " + e.message.slice(0,200)); }
+}
+async function buttaSegnalazione(id){
+  const s = SEGN.find(x => x.id === id);
+  if (!confirm("Cancellare la segnalazione su «" + ((s && (s.spiaggia || s.sid)) || "questa spiaggia") + "»?\n\nNon si recupera.")) return;
+  try{
+    await VADO.chiedi("segnalazioni?id=eq." + id, { metodo:"DELETE",
+      intestazioni:{ "Prefer":"return=minimal" } });
+    SEGN = SEGN.filter(x => x.id !== id);
+    disegna();
+  }catch(e){ alert("Non ha funzionato: " + e.message.slice(0,200)); }
+}
+
 function tabellaRegioni(domanda, max){
   const righe = REGIONI.slice().sort((a,b) =>
     domanda[b.chiave].size - domanda[a.chiave].size || a.ordine - b.ordine);
@@ -394,6 +466,6 @@ async function revoca(id, che){
 
 VADO.alCambio(s => { IO = s; carica(); });
 </script>
-<script src="vado-conto.js?v=202609121901"></script>
+<script src="vado-conto.js?v=202609122113"></script>
 </body>
 </html>
