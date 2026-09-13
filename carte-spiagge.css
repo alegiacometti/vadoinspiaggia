@@ -749,13 +749,25 @@ a.conto-chi:hover{color:var(--azzurro)}
   box-shadow:var(--ombra)}
 .pref-griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
 .pref-carta{background:var(--carta);border:1px solid var(--tratto);border-left:3px solid var(--basso);
-  border-radius:10px;padding:13px 15px;box-shadow:var(--ombra);display:flex;flex-direction:column;gap:5px}
+  border-radius:10px;padding:13px 15px;box-shadow:var(--ombra);display:flex;flex-direction:column;gap:5px;
+  position:relative}
 .pref-carta.persa{border-left-color:var(--secca);background:var(--nebbia)}
 .pref-alto{display:flex;align-items:baseline;gap:9px}
 .pref-nome{font-family:var(--display);font-variation-settings:"SOFT" 30,"WONK" 1,"opsz" 100;
   font-weight:400;font-size:21px;line-height:1.1;color:var(--profondo);text-decoration:none}
 .pref-nome:hover{color:var(--azzurro)}
-.pref-alto .stella{margin-left:auto}
+/* Il collegamento sta sul nome, ma il bersaglio e' tutta la scheda: questo
+   rettangolo invisibile, grande quanto la carta, e' il collegamento stesso
+   allungato fin dove arriva il dito. Il nome resta il nome — chi usa un lettore
+   di schermo sente quello, non «clicca qui» — e la stellina, che sta piu' in
+   alto di un livello, continua a ricevere il proprio clic. */
+.pref-carta:has(a.pref-nome){cursor:pointer}
+a.pref-nome::after{content:"";position:absolute;inset:0;border-radius:inherit}
+.pref-carta:hover{border-color:var(--azzurro);border-left-color:var(--azzurro)}
+.pref-carta.persa:hover{border-color:var(--tratto);border-left-color:var(--secca)}
+a.pref-nome:focus-visible{outline:none}
+a.pref-nome:focus-visible::after{outline:2px solid var(--azzurro);outline-offset:2px;border-radius:10px}
+.pref-alto .stella{margin-left:auto;position:relative;z-index:1}
 .pref-dove{font-family:var(--dati);font-size:10px;letter-spacing:.05em;color:var(--grigio)}
 .pref-persa{font-size:12.5px;line-height:1.5;color:var(--grigio)}
 .pref-persa a{color:var(--azzurro)}
