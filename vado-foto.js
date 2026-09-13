@@ -152,7 +152,13 @@ window.VADOFOTO = (function () {
       .concat(attesa.map(f => ({ percorso: f.percorso, did: f.didascalia,
                                  quando: f.creata, stato: "attesa" })));
 
-    const entrato = !!(window.VADO && VADO.chiSono && VADO.chiSono());
+    /* VADO e' dichiarato «const» in vado-dati.js: e' una variabile globale ma
+       NON una proprieta' di window, quindi window.VADO e' undefined anche
+       quando VADO c'e' eccome. Chiedendolo cosi' «entrato» era sempre falso, e
+       su una spiaggia senza foto la sezione non si disegnava affatto: nessun
+       invito, nessun modo di mandare la prima. E' la quarta volta che questo
+       tranello morde — si controlla con typeof, mai con window. */
+    const entrato = typeof VADO !== "undefined" && !!VADO.chiSono();
     if (!scatti.length) {
       dove.innerHTML = entrato
         ? '<p class="imm-invito">Hai una foto di questa spiaggia? ' +
