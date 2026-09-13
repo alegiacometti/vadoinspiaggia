@@ -7,10 +7,10 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#083c5c">
 <title>Gestione · Vado in spiaggia</title>
-<link rel="stylesheet" href="carte-spiagge.css?v=202609130638">
+<link rel="stylesheet" href="carte-spiagge.css?v=202609131625">
 <link rel="stylesheet" href="caratteri/caratteri.css?v=202609130413">
-<script src="configurazione.js?v=202609130638"></script>
-<script src="vado-dati.js?v=202609130638"></script>
+<script src="configurazione.js?v=202609131625"></script>
+<script src="vado-dati.js?v=202609131625"></script>
 <style>
 /* Questa pagina NON e' protetta dal fatto di essere nascosta: chiunque puo'
    aprirla, e va benissimo. A proteggere sono le regole del database — senza
@@ -69,6 +69,39 @@ button.gest-ruolo:focus-visible{outline:2px solid var(--ambra);outline-offset:2p
 .gest-fuori{max-width:520px;margin:60px auto;text-align:center}
 .gest-fuori h2{font-family:var(--display);font-weight:400;font-size:26px;color:var(--profondo);margin:0 0 10px}
 .gest-fuori p{font-size:13.5px;line-height:1.6;color:#20536e;margin:0 0 18px}
+/* Lo stato dei contenuti. Il conto lo fa il database; qui si colora soltanto,
+   perche' «147 su 170» letto in fretta non dice se e' tanto o poco, e una
+   barretta lunga meta' riga lo dice prima di aver finito di leggere. */
+.gest-stato-via{display:flex;flex-wrap:wrap;gap:12px;align-items:center;
+  background:var(--carta);border:1px solid var(--tratto);border-radius:12px;
+  padding:14px 16px}
+.gest-stato-via p{margin:0;font-size:12.5px;line-height:1.55;color:var(--grigio);
+  flex:1 1 260px}
+.gest-stato-via b{color:var(--profondo);font-weight:500}
+.gest-cop{text-align:center;white-space:nowrap;min-width:66px}
+.gest-cop b{font-family:var(--dati);font-size:12.5px;font-weight:500;color:var(--profondo)}
+.gest-cop span{font-family:var(--dati);font-size:9.5px;color:var(--grigio)}
+.gest-cop i{display:block;height:3px;width:46px;margin:4px auto 0;border-radius:2px;
+  background:var(--nebbia);overflow:hidden}
+.gest-cop i u{display:block;height:100%;text-decoration:none;background:#96a7b0}
+.gest-cop.pieno b{color:#2c7a61} .gest-cop.pieno i u{background:#2c7a61}
+.gest-cop.quasi b{color:#5f9a55} .gest-cop.quasi i u{background:#5f9a55}
+.gest-cop.meta  b{color:#b3800f} .gest-cop.meta  i u{background:#b3800f}
+.gest-cop.zero  b{color:#96a7b0}
+/* «gest-foto» era gia' preso: e' il riquadro della foto da approvare, in fondo
+   alla pagina, e ha un bordo e un display:flex che qui facevano un pasticcio.
+   Questa si chiama «gest-vista» — la veduta dall'alto, non la fotografia. */
+.gest-vista{line-height:1.3;min-width:150px}
+.gest-vista b{display:block;font-family:var(--dati);font-size:11.5px;font-weight:500}
+.gest-vista span{display:block;font-size:10px;color:var(--grigio)}
+.gest-vista.alta b{color:#2c7a61} .gest-vista.media b{color:#b3800f}
+.gest-vista.bassa b{color:#96a7b0}
+.gest-paese td{background:var(--nebbia);font-family:var(--dati);font-size:10px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--profondo);padding:7px 13px}
+.gest-paese td b{font-family:var(--testo);font-size:12px;letter-spacing:0;
+  text-transform:none;color:var(--grigio);font-weight:400;margin-left:10px}
+.gest-scorri{overflow-x:auto;border-radius:12px}
+.gest-scorri .gest-tab{min-width:820px}
 @media (max-width:760px){ .gest-nascondi{display:none} }
 </style>
 </head>
@@ -199,6 +232,8 @@ function disegna(){
     '<p class="gest-sez" style="margin-top:26px">Le persone</p>' + noteLibere() + tabellaPersone(perUtente) +
     '<p class="gest-sez" style="margin-top:26px">Le regioni, per quante persone le hanno</p>' +
     tabellaRegioni(domanda, max) +
+    '<p class="gest-sez" style="margin-top:26px">Lo stato dei contenuti</p>' +
+    '<div id="statoQui">' + bloccoStato() + '</div>' +
     '<p class="gest-sez" style="margin-top:26px">' + titoloSegnalazioni() + '</p>' + elencoSegnalazioni() +
     '<p class="gest-sez" style="margin-top:26px">Gli ultimi pareri</p>' + tabellaPareri();
 
@@ -214,6 +249,8 @@ function disegna(){
     b.onclick = () => buttaSegnalazione(+b.dataset.segnVia));
   corpo.querySelectorAll("[data-imp-salva]").forEach(b =>
     b.onclick = () => salvaImpostazioni(b));
+  corpo.querySelectorAll("[data-stato]").forEach(b =>
+    b.onclick = () => chiediStato(b));
   corpo.querySelectorAll("[data-imp-campo]").forEach(c =>
     c.addEventListener("input", () => {
       const b = corpo.querySelector("[data-imp-salva]");
@@ -510,6 +547,149 @@ function tabellaRegioni(domanda, max){
     '</tbody></table>';
 }
 
+/* -------------------------------------------------- lo stato dei contenuti
+   Quanto e' piena ogni regione. Il conto lo fa il database (rpc/stato_regioni):
+   cinquemilacinquecento schede non si scaricano nel browser per contarle, e la
+   RLS non le farebbe nemmeno uscire tutte.
+
+   Due colonne pero' nel database non ci sono, e stanno qui sotto scritte a
+   mano: da quale fonte viene la veduta dall'alto di quella regione, e quanto
+   e' fitta la linea di costa disegnata nella sua pagina. Sono due fatti che
+   cambiano quando si rifa' un archivio o si ridisegna una carta — cioe' quasi
+   mai — e metterli in una tabella del database vorrebbe dire mantenerli in due
+   posti invece che in uno. */
+const SORGENTI = {
+  agea: ["10 m", "Sentinel-2 · AGEA non ha WMS", "bassa"],
+  dgt:  ["30 cm", "DGT OrtoSat", "alta"],
+  dgu:  ["20–50 cm", "DGU DOF5 / DOF2", "alta"],
+  grec: ["10 m", "Sentinel-2 · Ktimatologio vieta il commerciale", "bassa"],
+  gurs: ["25 cm", "GURS DOF025", "alta"],
+  ign:  ["20 cm", "IGN BD ORTHO", "alta"],
+  malt: ["10 m", "Sentinel-2 · MSDI vieta il riuso", "bassa"],
+  pnoa: ["25–50 cm", "IGN/CNIG PNOA", "alta"],
+  ptis: ["10 m", "Sentinel-2 · fonti regionali non commerciali", "bassa"],
+  rer:  ["20 cm", "Ortofoto RER 2023-24", "alta"],
+  sent: ["10 m", "Sentinel-2", "bassa"],
+  sitr: ["25 cm", "SITR Regione Siciliana", "alta"],
+  tosc: ["da confermare", "Regione Toscana", "media"]
+};
+const FOTO = {
+  abruzzo:"agea", acores:"ptis", aldivjaka:"sent", aldurazzo:"sent", alentejo:"dgt",
+  algarve:"dgt", alscutari:"sent", alvalona:"sent", andalusia:"pnoa", antivari:"sent",
+  attica:"grec", baleari:"pnoa", basilicata:"agea", bocche:"sent", budua:"sent",
+  calabria:"agea", calcidica:"grec", campania:"agea", canarie:"pnoa", catalogna:"pnoa",
+  centro:"dgt", cicladi:"grec", corsica:"ign", creta:"grec", dalmaziacentro:"dgu",
+  dalmazianord:"dgu", dalmaziasud:"dgu", egeonord:"grec", emiliaromagna:"rer", epiro:"grec",
+  eubea:"grec", friuliveneziagiulia:"agea", gozo:"malt", greciaovest:"grec", ionie:"grec",
+  istria:"dgu", lazio:"agea", liguria:"agea", lisboa:"dgt", litorale:"gurs", madeira:"ptis",
+  malta:"malt", marche:"agea", molise:"agea", murcia:"pnoa", neum:"sent", norte:"dgt",
+  occitania:"ign", peloponneso:"grec", provenza:"ign", puglia:"agea", quarnero:"dgu",
+  sardegna:"agea", sicilia:"sitr", tessaglia:"grec", toscana:"tosc", tracia:"grec",
+  valenciana:"pnoa", veneto:"agea"
+};
+/* distanza mediana fra due vertici della costa disegnata, in metri */
+const COSTA = {
+  abruzzo:1289, acores:997, aldivjaka:108, aldurazzo:168, alentejo:1170, algarve:1154,
+  alscutari:80, alvalona:230, andalusia:1223, antivari:96, attica:436, baleari:936,
+  basilicata:1202, bocche:60, budua:50, calabria:1210, calcidica:320, campania:1184,
+  canarie:1111, catalogna:960, centro:1174, cicladi:763, corsica:486, creta:464,
+  dalmaziacentro:159, dalmazianord:168, dalmaziasud:271, egeonord:472, emiliaromagna:926,
+  epiro:221, eubea:451, friuliveneziagiulia:858, gozo:120, greciaovest:380, ionie:494,
+  istria:119, lazio:974, liguria:1062, lisboa:1196, litorale:903, madeira:1110, malta:119,
+  marche:874, molise:1174, murcia:1166, neum:35, norte:1127, occitania:1077,
+  peloponneso:374, provenza:982, puglia:966, quarnero:136, sardegna:187, sicilia:296,
+  tessaglia:281, toscana:905, tracia:425, valenciana:1136, veneto:929
+};
+const PAESI_NOME = { it:"Italia", fr:"Francia", es:"Spagna", pt:"Portogallo",
+  hr:"Croazia", si:"Slovenia", gr:"Grecia", mt:"Malta", me:"Montenegro",
+  al:"Albania", ba:"Bosnia-Erzegovina" };
+const BB_ANNO = { it:"2026", fr:"2026", es:"2026", pt:"2026", gr:"2026",
+  hr:"senza anno", si:"2026 da conf.", mt:"2025", me:"—", al:"—", ba:"—" };
+
+let STATO = null;            /* null = non ancora chiesto */
+
+/* «56 su 58» con la barretta sotto. Sopra il 97% e' pieno, sotto i tre quarti
+   e' a meta': le soglie servono al colore, il numero resta quello vero. */
+function cellaCop(n, tot, piu){
+  const extra = piu ? " " + piu : "";
+  if (!tot) return '<td class="gest-cop zero' + extra + '"><b>—</b></td>';
+  const p = n / tot;
+  const cl = n === tot ? "pieno" : (p >= .75 ? "quasi" : (n ? "meta" : "zero"));
+  const testo = n === tot ? "<b>tutte</b>"
+              : (n === 0 ? "<b>nessuna</b>" : '<b>' + n + '</b><span>/' + tot + '</span>');
+  return '<td class="gest-cop ' + cl + extra + '">' + testo +
+         '<i><u style="width:' + (p * 100).toFixed(1) + '%"></u></i></td>';
+}
+
+function tabellaStato(){
+  if (!STATO || !STATO.length)
+    return '<div class="gest-vuoto">Il database non ha restituito niente.</div>';
+  const ordine = ["it","fr","es","pt","hr","si","gr","mt","me","al","ba"];
+  let html = '<div class="gest-scorri"><table class="gest-tab"><thead><tr>' +
+    '<th>Regione</th><th class="gest-nascondi">Veduta dall’alto</th>' +
+    '<th>Descri&shy;zione</th><th>Servizi</th>' +
+    '<th class="gest-nascondi">Fondo</th><th>Come si arriva</th>' +
+    '<th>Bandiere Blu</th><th class="gest-nascondi">Costa</th>' +
+    '</tr></thead><tbody>';
+  ordine.forEach(p => {
+    const sue = STATO.filter(r => r.paese === p).sort((a,b) => b.spiagge - a.spiagge);
+    if (!sue.length) return;
+    const tot = sue.reduce((s,r) => s + r.spiagge, 0);
+    const alta = sue.reduce((s,r) =>
+      s + ((SORGENTI[FOTO[r.chiave]] || [,,""])[2] !== "bassa" ? r.spiagge : 0), 0);
+    html += '<tr class="gest-paese"><td colspan="8">' + esc(PAESI_NOME[p] || p) +
+      '<b>' + sue.length + (sue.length === 1 ? " regione" : " regioni") + ' · ' + tot +
+      ' spiagge · veduta ad alta risoluzione per ' + alta + '</b></td></tr>';
+    sue.forEach(r => {
+      const f = SORGENTI[FOTO[r.chiave]] || ["?", "non so", "bassa"];
+      const m = COSTA[r.chiave];
+      const cc = m == null ? "zero" : (m <= 300 ? "pieno" : (m <= 600 ? "quasi"
+                : (m <= 1000 ? "meta" : "zero")));
+      html += '<tr>' +
+        '<td class="gest-chi">' + esc(r.nome) +
+          '<div class="gest-quando">' + r.spiagge + ' spiagge · ' + r.zone + ' zone</div></td>' +
+        '<td class="gest-nascondi gest-vista ' + f[2] + '"><b>' + esc(f[0]) + '</b>' +
+          '<span>' + esc(f[1]) + '</span></td>' +
+        cellaCop(r.descrizione, r.spiagge) +
+        cellaCop(r.servizi, r.spiagge) +
+        cellaCop(r.fondo, r.spiagge, "gest-nascondi") +
+        cellaCop(r.accesso, r.spiagge) +
+        '<td class="gest-cop ' + (r.bandiere ? "pieno" : "zero") + '"><b>' + r.bandiere +
+          '</b><span style="display:block">' + esc(BB_ANNO[r.paese] || "") + '</span></td>' +
+        '<td class="gest-nascondi gest-cop ' + cc + '"><b>' +
+          (m == null ? "—" : m + " m") + '</b></td>' +
+        '</tr>';
+    });
+  });
+  return html + '</tbody></table></div>';
+}
+
+function bloccoStato(){
+  if (STATO) return tabellaStato();
+  return '<div class="gest-stato-via">' +
+    '<p>Quante delle 5534 schede hanno davvero la descrizione, i servizi, il fondo e ' +
+    'il modo d’accesso, regione per regione. <b>Il conto lo fa il database</b>, e ci ' +
+    'mette un paio di secondi: si chiede solo quando serve.</p>' +
+    '<button type="button" class="conto-vai" data-stato style="flex:0 0 auto">' +
+    'Calcola lo stato</button></div>';
+}
+
+async function chiediStato(bottone){
+  bottone.disabled = true;
+  const era = bottone.textContent;
+  bottone.textContent = "Conto…";
+  try {
+    STATO = await VADO.statoRegioni();
+  } catch (e) {
+    bottone.disabled = false; bottone.textContent = era;
+    const p = bottone.parentNode.querySelector("p");
+    if (p) p.innerHTML = '<b>Non ha funzionato:</b> ' + esc(e.message);
+    return;
+  }
+  const posto = document.getElementById("statoQui");
+  if (posto) posto.innerHTML = tabellaStato();
+}
+
 /* ------------------------------------------------------------- concedere */
 let sblUtente = null;
 function apriSblocco(utente){
@@ -591,8 +771,8 @@ async function revoca(id, che){
 
 VADO.alCambio(s => { IO = s; carica(); });
 </script>
-<script src="vado-conto.js?v=202609130712"></script>
-<script src="vado-cookie.js?v=202609130638"></script>
-<script src="vado-piede.js?v=202609130638"></script>
+<script src="vado-conto.js?v=202609131625"></script>
+<script src="vado-cookie.js?v=202609131625"></script>
+<script src="vado-piede.js?v=202609131625"></script>
 </body>
 </html>

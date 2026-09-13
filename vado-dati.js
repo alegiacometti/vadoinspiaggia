@@ -687,8 +687,15 @@ const VADO = (() => {
     chiedi("rpc/accetta_privacy", { metodo: "POST",
       corpo: { versione: versione, con_terzi: !!terzi } });
 
+  /* Quanto e' piena ogni regione: una riga per regione con quante schede hanno
+     davvero la descrizione, i servizi, il fondo, il modo d'accesso. Il conto lo
+     fa il database — cinquemilacinquecento righe non si scaricano per contarle,
+     e chi non ha la regione sbloccata non potrebbe nemmeno vederle. A chi non
+     amministra la funzione risponde con zero righe, come tutto il resto. */
+  const statoRegioni = () => chiedi("rpc/stato_regioni", { metodo: "POST", corpo: {} });
+
   return { regione, catalogo, dettaglioRegione, chiedi, BASE,
-           consensoMio, accettaPrivacy, entraConGoogle,
+           consensoMio, accettaPrivacy, entraConGoogle, statoRegioni,
            caricaFoto, firmaFoto, approvaFoto, rifiutaFoto, buttaFoto,
            impostazioni, salvaImpostazione,
            iscriviti, accedi, esci, scordata, alCambio, chiSono,
