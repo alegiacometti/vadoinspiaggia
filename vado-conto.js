@@ -105,7 +105,13 @@
   const cCons   = velo.querySelector("[data-consensi]");
   const spPriv  = velo.querySelector("[data-c-privacy]");
   const spTerzi = velo.querySelector("[data-c-terzi]");
-  const VERS    = window.PRIVACY_VERSIONE || "";
+  /* La versione dell'informativa la dichiara configurazione.js. Letta qui una
+     volta sola, al caricamento, valeva stringa vuota in tutte le pagine che
+     configurazione.js non caricavano affatto — e il database, giustamente,
+     rifiutava un consenso senza versione: «manca la versione dell'informativa».
+     Si legge al momento del clic, e se manca davvero lo si dice qui, invece di
+     far viaggiare fino al database una stringa che lui non puo' accettare. */
+  const vers = () => String(window.PRIVACY_VERSIONE || "").trim();
   const barra   = cForza.querySelector("i");
   const etiForza= cForza.querySelector(".forza-eti");
   const schede  = [...velo.querySelectorAll(".conto-schede button")];
@@ -288,6 +294,11 @@
     if (t.includes("weak_password") || t.includes("password")) return "Questa password non va bene: scegline un’altra.";
     if (t.includes("rate") || (e && e.stato === 429)) return "Troppi tentativi ravvicinati. Riprova fra qualche minuto.";
     if (t.includes("failed to fetch")) return "Non riesco a raggiungere il servizio. Controlla la connessione.";
+    /* Questo non e' colpa di chi guarda: e' una pagina pubblicata senza
+       configurazione.js. Vale la pena dirlo per nome, perche' chi tiene il
+       sito lo legga e sappia dove mettere le mani. */
+    if (t.includes("versione-informativa-mancante") || t.includes("manca la versione"))
+      return "Questa pagina non ha caricato configurazione.js, quindi non sa quale versione dell’informativa far accettare. Va segnalato a chi tiene il sito.";
     return "Non ha funzionato: " + (e && e.message || "errore sconosciuto");
   }
 
@@ -352,12 +363,16 @@
       if (modo === "accedi") {
         await VADO.accedi(email, pw, cap); velo.close();
       } else if (modo === "consenso") {
-        await VADO.accettaPrivacy(VERS, spTerzi.checked);
+        const v = vers();
+        if (!v) throw new Error("versione-informativa-mancante");
+        await VADO.accettaPrivacy(v, spTerzi.checked);
         obbligato = false;
         velo.close();
       } else if (modo === "registrati") {
+        const v = vers();
+        if (!v) throw new Error("versione-informativa-mancante");
         const r = await VADO.iscriviti(email, pw, cap,
-                    { versione: VERS, terzi: spTerzi.checked });
+                    { versione: v, terzi: spTerzi.checked });
         if (r.entrato) velo.close();
         else dillo("Account creato. Ti ho mandato un messaggio a " + email +
                    ": aprilo per confermare l’indirizzo, poi torna qui e accedi.", true);
