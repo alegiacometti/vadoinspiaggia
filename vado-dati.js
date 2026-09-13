@@ -694,8 +694,39 @@ const VADO = (() => {
      amministra la funzione risponde con zero righe, come tutto il resto. */
   const statoRegioni = () => chiedi("rpc/stato_regioni", { metodo: "POST", corpo: {} });
 
+  /* ------------------------------------------------------------- il registro
+     Una riga per spiaggia con dentro tutto: i dati pubblici, il ritaglio, le
+     affiliazioni e il taccuino di chi amministra. Il taccuino sta in una
+     tabella sua, che vede solo chi amministra — su «spiagge» non poteva
+     starci, perche' la RLS decide le righe e non le colonne, e chi ha la
+     regione sbloccata potrebbe chiedersi le note interne. */
+  const registro = (regione, cerca, quante, salta) =>
+    chiedi("rpc/registro_spiagge", { metodo: "POST", corpo: {
+      p_regione: regione || null, p_cerca: cerca || null,
+      p_quante: quante || 500, p_salta: salta || 0 } });
+
+  /* Il taccuino: una sola funzione che crea la riga se non c'e'. */
+  const segnaLavoro = (sid, campi) =>
+    chiedi("rpc/segna_lavoro", { metodo: "POST", corpo: {
+      p_sid: sid,
+      p_stato: campi.stato || null,
+      p_priorita: campi.priorita || null,
+      p_note: campi.note || null,
+      p_sponsor: campi.sponsor || null,
+      p_fino: campi.sponsor_fino || null } });
+
+  /* I campi che si vedono nella scheda stanno su «spiagge», e li si corregge
+     con una PATCH normale: il database accetta la scrittura solo su quelle
+     sette colonne, e solo da chi amministra. Il permesso e' per colonna, non
+     per riga: anche sbagliando la richiesta, latitudine e nome non si toccano. */
+  const correggiSpiaggia = (sid, campi) =>
+    chiedi("spiagge?sid=eq." + encodeURIComponent(sid),
+      { metodo: "PATCH", corpo: campi,
+        intestazioni: { "Prefer": "return=minimal" } });
+
   return { regione, catalogo, dettaglioRegione, chiedi, BASE,
            consensoMio, accettaPrivacy, entraConGoogle, statoRegioni,
+           registro, segnaLavoro, correggiSpiaggia,
            caricaFoto, firmaFoto, approvaFoto, rifiutaFoto, buttaFoto,
            impostazioni, salvaImpostazione,
            iscriviti, accedi, esci, scordata, alCambio, chiSono,

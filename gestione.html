@@ -7,10 +7,10 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#083c5c">
 <title>Gestione · Vado in spiaggia</title>
-<link rel="stylesheet" href="carte-spiagge.css?v=202609131640">
+<link rel="stylesheet" href="carte-spiagge.css?v=202609131744">
 <link rel="stylesheet" href="caratteri/caratteri.css?v=202609130413">
-<script src="configurazione.js?v=202609131640"></script>
-<script src="vado-dati.js?v=202609131640"></script>
+<script src="configurazione.js?v=202609131744"></script>
+<script src="vado-dati.js?v=202609131744"></script>
 <style>
 /* Questa pagina NON e' protetta dal fatto di essere nascosta: chiunque puo'
    aprirla, e va benissimo. A proteggere sono le regole del database — senza
@@ -102,7 +102,81 @@ button.gest-ruolo:focus-visible{outline:2px solid var(--ambra);outline-offset:2p
   text-transform:none;color:var(--grigio);font-weight:400;margin-left:10px}
 .gest-scorri{overflow-x:auto;border-radius:12px}
 .gest-scorri .gest-tab{min-width:820px}
-@media (max-width:760px){ .gest-nascondi{display:none} }
+/* ------------------------------------------------------------ le schede
+   Sei sezioni in colonna erano diventate una pagina che si scorre per venti
+   schermate, e le cose urgenti — una foto in attesa, una segnalazione nuova —
+   stavano in fondo. Ora sono schede, e quelle due portano il conto scritto
+   sopra: si vede dalla prima riga se c'e' qualcosa da fare, senza aprirle. */
+.gest-schede{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 20px;
+  border-bottom:1px solid var(--tratto);padding-bottom:0}
+.gest-schede button{position:relative;display:inline-flex;align-items:center;gap:7px;
+  font-family:var(--dati);font-size:10px;letter-spacing:.11em;text-transform:uppercase;
+  background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;
+  padding:9px 13px;cursor:pointer;color:var(--grigio);white-space:nowrap}
+.gest-schede button:hover{color:var(--profondo);background:var(--nebbia)}
+.gest-schede button.on{color:var(--profondo);border-bottom-color:var(--azzurro)}
+.gest-schede button:focus-visible{outline:2px solid var(--ambra);outline-offset:-2px}
+.gest-conta{font-family:var(--dati);font-size:9px;letter-spacing:.02em;
+  background:var(--corallo);color:#fff;border-radius:999px;padding:1px 6px;line-height:1.5}
+.gest-conta.calma{background:var(--tratto);color:var(--grigio)}
+.gest-intro{margin:-8px 0 16px;font-size:12.5px;line-height:1.55;color:var(--grigio);
+  max-width:70ch}
+.gest-intro b{color:var(--profondo);font-weight:500}
+
+/* le immagini da approvare, in galleria: una foto si giudica guardandola */
+.gest-gall{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.gest-scatto{background:var(--carta);border:1px solid var(--tratto);border-radius:11px;
+  overflow:hidden;box-shadow:var(--ombra);display:flex;flex-direction:column}
+.gest-scatto.attesa{border-left:3px solid var(--ambra)}
+.gest-scatto img{display:block;width:100%;aspect-ratio:3/2;object-fit:cover;
+  background:var(--nebbia)}
+.gest-scatto .dove{padding:10px 13px 0;font-size:13.5px;font-weight:500;color:var(--profondo)}
+.gest-scatto .chi{padding:2px 13px 0;font-family:var(--dati);font-size:10px;color:var(--grigio)}
+.gest-scatto .dice{padding:7px 13px 0;font-size:12.5px;line-height:1.5;color:var(--testo)}
+.gest-scatto .mosse{display:flex;gap:6px;padding:11px 13px 12px;margin-top:auto}
+.gest-scatto .mosse button{font-family:var(--dati);font-size:9.5px;letter-spacing:.08em;
+  text-transform:uppercase;border:1px solid var(--tratto);background:var(--carta);
+  border-radius:999px;padding:5px 12px;cursor:pointer;color:var(--grigio)}
+.gest-scatto .mosse button.si:hover{border-color:#3a9b5c;color:#1c6b36;background:#e8f6ec}
+.gest-scatto .mosse button.no:hover{border-color:var(--corallo);color:#8d2b22;background:#fdecea}
+.gest-scatto .bollo{font-family:var(--dati);font-size:9px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ambra);padding:9px 13px 0}
+.gest-scatto .bollo.viva{color:var(--verde-ok,#2c7a61)}
+.gest-hafoto{font-family:var(--dati);font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ambra);border:1px solid var(--tratto);border-radius:999px;padding:2px 8px;
+  background:none;cursor:pointer;margin-top:6px;display:inline-block}
+.gest-hafoto:hover{border-color:var(--ambra)}
+/* ---------------------------------------------------------- il registro */
+.gest-filtri{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 14px}
+.gest-filtri select,.gest-filtri input{font:inherit;font-size:13px;padding:7px 11px;
+  border:1px solid var(--tratto);border-radius:999px;background:var(--carta);
+  color:var(--profondo)}
+.gest-filtri input{min-width:190px}
+.gest-filtri input:focus,.gest-filtri select:focus{outline:2px solid var(--ambra);outline-offset:1px}
+.gest-filtri .conto-vai{padding:7px 16px;font-size:11px}
+.gest-filtri .quanti{margin-left:auto;font-family:var(--dati);font-size:10px;
+  letter-spacing:.08em;color:var(--grigio)}
+.gest-stato{font-family:var(--dati);font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+  border-radius:999px;padding:2px 8px;border:1px solid var(--tratto);color:var(--grigio);
+  white-space:nowrap}
+.gest-stato.fare{background:#fdf4e3;border-color:#e6cd96;color:#8a6410}
+.gest-stato.corso{background:#eaf2fa;border-color:#b9d4e3;color:var(--azzurro)}
+.gest-stato.fatta{background:#eaf6f1;border-color:#a8d8c6;color:#2c7a61}
+.gest-stato.ferma{background:#f4f1ec;border-color:var(--tratto);color:var(--secca)}
+.gest-pallini{display:inline-flex;gap:3px}
+.gest-pallini i{width:7px;height:7px;border-radius:50%;background:var(--tratto);display:block}
+.gest-pallini i.on{background:#2c7a61}
+.gest-due{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gest-riga-sez{margin:14px 0 -2px;font-family:var(--dati);font-size:9px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--azzurro)}
+#regModulo textarea{font:inherit;font-size:14px;padding:9px 11px;border:1px solid var(--tratto);
+  border-radius:8px;background:var(--nebbia);resize:vertical}
+#veloReg .foglio-conto{max-width:560px}
+.gest-modifica{font-family:var(--dati);font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+  background:none;border:1px solid var(--tratto);border-radius:999px;padding:4px 10px;
+  cursor:pointer;color:var(--azzurro)}
+.gest-modifica:hover{border-color:var(--azzurro);background:var(--schiuma)}
+@media (max-width:760px){ .gest-nascondi{display:none} .gest-due{grid-template-columns:1fr} }
 </style>
 </head>
 <body>
@@ -134,6 +208,46 @@ button.gest-ruolo:focus-visible{outline:2px solid var(--ambra);outline-offset:2p
       <input type="text" id="sblNota" placeholder="fiera di Rimini, prova 30 giorni…"></label>
     <p class="conto-esito" id="sblEsito" hidden></p>
     <button type="button" class="conto-vai" id="sblVai">Sblocca</button>
+  </form>
+</dialog>
+
+<dialog class="velo-conto" id="veloReg">
+  <form method="dialog" class="foglio-conto" id="regModulo">
+    <button class="chiudi" value="x" aria-label="Chiudi">✕</button>
+    <p class="conto-nota" id="regChi"></p>
+    <div class="gest-due">
+      <label class="conto-campo"><span>Stato</span>
+        <select id="regStato">
+          <option value="">non segnato</option>
+          <option value="da fare">da fare</option>
+          <option value="in corso">in corso</option>
+          <option value="fatta">fatta</option>
+          <option value="ferma">ferma</option>
+        </select></label>
+      <label class="conto-campo"><span>Priorità 1-5</span>
+        <input type="number" id="regPrio" min="1" max="5" step="1"></label>
+    </div>
+    <label class="conto-campo"><span>Note (le vedi solo tu)</span>
+      <textarea id="regNote" rows="2" placeholder="ricontrollare la posizione, chiedere foto al bagnino…"></textarea></label>
+    <div class="gest-due">
+      <label class="conto-campo"><span>Sponsor locale</span>
+        <input type="text" id="regSpon" placeholder="Bagni Nella 57"></label>
+      <label class="conto-campo"><span>Pagato fino al</span>
+        <input type="date" id="regFino"></label>
+    </div>
+    <p class="gest-riga-sez">Nella scheda, per chi guarda</p>
+    <label class="conto-campo"><span>Comune per le notizie</span>
+      <input type="text" id="regCom" placeholder="Senigallia"></label>
+    <label class="conto-campo"><span>Dove mangiare · collegamento</span>
+      <input type="url" id="regRist" placeholder="https://www.thefork.it/ristoranti/…"></label>
+    <label class="conto-campo"><span>Dove dormire · collegamento</span>
+      <input type="url" id="regAlb" placeholder="https://www.booking.com/…"></label>
+    <label class="conto-campo"><span>Ombrellone · collegamento</span>
+      <input type="url" id="regOmb" placeholder="https://www.spiagge.it/…"></label>
+    <label class="conto-campo"><span>Cosa fare · collegamento</span>
+      <input type="url" id="regAtt" placeholder="https://www.getyourguide.it/…"></label>
+    <p class="conto-esito" id="regEsito" hidden></p>
+    <button type="button" class="conto-vai" id="regVai">Salva</button>
   </form>
 </dialog>
 
@@ -201,6 +315,355 @@ async function carica(){
   disegna();
 }
 
+/* --------------------------------------------------------------- il registro
+   Una riga per spiaggia, con dentro quello che c'e' e quello che manca. Non si
+   carica da sola: cinquemilacinquecento righe sono un peso che si chiede solo
+   quando serve, e quasi sempre serve una regione alla volta.
+
+   Quello che si scrive qui finisce in due posti diversi, e la differenza conta:
+   le note, lo stato e lo sponsor stanno nel taccuino — tabella a parte, la vede
+   solo chi amministra — mentre i collegamenti di affiliazione e il comune per
+   le notizie stanno sulla spiaggia, perche' domani la scheda deve stamparli. */
+let REGISTRO = null, REG_FILTRO = "", REG_CERCA = "", REG_CARICO = false;
+const STATI = { "da fare":"fare", "in corso":"corso", "fatta":"fatta", "ferma":"ferma" };
+
+function barraRegistro(){
+  const opzioni = '<option value="">tutte le regioni</option>' +
+    REGIONI.map(r => '<option value="' + esc(r.chiave) + '"' +
+      (r.chiave === REG_FILTRO ? ' selected' : '') + '>' + esc(r.nome) + '</option>').join("");
+  return '<div class="gest-filtri">' +
+    '<select data-reg-regione>' + opzioni + '</select>' +
+    '<input type="search" data-reg-cerca placeholder="nome, comune o codice…" value="' +
+      esc(REG_CERCA) + '">' +
+    '<button type="button" class="conto-vai" data-reg-carica>' +
+      (REGISTRO ? "Rileggi" : "Carica") + '</button>' +
+    (REGISTRO ? '<button type="button" class="gest-piu" data-reg-xls>Esporta Excel</button>' : '') +
+    (REGISTRO ? '<button type="button" class="gest-piu" data-reg-csv>CSV</button>' : '') +
+    (REGISTRO ? '<span class="quanti">' + REGISTRO.length + ' righe</span>' : '') +
+    '</div>';
+}
+
+function pallini(r){
+  const q = [r.aff_ristorante, r.aff_albergo, r.aff_ombrellone, r.aff_attivita];
+  return '<span class="gest-pallini" title="mangiare · dormire · ombrellone · attività">' +
+    q.map(v => '<i' + (v ? ' class="on"' : '') + '></i>').join("") + '</span>';
+}
+
+function tabellaRegistro(){
+  if (!REGISTRO)
+    return '<div class="gest-vuoto">Scegli una regione — o lascia «tutte» — e premi Carica.</div>';
+  if (!REGISTRO.length)
+    return '<div class="gest-vuoto">Nessuna spiaggia con questi filtri.</div>';
+  return '<div class="gest-scorri"><table class="gest-tab"><thead><tr>' +
+    '<th>Spiaggia</th><th class="gest-nascondi">Dati</th><th>Stato</th>' +
+    '<th class="gest-nascondi">Veduta</th><th>Sponsor</th><th>Note</th><th></th>' +
+    '</tr></thead><tbody>' + REGISTRO.map(r => '<tr>' +
+      '<td><div class="gest-chi">' + esc(r.nome) + (r.bandiera ? ' 🏳' : '') + '</div>' +
+        '<div class="gest-quando">' + esc(r.comune || "") + ' · ' + esc(r.sid) + '</div></td>' +
+      '<td class="gest-nascondi gest-quando">' +
+        (r.fondo ? esc(r.fondo) : '<span class="gest-niente">fondo?</span>') + '<br>' +
+        (r.lung ? esc(r.lung) + ' · ' : '') + r.servizi + ' servizi' +
+        (r.etichette && r.etichette.length ? '<br>' + esc(r.etichette.join(", ")) : '') + '</td>' +
+      '<td>' + (r.stato
+        ? '<span class="gest-stato ' + STATI[r.stato] + '">' + esc(r.stato) + '</span>'
+        : '<span class="gest-niente">—</span>') +
+        (r.priorita ? ' <span class="gest-quando">p' + r.priorita + '</span>' : '') + '</td>' +
+      '<td class="gest-nascondi gest-quando">' + esc((r.img_fonte || "").split(" · ").pop()) + '</td>' +
+      '<td>' + (r.sponsor ? '<div class="gest-chi">' + esc(r.sponsor) + '</div>' +
+          (r.sponsor_fino ? '<div class="gest-quando">fino al ' + giorno(r.sponsor_fino) + '</div>' : '')
+        : pallini(r)) + '</td>' +
+      '<td class="gest-quando">' + (r.note_admin ? esc(r.note_admin.slice(0, 70)) : '') + '</td>' +
+      '<td><button type="button" class="gest-modifica" data-reg-apri="' + esc(r.sid) +
+        '">apri</button></td></tr>').join("") + '</tbody></table></div>';
+}
+
+async function caricaRegistro(bottone){
+  if (REG_CARICO) return;
+  REG_CARICO = true;
+  const era = bottone.textContent; bottone.disabled = true; bottone.textContent = "Leggo…";
+  try {
+    REGISTRO = await VADO.registro(REG_FILTRO, REG_CERCA, 6000, 0);
+  } catch (e) {
+    bottone.disabled = false; bottone.textContent = era; REG_CARICO = false;
+    return alert("Non ha funzionato: " + e.message.slice(0, 200));
+  }
+  REG_CARICO = false;
+  disegna();
+}
+
+/* L'esportazione non chiede niente al database: mette su un file quello che e'
+   gia' in pagina. Il punto e virgola e il BOM davanti sono per Excel italiano,
+   che con la virgola mette tutto in una colonna sola e senza BOM storpia gli
+   accenti. */
+function esportaRegistro(){
+  if (!REGISTRO || !REGISTRO.length) return;
+  const col = [
+    ["sid","Codice"],["regione","Regione"],["zona","Zona"],["nome","Nome"],["comune","Comune"],
+    ["lat","Latitudine"],["lon","Longitudine"],["lato","Esposizione"],["lung","Lunghezza"],
+    ["fondo","Fondo"],["folla","Affollamento"],["acc","Accesso"],["camm","Come si arriva"],
+    ["park","Parcheggio"],["bandiera","Bandiera Blu"],["servizi","Servizi rilevati"],
+    ["etichette","Etichette"],["nota","Descrizione"],["place_id","Google Place ID"],
+    ["img","File immagine"],["img_fonte","Fonte immagine"],["notizie_com","Comune notizie"],
+    ["aff_ristorante","Aff. ristorante"],["aff_albergo","Aff. albergo"],
+    ["aff_ombrellone","Aff. ombrellone"],["aff_attivita","Aff. attività"],
+    ["stato","Stato"],["priorita","Priorità"],["note_admin","Note"],
+    ["sponsor","Sponsor"],["sponsor_fino","Sponsor fino al"]
+  ];
+  const cella = v => {
+    if (v == null) return "";
+    if (Array.isArray(v)) v = v.join(", ");
+    if (v === true) return "sì";
+    if (v === false) return "no";
+    const t = String(v);
+    return /[";\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
+  };
+  const righe = [col.map(c => c[1]).join(";")]
+    .concat(REGISTRO.map(r => col.map(c => cella(r[c[0]])).join(";")));
+  const blob = new Blob(["\ufeff" + righe.join("\r\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "registro-spiagge" + (REG_FILTRO ? "-" + REG_FILTRO : "") + ".csv";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+/* ----------------------------------------------------------- il foglio Excel
+   Lo stesso registro, ma come cartella di Excel: un foglio con una riga per
+   spiaggia, uno di riepilogo con le formule vere — non i totali calcolati qui,
+   cosi' si ricontano da soli se qualcuno filtra o corregge — e una legenda.
+
+   La libreria che scrive il formato .xlsx si carica SOLO quando premi il
+   pulsante: e' un file di trecento kilobyte che non ha senso far scaricare a
+   chi apre la gestione per leggere una segnalazione. Se non arriva, si ripiega
+   sul CSV senza dire niente di piu' di quel che serve. */
+const SHEETJS = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+function portaLibreria(){
+  if (window.XLSX) return Promise.resolve(true);
+  return new Promise(ok => {
+    const t = document.createElement("script");
+    t.src = SHEETJS;
+    t.onload  = () => ok(true);
+    t.onerror = () => ok(false);
+    document.head.appendChild(t);
+  });
+}
+
+const COL_REG = [
+  ["sid","Codice"],["regione","Regione"],["zona","Zona costiera"],["nome","Nome spiaggia"],
+  ["comune","Comune"],["lat","Latitudine"],["lon","Longitudine"],["lato","Esposizione"],
+  ["lung","Lunghezza"],["fondo","Fondo"],["folla","Affollamento 1-5"],["acc","Tipo di accesso"],
+  ["camm","Come si arriva"],["park","Parcheggio"],["bandiera","Bandiera Blu"],
+  ["servizi","Servizi rilevati"],["etichette","Etichette"],["nota","Descrizione"],
+  ["place_id","Google Place ID"],["img","File immagine"],["img_fonte","Fonte immagine"],
+  ["notizie_com","Comune per le notizie"],
+  ["aff_ristorante","Affiliazione · dove mangiare"],["aff_albergo","Affiliazione · dove dormire"],
+  ["aff_ombrellone","Affiliazione · ombrellone"],["aff_attivita","Affiliazione · attività"],
+  ["stato","Stato lavorazione"],["priorita","Priorità 1-5"],["note_admin","Note interne"],
+  ["sponsor","Sponsor locale"],["sponsor_fino","Sponsor pagato fino al"]
+];
+const semplice = v => Array.isArray(v) ? v.join(", ")
+  : (v === true ? "sì" : (v === false ? "no" : (v == null ? "" : v)));
+
+async function esportaExcel(bottone){
+  if (!REGISTRO || !REGISTRO.length) return;
+  const era = bottone.textContent;
+  bottone.disabled = true; bottone.textContent = "Preparo…";
+  if (!await portaLibreria()) {
+    bottone.disabled = false; bottone.textContent = era;
+    alert("Non riesco a caricare la libreria che scrive i file Excel.\n" +
+          "Uso il CSV: si apre in Excel allo stesso modo.");
+    return esportaRegistro();
+  }
+  const X = window.XLSX;
+  const intestazioni = COL_REG.map(c => c[1]);
+  const corpoFoglio = REGISTRO.map(r => COL_REG.map(c => semplice(r[c[0]])));
+  const fSpiagge = X.utils.aoa_to_sheet([intestazioni].concat(corpoFoglio));
+  fSpiagge["!autofilter"] = { ref: X.utils.encode_range(
+    { s:{r:0,c:0}, e:{r:corpoFoglio.length, c:COL_REG.length - 1} }) };
+  fSpiagge["!cols"] = COL_REG.map(c => ({
+    wch: /Descrizione|Come si arriva|Parcheggio|Note interne|Affiliazione/.test(c[1]) ? 40
+       : (/Nome|Zona|Comune/.test(c[1]) ? 24 : 14)
+  }));
+
+  /* Il riepilogo non porta numeri: porta formule. Se domani filtri il foglio
+     Spiagge o correggi una riga, i conti si rifanno da soli — che e' tutta la
+     differenza fra un foglio e una fotografia di un foglio. */
+  const ultima = corpoFoglio.length + 1;
+  const rg = n => "Spiagge!$" + n + "$2:$" + n + "$" + ultima;
+  const regioniViste = [];
+  REGISTRO.forEach(r => { if (!regioniViste.includes(r.regione)) regioniViste.push(r.regione); });
+  const nomeReg = {};
+  REGIONI.forEach(r => nomeReg[r.chiave] = r.nome);
+
+  const rip = [["Regione","Chiave","Spiagge","Bandiere Blu","Senza descrizione",
+                "Senza fondo","Senza come si arriva","Con sponsor","Da fare"]];
+  regioniViste.forEach((k, i) => {
+    const n = i + 2;
+    rip.push([
+      nomeReg[k] || k, k,
+      { f: 'COUNTIF(' + rg("B") + ',$B' + n + ')' },
+      { f: 'COUNTIFS(' + rg("B") + ',$B' + n + ',' + rg("O") + ',"sì")' },
+      { f: 'COUNTIFS(' + rg("B") + ',$B' + n + ',' + rg("R") + ',"")' },
+      { f: 'COUNTIFS(' + rg("B") + ',$B' + n + ',' + rg("J") + ',"")' },
+      { f: 'COUNTIFS(' + rg("B") + ',$B' + n + ',' + rg("M") + ',"")' },
+      { f: 'COUNTIFS(' + rg("B") + ',$B' + n + ',' + rg("AD") + ',"<>")' },
+      { f: 'COUNTIFS(' + rg("B") + ',$B' + n + ',' + rg("AA") + ',"da fare")' }
+    ]);
+  });
+  /* L'ultima riga con dei dati, non quella del totale: sommare fino a se'
+     stessi e' un riferimento circolare, e Excel lo dice con un errore. */
+  const tot = regioniViste.length + 1;
+  rip.push(["TOTALE", "", { f: 'SUM(C2:C' + tot + ')' }, { f: 'SUM(D2:D' + tot + ')' },
+    { f: 'SUM(E2:E' + tot + ')' }, { f: 'SUM(F2:F' + tot + ')' }, { f: 'SUM(G2:G' + tot + ')' },
+    { f: 'SUM(H2:H' + tot + ')' }, { f: 'SUM(I2:I' + tot + ')' }]);
+  const fRip = X.utils.aoa_to_sheet(rip);
+  fRip["!cols"] = [{wch:28},{wch:18},{wch:10},{wch:14},{wch:18},{wch:13},{wch:20},{wch:13},{wch:10}];
+
+  const oggi = new Date().toLocaleDateString("it-IT");
+  const fLeg = X.utils.aoa_to_sheet([
+    ["Registro delle spiagge · Vado in spiaggia"],
+    ["Generato dalla pagina di gestione il " + oggi + "."],
+    [""],
+    ["Che cos’è", "Una riga per spiaggia, letta dal database nel momento in cui hai premuto Esporta."],
+    ["", "Non è la copia di lavoro: se correggi una cella qui, il sito non se ne accorge."],
+    ["", "Per cambiare qualcosa si usa la scheda «Registro spiagge» della gestione."],
+    [""],
+    ["Riepilogo", "Le colonne portano formule, non numeri: filtra o correggi il foglio Spiagge"],
+    ["", "e i conti si rifanno da soli."],
+    [""],
+    ["Colonne da compilare", "Comune per le notizie, le quattro Affiliazioni, Stato, Priorità,"],
+    ["", "Note interne, Sponsor. Oggi sono quasi tutte vuote: esistono perché"],
+    ["", "il giorno che si accendono non si debba rifare niente."],
+    [""],
+    ["Note interne e Sponsor", "Stanno in una tabella che vede solo chi amministra."],
+    ["", "Non escono mai dal sito, e non finiscono in nessuna scheda pubblica."],
+    [""],
+    ["Meteo e mare", "Non sono colonne e non possono esserlo: la scheda li chiede a Open-Meteo"],
+    ["", "nel momento in cui la apri. Un meteo scritto in un foglio è già vecchio."],
+    [""],
+    ["Spiagge non pubblicate", "Qui ci sono solo quelle pubblicate. Le schede tenute da parte"],
+    ["", "non stanno nel database, e restano nel vecchio spiagge-master.xlsx."],
+    [""],
+    ["Bandiera Blu", "Sì quando il premio ufficiale è stato abbinato a questa scheda."],
+    ["", "Gli elenchi ufficiali ne premiano di più: non tutte le spiagge premiate"],
+    ["", "sono pubblicate qui."]
+  ]);
+  fLeg["!cols"] = [{wch:24},{wch:86}];
+
+  const libro = X.utils.book_new();
+  X.utils.book_append_sheet(libro, fRip, "Riepilogo");
+  X.utils.book_append_sheet(libro, fSpiagge, "Spiagge");
+  X.utils.book_append_sheet(libro, fLeg, "Legenda");
+  X.writeFile(libro, "registro-spiagge" + (REG_FILTRO ? "-" + REG_FILTRO : "") + ".xlsx");
+  bottone.disabled = false; bottone.textContent = era;
+}
+
+/* --------------------------------------------------- la finestra di modifica */
+const veloReg = document.getElementById("veloReg");
+let regAperta = null;
+const campoReg = id => document.getElementById(id);
+
+function apriRegistro(sid){
+  const r = (REGISTRO || []).find(x => x.sid === sid);
+  if (!r) return;
+  regAperta = r;
+  campoReg("regChi").innerHTML = '<b>' + esc(r.nome) + '</b><br>' +
+    esc(r.comune || "") + ' · ' + esc(r.sid);
+  campoReg("regStato").value = r.stato || "";
+  campoReg("regPrio").value  = r.priorita || "";
+  campoReg("regNote").value  = r.note_admin || "";
+  campoReg("regSpon").value  = r.sponsor || "";
+  campoReg("regFino").value  = r.sponsor_fino || "";
+  campoReg("regCom").value   = r.notizie_com || "";
+  campoReg("regRist").value  = r.aff_ristorante || "";
+  campoReg("regAlb").value   = r.aff_albergo || "";
+  campoReg("regOmb").value   = r.aff_ombrellone || "";
+  campoReg("regAtt").value   = r.aff_attivita || "";
+  const es = campoReg("regEsito"); es.hidden = true;
+  veloReg.showModal();
+}
+
+async function salvaRegistro(bottone){
+  if (!regAperta) return;
+  const es = campoReg("regEsito");
+  const era = bottone.textContent; bottone.disabled = true; bottone.textContent = "Un momento…";
+  const vuoto = v => (v || "").trim() || null;
+  const lavoro = {
+    stato: vuoto(campoReg("regStato").value),
+    priorita: campoReg("regPrio").value ? +campoReg("regPrio").value : null,
+    note: vuoto(campoReg("regNote").value),
+    sponsor: vuoto(campoReg("regSpon").value),
+    sponsor_fino: vuoto(campoReg("regFino").value)
+  };
+  const scheda = {
+    notizie_com:    vuoto(campoReg("regCom").value),
+    aff_ristorante: vuoto(campoReg("regRist").value),
+    aff_albergo:    vuoto(campoReg("regAlb").value),
+    aff_ombrellone: vuoto(campoReg("regOmb").value),
+    aff_attivita:   vuoto(campoReg("regAtt").value)
+  };
+  try {
+    await VADO.segnaLavoro(regAperta.sid, lavoro);
+    await VADO.correggiSpiaggia(regAperta.sid, scheda);
+  } catch (e) {
+    es.textContent = "Non ha funzionato: " + e.message.slice(0, 200);
+    es.className = "conto-esito brutta"; es.hidden = false;
+    bottone.disabled = false; bottone.textContent = era; return;
+  }
+  /* La riga in pagina si aggiorna qui invece di rileggere tutto: rileggere
+     seimila righe per una nota cambiata sarebbe sproporzionato. */
+  Object.assign(regAperta, {
+    stato: lavoro.stato, priorita: lavoro.priorita, note_admin: lavoro.note,
+    sponsor: lavoro.sponsor, sponsor_fino: lavoro.sponsor_fino
+  }, scheda);
+  bottone.disabled = false; bottone.textContent = era;
+  veloReg.close();
+  disegna();
+}
+document.getElementById("regVai").onclick = e => salvaRegistro(e.currentTarget);
+
+/* ------------------------------------------------------------- le schede
+   Una pagina sola con sei sezioni in fila voleva dire scorrere fino in fondo
+   per sapere se c'era una foto da approvare. Adesso sono schede, e il nome
+   della scheda aperta finisce nell'indirizzo: ricaricando si torna dov'eri, e
+   un collegamento a «#segnalazioni» porta dritto li'. */
+const SCHEDE = [
+  ["persone",      "Le persone"],
+  ["regioni",      "Diffusione regioni"],
+  ["contenuti",    "Contenuti"],
+  ["registro",     "Registro spiagge"],
+  ["segnalazioni", "Segnalazioni"],
+  ["immagini",     "Immagini da approvare"],
+  ["pareri",       "Pareri"],
+  ["azienda",      "Dati dell’azienda"]
+];
+function schedaAperta(){
+  const h = decodeURIComponent((location.hash || "").replace(/^#/, ""));
+  return SCHEDE.some(x => x[0] === h) ? h : "persone";
+}
+/* I due conti che vanno visti prima di aprire: quante segnalazioni non ho
+   ancora letto, e quante foto aspettano un si' o un no. Gli altri numeri
+   possono aspettare di essere cercati; questi no. */
+function contoScheda(chiave){
+  if (chiave === "segnalazioni") return SEGN.filter(x => !x.letta).length;
+  if (chiave === "immagini")     return PARERI.filter(r => r.foto && !r.foto_ok).length;
+  if (chiave === "azienda") {
+    const righe = (IMPOST && IMPOST._righe) || [];
+    return righe.filter(r => !(r.valore || "").trim()).length;
+  }
+  return 0;
+}
+function barraSchede(ora){
+  return '<div class="gest-schede" role="tablist">' + SCHEDE.map(([k, et]) => {
+    const n = contoScheda(k);
+    return '<button type="button" role="tab" data-scheda="' + k + '"' +
+      (k === ora ? ' class="on" aria-selected="true"' : ' aria-selected="false"') + '>' +
+      esc(et) +
+      (n ? '<span class="gest-conta' + (k === "azienda" ? ' calma' : '') + '">' + n + '</span>' : '') +
+      '</button>';
+  }).join("") + '</div>';
+}
+
 function disegna(){
   const perUtente = {};
   ACCESSI.forEach(a => (perUtente[a.utente] = perUtente[a.utente] || []).push(a));
@@ -221,21 +684,83 @@ function disegna(){
   });
   const max = Math.max(1, ...Object.values(domanda).map(s => s.size));
 
-  corpo.innerHTML =
-    '<div class="gest-cifre">' +
-      cifra(PROFILI.length, PROFILI.length === 1 ? "iscritto" : "iscritti") +
-      cifra(conQualcosa.size, "con almeno uno sblocco") +
-      cifra(vivi.length, vivi.length === 1 ? "sblocco attivo" : "sblocchi attivi") +
-      cifra(ACCESSI.length - vivi.length, "scaduti") +
-    '</div>' +
-    '<p class="gest-sez">' + titoloImpostazioni() + '</p>' + moduloImpostazioni() +
-    '<p class="gest-sez" style="margin-top:26px">Le persone</p>' + noteLibere() + tabellaPersone(perUtente) +
-    '<p class="gest-sez" style="margin-top:26px">Le regioni, per quante persone le hanno</p>' +
-    tabellaRegioni(domanda, max) +
-    '<p class="gest-sez" style="margin-top:26px">Lo stato dei contenuti</p>' +
-    '<div id="statoQui">' + bloccoStato() + '</div>' +
-    '<p class="gest-sez" style="margin-top:26px">' + titoloSegnalazioni() + '</p>' + elencoSegnalazioni() +
-    '<p class="gest-sez" style="margin-top:26px">Gli ultimi pareri</p>' + tabellaPareri();
+  const ora = schedaAperta();
+  let dentro = "";
+
+  if (ora === "persone") {
+    dentro =
+      '<div class="gest-cifre">' +
+        cifra(PROFILI.length, PROFILI.length === 1 ? "iscritto" : "iscritti") +
+        cifra(conQualcosa.size, "con almeno uno sblocco") +
+        cifra(vivi.length, vivi.length === 1 ? "sblocco attivo" : "sblocchi attivi") +
+        cifra(ACCESSI.length - vivi.length, "scaduti") +
+      '</div>' + noteLibere() + tabellaPersone(perUtente);
+
+  } else if (ora === "regioni") {
+    dentro = '<p class="gest-intro">Quante persone hanno ciascuna regione. Uno sblocco ' +
+      'di paese intero vale per tutte le sue regioni, e viene contato in ognuna: ' +
+      'altrimenti i <b>pacchetti sembrerebbero non vendere mai</b>.</p>' +
+      tabellaRegioni(domanda, max);
+
+  } else if (ora === "contenuti") {
+    dentro = '<p class="gest-intro">Quanto è piena ogni regione: descrizioni, servizi, ' +
+      'fondo, modo d’accesso, Bandiere Blu. È il contrario della scheda qui accanto — ' +
+      'lì c’è <b>quanto vende</b> una regione, qui <b>quanto vale</b>.</p>' +
+      '<div id="statoQui">' + bloccoStato() + '</div>';
+
+  } else if (ora === "registro") {
+    dentro = '<p class="gest-intro">Una riga per spiaggia, con quello che c’è e quello ' +
+      'che manca. <b>Note, stato e sponsor restano fra noi</b> — stanno in una tabella ' +
+      'che vede solo chi amministra; i quattro collegamenti e il comune delle notizie ' +
+      'invece finiranno nella scheda, quando li accenderemo.</p>' +
+      barraRegistro() + tabellaRegistro();
+
+  } else if (ora === "segnalazioni") {
+    dentro = '<p class="gest-intro">Gli errori che segnalano le persone, dal pulsante in ' +
+      'fondo a ogni scheda. Segnarne una come letta non la cancella: <b>resta qui</b>, ' +
+      'più pallida, finché non la butti tu.</p>' + elencoSegnalazioni();
+
+  } else if (ora === "immagini") {
+    dentro = '<p class="gest-intro">Il parere si pubblica subito, la foto no: finché sta ' +
+      'in attesa <b>non la vede nessuno tranne te</b>. Approvarla la mette nella scheda; ' +
+      'rifiutarla la cancella dal deposito — non la nasconde, la cancella.</p>' +
+      galleriaFoto();
+
+  } else if (ora === "pareri") {
+    dentro = '<p class="gest-intro">Gli ultimi sessanta pareri. Si cancellano <b>per ' +
+      'intero</b>, voto e commento insieme: un voto senza il commento che lo spiegava ' +
+      'è un numero senza motivo.</p>' + tabellaPareri();
+
+  } else if (ora === "azienda") {
+    dentro = '<p class="gest-intro">Scritti una volta sola qui, compaiono ' +
+      'nell’informativa privacy, nei termini di servizio e nel piede di ogni pagina. ' +
+      'I campi vuoti restano <b>gialli</b> nelle pagine legali: è il promemoria.</p>' +
+      moduloImpostazioni();
+  }
+
+  corpo.innerHTML = barraSchede(ora) + dentro;
+
+  corpo.querySelectorAll("[data-scheda]").forEach(b =>
+    b.onclick = () => { location.hash = b.dataset.scheda; });
+  corpo.querySelectorAll("[data-vai-foto]").forEach(b =>
+    b.onclick = () => { location.hash = "immagini"; });
+  corpo.querySelectorAll("[data-reg-regione]").forEach(c =>
+    c.onchange = () => { REG_FILTRO = c.value; });
+  corpo.querySelectorAll("[data-reg-cerca]").forEach(c => {
+    c.oninput = () => { REG_CERCA = c.value; };
+    c.onkeydown = e => { if (e.key === "Enter") {
+      e.preventDefault();
+      const b = corpo.querySelector("[data-reg-carica]"); if (b) caricaRegistro(b);
+    } };
+  });
+  corpo.querySelectorAll("[data-reg-carica]").forEach(b =>
+    b.onclick = () => caricaRegistro(b));
+  corpo.querySelectorAll("[data-reg-csv]").forEach(b =>
+    b.onclick = () => esportaRegistro());
+  corpo.querySelectorAll("[data-reg-xls]").forEach(b =>
+    b.onclick = () => esportaExcel(b));
+  corpo.querySelectorAll("[data-reg-apri]").forEach(b =>
+    b.onclick = () => apriRegistro(b.dataset.regApri));
 
   corpo.querySelectorAll("[data-sblocca]").forEach(b =>
     b.onclick = () => apriSblocco(b.dataset.sblocca));
@@ -275,21 +800,6 @@ function disegna(){
    nessuno tranne qui. Approvarla la sposta in «ok/», rifiutarla la cancella
    dal deposito — non la nasconde soltanto: una foto rifiutata non deve restare
    da nessuna parte. */
-function riquadroFoto(r){
-  if (!r.foto) return "";
-  return '<div class="gest-foto">' +
-    '<img data-gfoto="' + esc(r.foto) + '" alt="Foto allegata al parere">' +
-    '<div class="gest-foto-lato">' +
-      '<span class="gest-foto-stato">' + (r.foto_ok ? "pubblicata" : "in attesa") + '</span>' +
-      (r.foto_ok ? '' :
-        '<button type="button" class="si" data-foto-si="' + esc(r.sid) +
-          '" data-chi="' + esc(r.utente) + '" data-perc="' + esc(r.foto) + '">approva</button>') +
-      '<button type="button" class="no" data-foto-no="' + esc(r.sid) +
-        '" data-chi="' + esc(r.utente) + '" data-perc="' + esc(r.foto) + '">' +
-        (r.foto_ok ? 'togli dal sito' : 'rifiuta') + '</button>' +
-    '</div></div>';
-}
-
 /* Il deposito e' chiuso: anche all'amministratore le immagini arrivano con un
    indirizzo firmato, chiesto dopo aver disegnato la tabella. */
 function appendiFotoGestione(){
@@ -315,6 +825,37 @@ async function rifiutaLaFoto(sid, utente, percorso, bottone){
   await carica();
 }
 
+/* ------------------------------------------------- le immagini, in galleria
+   Una foto non si giudica dentro la casella di una tabella: si guarda. Qui
+   stanno tutte quelle allegate ai pareri, prima le in attesa — che sono il
+   lavoro da fare — poi le gia' pubblicate, che restano a portata di mano per
+   il giorno in cui una va tolta. */
+function galleriaFoto(){
+  const con = PARERI.filter(r => r.foto);
+  if (!con.length)
+    return '<div class="gest-vuoto">Nessuna immagine allegata ai pareri.</div>';
+  const ordine = con.slice().sort((a, b) => (a.foto_ok ? 1 : 0) - (b.foto_ok ? 1 : 0));
+  return '<div class="gest-gall">' + ordine.map(r =>
+    '<div class="gest-scatto' + (r.foto_ok ? '' : ' attesa') + '">' +
+      '<img data-gfoto="' + esc(r.foto) + '" alt="Foto allegata al parere su ' +
+        esc(r.spiaggia || r.sid) + '">' +
+      '<div class="bollo' + (r.foto_ok ? ' viva' : '') + '">' +
+        (r.foto_ok ? 'pubblicata' : 'in attesa') + '</div>' +
+      '<div class="dove">' + esc(r.spiaggia || r.sid) + '</div>' +
+      '<div class="chi">' + esc(r.email || '—') + ' · ' + giorno(r.creata) +
+        ' · ' + "\u2605".repeat(r.voto) + '</div>' +
+      (r.commento ? '<div class="dice">' + esc(r.commento.slice(0, 140)) +
+        (r.commento.length > 140 ? '…' : '') + '</div>' : '') +
+      '<div class="mosse">' +
+        (r.foto_ok ? '' :
+          '<button type="button" class="si" data-foto-si="' + esc(r.sid) +
+            '" data-chi="' + esc(r.utente) + '" data-perc="' + esc(r.foto) + '">approva</button>') +
+        '<button type="button" class="no" data-foto-no="' + esc(r.sid) +
+          '" data-chi="' + esc(r.utente) + '" data-perc="' + esc(r.foto) + '">' +
+          (r.foto_ok ? 'togli dal sito' : 'rifiuta') + '</button>' +
+      '</div></div>').join("") + '</div>';
+}
+
 function tabellaPareri(){
   if (!PARERI.length) return '<div class="gest-vuoto">Ancora nessun parere.</div>';
   return '<table class="gest-tab"><thead><tr>' +
@@ -326,7 +867,8 @@ function tabellaPareri(){
         (r.mostra_nome ? '' : '<span class="gest-ruolo">firmato Anonimo</span>') + '</td>' +
       '<td class="gest-quando">' + "★".repeat(r.voto) + '</td>' +
       '<td>' + (r.commento ? esc(r.commento) : '<span class="gest-ruolo">solo voto</span>') +
-        riquadroFoto(r) + '</td>' +
+        (r.foto ? '<button type="button" class="gest-hafoto" data-vai-foto="1">' +
+          (r.foto_ok ? 'con foto' : 'foto da approvare') + ' →</button>' : '') + '</td>' +
       '<td class="gest-nascondi gest-quando">' + giorno(r.creata) + '</td>' +
       '<td><button type="button" class="gest-x" data-par="' + esc(r.sid) +
         '" data-chi="' + esc(r.utente) + '" title="Cancella questo parere">✕</button></td>' +
@@ -388,12 +930,6 @@ const GRUPPI_IMP = {
   privacy: ["Per l’informativa", "A chi scrive chi vuole i suoi dati, e chi sono i fornitori da nominare."],
   piede:   ["Il piede del sito", "Il copyright in fondo alle pagine."]
 };
-function titoloImpostazioni(){
-  const righe = (IMPOST && IMPOST._righe) || [];
-  const vuoti = righe.filter(r => !(r.valore || "").trim()).length;
-  if (!righe.length) return "Dati dell’azienda";
-  return "Dati dell’azienda" + (vuoti ? " · " + vuoti + " da compilare" : "");
-}
 function moduloImpostazioni(){
   const righe = (IMPOST && IMPOST._righe) || [];
   if (!righe.length)
@@ -481,11 +1017,6 @@ const GENERI_SEGN = {
   posizione: "posizione", dati: "dati", servizi: "servizi",
   immagine: "immagine",  altro: "altro"
 };
-function titoloSegnalazioni(){
-  const nuove = SEGN.filter(s => !s.letta).length;
-  if (!SEGN.length) return "Le segnalazioni";
-  return "Le segnalazioni" + (nuove ? " · " + nuove + (nuove === 1 ? " da leggere" : " da leggere") : "");
-}
 /* Se il profilo non si trova non si inventa niente: si mostra solo la data.
    Scrivere "un iscritto che non c'e' piu'" sarebbe una deduzione, e per giunta
    quasi sempre sbagliata. */
@@ -769,10 +1300,16 @@ async function revoca(id, che){
   }catch(e){ alert("Non ha funzionato: " + e.message.slice(0,200)); }
 }
 
+/* Cambiare scheda non richiede niente al database: i dati sono gia' qui, si
+   ridisegna e basta. Il guardiano e' PROFILI: se e' vuoto la pagina non ha
+   ancora caricato — o chi guarda non amministra — e non c'e' niente da
+   ridisegnare. */
+window.addEventListener("hashchange", () => { if (PROFILI.length) disegna(); });
+
 VADO.alCambio(s => { IO = s; carica(); });
 </script>
-<script src="vado-conto.js?v=202609131640"></script>
-<script src="vado-cookie.js?v=202609131640"></script>
-<script src="vado-piede.js?v=202609131640"></script>
+<script src="vado-conto.js?v=202609131744"></script>
+<script src="vado-cookie.js?v=202609131744"></script>
+<script src="vado-piede.js?v=202609131744"></script>
 </body>
 </html>
