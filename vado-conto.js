@@ -124,9 +124,11 @@
                   vai: "Salva la password", email: false, pw: true, ac: "new-password", senzaSchede: true, nuova: true },
     /* Chi entra con Google salta il nostro modulo, e quindi non ha mai visto
        l'informativa. Gliela si chiede qui, una volta sola. */
-    consenso:   { nota: "Ancora una cosa, poi hai finito: senza questo non posso tenere il tuo account.",
+    consenso:   { nota: "Ancora una cosa, poi hai finito: senza questo non posso tenere il tuo account. " +
+                        "Se vuoi leggere prima, <a href=\"privacy.html\" target=\"_blank\" rel=\"noopener\">" +
+                        "apri l\u2019informativa</a>: si apre a parte e questa finestra ti aspetta.",
                   vai: "Accetto e continuo", email: false, pw: false,
-                  senzaSchede: true, consensi: true, obbligo: true }
+                  senzaSchede: true, consensi: true, obbligo: true, notaHtml: true }
   };
   /* Quando la finestra e' aperta per il consenso non si puo' uscire senza
      rispondere: chiuderla vuol dire non accettare, e allora si esce dal sito.
@@ -139,7 +141,10 @@
     const t = TESTI[m];
     schede.forEach(b => b.classList.toggle("on", b.dataset.s === t.tab));
     velo.querySelector(".conto-schede").hidden = !!t.senzaSchede;
-    nota.textContent = t.nota;
+    /* Quasi tutte le note sono testo e basta: si scrivono come testo, cosi'
+       niente di quello che c'e' scritto puo' diventare marcatura per sbaglio.
+       Quella del consenso ha dentro un collegamento, ed e' scritta da noi. */
+    if (t.notaHtml) nota.innerHTML = t.nota; else nota.textContent = t.nota;
     vai.textContent  = t.vai;
     cEmail.hidden = !t.email; f.email.required    = !!t.email;
     cPw.hidden    = !t.pw;    f.password.required = !!t.pw;
@@ -450,9 +455,20 @@
      Chi entra con Google non e' passato dal nostro modulo e non ha mai visto
      l'informativa. Al primo ingresso gliela si chiede. Il controllo costa una
      richiesta e si fa una volta per sessione. */
+  /* Ovunque tranne che SULL'INFORMATIVA.
+     La finestra del consenso non si puo' chiudere senza rispondere — e' voluto,
+     chiudere vuol dire non accettare. Ma aprendola anche sulla pagina che si
+     deve leggere per rispondere si costruisce un vicolo cieco: ti chiedo di
+     accettare un testo, e ti impedisco di leggerlo.
+     Il riconoscimento e' doppio apposta: l'indirizzo del file, e un pezzo di
+     pagina che esiste solo li'. Se un domani il file cambia nome, la seconda
+     prova regge lo stesso. */
+  const suInformativa = /(^|\/)privacy\.html($|[?#])/i.test(location.pathname) ||
+                        !!document.getElementById("avviso-vuoti");
+
   let consensoGiaVisto = false;
   VADO.alCambio(async s => {
-    if (!s || consensoGiaVisto) return;
+    if (!s || consensoGiaVisto || suInformativa) return;
     consensoGiaVisto = true;
     if (velo.open) return;                 /* la finestra sta gia' facendo altro */
     try {
