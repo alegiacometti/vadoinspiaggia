@@ -28,6 +28,16 @@
         '<button type="button" data-s="registrati">Registrati</button>' +
       '</div>' +
       '<p class="conto-nota" data-nota></p>' +
+      '<div class="conto-google" data-riga-google>' +
+        '<button type="button" class="conto-g" data-google>' +
+          '<svg viewBox="0 0 48 48" aria-hidden="true" width="17" height="17">' +
+          '<path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-2.8-.4-4H24v7.3h12.1c-.2 2-1.6 5-4.5 7l-.1.3 6.5 5 .5.1c4.1-3.8 6.6-9.4 6.6-15.7"/>' +
+          '<path fill="#34A853" d="M24 46c5.9 0 10.9-1.9 14.5-5.3l-6.9-5.4c-1.9 1.3-4.4 2.2-7.6 2.2-5.8 0-10.7-3.8-12.5-9l-.3 0-6.7 5.2-.1.3C7.9 41 15.4 46 24 46"/>' +
+          '<path fill="#FBBC05" d="M11.5 28.5c-.5-1.4-.7-2.9-.7-4.5s.3-3.1.7-4.5l0-.3-6.8-5.3-.2.1C2.9 17 2 20.4 2 24s.9 7 2.5 10l7-5.5"/>' +
+          '<path fill="#EB4335" d="M24 9.5c4.1 0 6.9 1.8 8.5 3.3l6.2-6C34.9 3.4 29.9 1 24 1 15.4 1 7.9 6 4.5 14l7 5.5c1.8-5.2 6.7-9 12.5-9"/>' +
+          '</svg><span>Continua con Google</span></button>' +
+        '<div class="conto-oppure"><span>oppure</span></div>' +
+      '</div>' +
       '<label class="conto-campo" data-campo-email><span>Email</span>' +
         '<input type="email" name="email" autocomplete="email" required></label>' +
       '<label class="conto-campo" data-campo-pw><span>Password</span>' +
@@ -36,6 +46,15 @@
         '<input type="password" name="password" autocomplete="current-password"></label>' +
       '<div class="conto-forza" data-forza hidden>' +
         '<div class="forza-barra"><i></i></div><span class="forza-eti"></span></div>' +
+      '<div class="conto-consensi" data-consensi hidden>' +
+        '<label><input type="checkbox" data-c-privacy>' +
+          '<span>Ho letto e accetto l\u2019<a href="privacy.html" target="_blank" rel="noopener">' +
+          'informativa privacy e le condizioni</a>.</span></label>' +
+        '<label><input type="checkbox" data-c-terzi>' +
+          '<span>Acconsento che il mio indirizzo sia comunicato a soggetti terzi ' +
+          'selezionati perch\u00e9 mi mandino le loro proposte. ' +
+          '<i>Facoltativo: lasciandola vuota il sito funziona uguale.</i></span></label>' +
+      '</div>' +
       '<div class="conto-captcha" data-captcha hidden></div>' +
       '<div class="conto-scordata" data-riga-scordata>' +
         '<button type="button" data-scordata>Password dimenticata?</button></div>' +
@@ -49,6 +68,15 @@
   /* La X e' un pulsante normale e chiude, punto. Si chiude anche cliccando
      fuori dal foglio: il <dialog> riceve il clic sullo sfondo, il foglio no. */
   velo.querySelector(".chiudi").addEventListener("click", () => velo.close());
+  /* Chiudere la finestra del consenso vuol dire "no": e allora si esce, invece
+     di restare dentro con un account che non ha accettato niente. */
+  velo.addEventListener("close", () => {
+    if (!obbligato) return;
+    obbligato = false;
+    /* VADO e' un const: variabile globale, ma NON una proprieta' di window.
+       Chiederla con window.VADO da' sempre undefined. */
+    if (typeof VADO !== "undefined") VADO.esci();
+  });
   /* Chiudere cliccando fuori dal foglio e' comodo, ma il clic va giudicato da
      DOVE E' COMINCIATO, non da dove finisce. Chi seleziona con il mouse il
      testo di un campo — per esempio per cancellare l'indirizzo gia' scritto —
@@ -73,6 +101,11 @@
   const vai     = velo.querySelector("[data-vai]");
   const cForza  = velo.querySelector("[data-forza]");
   const cCapt   = velo.querySelector("[data-captcha]");
+  const rGoogle = velo.querySelector("[data-riga-google]");
+  const cCons   = velo.querySelector("[data-consensi]");
+  const spPriv  = velo.querySelector("[data-c-privacy]");
+  const spTerzi = velo.querySelector("[data-c-terzi]");
+  const VERS    = window.PRIVACY_VERSIONE || "";
   const barra   = cForza.querySelector("i");
   const etiForza= cForza.querySelector(".forza-eti");
   const schede  = [...velo.querySelectorAll(".conto-schede button")];
@@ -80,14 +113,26 @@
 
   const TESTI = {
     accedi:     { nota: "Le regioni che hai sbloccato e le spiagge che hai salvato ti seguono su qualunque computer.",
-                  vai: "Accedi", email: true, pw: true, ac: "current-password", scordata: true, tab: "accedi" },
+                  vai: "Accedi", email: true, pw: true, ac: "current-password", scordata: true,
+                  tab: "accedi", google: true },
     registrati: { nota: "Basta un indirizzo email. Le Marche sono libere per tutti: puoi provare il sito prima di sbloccare qualsiasi cosa.",
-                  vai: "Crea l’account", email: true, pw: true, ac: "new-password", tab: "registrati", nuova: true },
+                  vai: "Crea l’account", email: true, pw: true, ac: "new-password", tab: "registrati",
+                  nuova: true, consensi: true, google: true },
     recupera:   { nota: "Scrivi l’indirizzo con cui ti sei registrato: ti arriva un messaggio con il collegamento per scegliere una password nuova.",
                   vai: "Mandami il collegamento", email: true, pw: false, torna: true },
     nuova:      { nota: "Scegli la password nuova. Almeno otto caratteri.",
-                  vai: "Salva la password", email: false, pw: true, ac: "new-password", senzaSchede: true, nuova: true }
+                  vai: "Salva la password", email: false, pw: true, ac: "new-password", senzaSchede: true, nuova: true },
+    /* Chi entra con Google salta il nostro modulo, e quindi non ha mai visto
+       l'informativa. Gliela si chiede qui, una volta sola. */
+    consenso:   { nota: "Ancora una cosa, poi hai finito: senza questo non posso tenere il tuo account.",
+                  vai: "Accetto e continuo", email: false, pw: false,
+                  senzaSchede: true, consensi: true, obbligo: true }
   };
+  /* Quando la finestra e' aperta per il consenso non si puo' uscire senza
+     rispondere: chiuderla vuol dire non accettare, e allora si esce dal sito.
+     Lasciare dentro qualcuno che non ha accettato sarebbe la sola via d'uscita
+     davvero sbagliata. */
+  let obbligato = false;
 
   function scheda(m) {
     modo = m;
@@ -104,11 +149,22 @@
     /* Il misuratore si mostra solo a chi la password la sta SCEGLIENDO. A chi
        sta entrando non serve sapere quanto e' robusta quella che ha gia': e'
        un giudizio che non puo' usare, e in piu' la disegna mentre la scrive. */
+    /* Il pulsante di Google sta dove serve — entrare e iscriversi — e sparisce
+       dove non c'entra niente: scegliere una password nuova, o accettare
+       l'informativa quando da Google ci si e' gia' passati. */
+    rGoogle.hidden = !t.google;
+    cCons.hidden = !t.consensi;
+    obbligato = !!t.obbligo;
+    velo.querySelector(".chiudi").hidden = !!t.obbligo;
+    if (t.consensi) { spPriv.checked = false; spTerzi.checked = false; }
     cForza.hidden = !(t.pw && t.nuova);
     disegnaForza();
     esito.hidden = true; esito.className = "conto-esito";
   }
   schede.forEach(b => b.addEventListener("click", () => scheda(b.dataset.s)));
+  velo.querySelector("[data-google]").addEventListener("click", () => {
+    if (typeof VADO !== "undefined" && VADO.entraConGoogle) VADO.entraConGoogle();
+  });
   velo.querySelector("[data-scordata]").addEventListener("click", () => {
     /* l'indirizzo gia' scritto si porta dietro: chi arriva qui l'ha appena
        digitato, e ribatterlo e' la classica scortesia che fa abbandonare */
@@ -181,6 +237,8 @@
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em))
         return [cEmail, "Quell’indirizzo non sembra completo: ci vuole una chiocciola e un punto dopo."];
     }
+    if (t.consensi && !spPriv.checked)
+      return [cCons, "Per proseguire devi accettare l’informativa privacy: è la sola casella obbligatoria."];
     if (t.pw) {
       if (!pw) return [cPw, "Scrivi la password."];
       /* La lunghezza minima si chiede a chi la sta SCEGLIENDO. A chi sta
@@ -288,8 +346,13 @@
     try {
       if (modo === "accedi") {
         await VADO.accedi(email, pw, cap); velo.close();
+      } else if (modo === "consenso") {
+        await VADO.accettaPrivacy(VERS, spTerzi.checked);
+        obbligato = false;
+        velo.close();
       } else if (modo === "registrati") {
-        const r = await VADO.iscriviti(email, pw, cap);
+        const r = await VADO.iscriviti(email, pw, cap,
+                    { versione: VERS, terzi: spTerzi.checked });
         if (r.entrato) velo.close();
         else dillo("Account creato. Ti ho mandato un messaggio a " + email +
                    ": aprilo per confermare l’indirizzo, poi torna qui e accedi.", true);
@@ -374,6 +437,7 @@
     if (!brutto) setTimeout(() => b.remove(), 6000);
   };
   if (arrivo === "recovery") { scheda("nuova"); velo.showModal(); f.password.focus(); }
+  else if (arrivo === "google") fascetta("Sei dentro con Google.");
   else if (arrivo === "signup" || arrivo === "magiclink") fascetta("Indirizzo confermato: sei dentro.");
   else if (arrivo === "errore") fascetta("Quel collegamento non è più valido: chiedine un altro dalla finestra d’accesso.", true);
 
@@ -381,4 +445,19 @@
      il pulsante deve accorgersene, altrimenti si resta a guardare un "Esci"
      che non ha piu' niente da chiudere. */
   addEventListener("storage", e => { if (e.key === "vado.sessione") location.reload(); });
+
+  /* ------------------------------------------- il consenso di chi arriva da fuori
+     Chi entra con Google non e' passato dal nostro modulo e non ha mai visto
+     l'informativa. Al primo ingresso gliela si chiede. Il controllo costa una
+     richiesta e si fa una volta per sessione. */
+  let consensoGiaVisto = false;
+  VADO.alCambio(async s => {
+    if (!s || consensoGiaVisto) return;
+    consensoGiaVisto = true;
+    if (velo.open) return;                 /* la finestra sta gia' facendo altro */
+    try {
+      const c = await VADO.consensoMio();
+      if (c && !c.privacy_il) { scheda("consenso"); velo.showModal(); }
+    } catch (_) { /* se non si riesce a chiedere, non si blocca nessuno */ }
+  });
 })();

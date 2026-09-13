@@ -93,7 +93,10 @@ window.VADORECE = (function () {
           (mod ? '<button type="button" class="rec-togli" data-mod-sid="' + esc(mod.sid) +
                  '" data-mod-utente="' + esc(mod.utente) + '" title="Togli questa recensione">✕</button>' : '') +
           '</div>' +
-          (r.commento ? '<p class="rec-testo">' + esc(r.commento) + '</p>' : '') + '</li>';
+          (r.commento ? '<p class="rec-testo">' + esc(r.commento) + '</p>' : '') +
+          (r.foto ? '<div class="rec-foto-vista"><img data-foto="' + esc(r.foto) +
+                    '" alt="Foto di chi ha scritto questo parere" loading="lazy"></div>' : '') +
+          '</li>';
       }).join("") + '</ul>';
     }
 
@@ -113,6 +116,7 @@ window.VADORECE = (function () {
         '</div>' +
         '<textarea data-rec-testo rows="3" maxlength="1200" placeholder="Com’era? Fondo, acqua, servizi, quanta gente… (facoltativo)">' +
           esc(mia && mia.commento || "") + '</textarea>' +
+        modulettoFoto(mia) +
         '<label class="rec-nome"><input type="checkbox" data-rec-nome' +
           (!mia || mia.mostra_nome ? " checked" : "") + '>' +
           '<span>Mostra il mio nome accanto al parere</span></label>' +
@@ -126,6 +130,44 @@ window.VADORECE = (function () {
     html += '</div>';
     dove.innerHTML = html;
     lega(dove, sid, nomeSpiaggia, mia);
+    appendiFoto(dove);
+  }
+
+  /* La foto e' un allegato facoltativo, e va detto subito che non compare da
+     sola: il parere si legge un attimo dopo averlo scritto, la foto no. Dirlo
+     dopo, quando uno la cerca e non la trova, sembra un guasto. */
+  function modulettoFoto(mia) {
+    const c = mia && mia.foto;
+    let stato = "";
+    if (c && mia.foto_ok)
+      stato = '<span class="rec-foto-stato ok">La tua foto è pubblicata</span>' +
+              '<button type="button" class="rec-foto-via" data-rec-foto-via>togli la foto</button>';
+    else if (c)
+      stato = '<span class="rec-foto-stato attesa">La tua foto è in attesa: la guardo io prima che compaia</span>' +
+              '<button type="button" class="rec-foto-via" data-rec-foto-via>togli la foto</button>';
+    return '<div class="rec-foto">' +
+      '<input type="file" data-rec-file accept="image/jpeg,image/png,image/webp" hidden>' +
+      '<button type="button" class="rec-foto-scegli" data-rec-scegli>' +
+        (c ? "Cambia la foto" : "Allega una foto") + '</button>' +
+      '<span class="rec-foto-scelta" data-rec-scelta></span>' +
+      (stato ? '<div class="rec-foto-riga">' + stato + '</div>' : '') +
+      '<p class="rec-foto-nota">Il parere si pubblica subito; la foto solo dopo che l’ho guardata. ' +
+      'Dev’essere tua e non deve avere dentro persone riconoscibili.</p>' +
+      '</div>';
+  }
+
+  /* Il deposito e' chiuso: ogni immagine approvata vuole un indirizzo firmato,
+     che si chiede al momento e scade da solo. Si fa dopo aver disegnato, cosi'
+     l'elenco compare subito e le foto arrivano quando arrivano. */
+  function appendiFoto(dove) {
+    dove.querySelectorAll("img[data-foto]").forEach(async img => {
+      try {
+        const u = await VADO.firmaFoto(img.dataset.foto, 3600);
+        if (u) img.src = u; else img.closest(".rec-foto-vista").remove();
+      } catch (_) {
+        const q = img.closest(".rec-foto-vista"); if (q) q.remove();
+      }
+    });
   }
 
   function lega(dove, sid, nomeSpiaggia, mia) {
@@ -158,6 +200,33 @@ window.VADORECE = (function () {
       esito.hidden = true;
     });
 
+    /* il file scelto resta qui finche' non si salva: caricarlo subito vorrebbe
+       dire riempire il deposito di foto di pareri che nessuno ha mai pubblicato */
+    let fileScelto = null;
+    let togliLaFoto = false;
+    const inFile  = modulo.querySelector("[data-rec-file]");
+    const scelta  = modulo.querySelector("[data-rec-scelta]");
+    const scegli  = modulo.querySelector("[data-rec-scegli]");
+    if (scegli) scegli.onclick = () => inFile.click();
+    if (inFile) inFile.onchange = () => {
+      const f = inFile.files && inFile.files[0];
+      if (!f) { fileScelto = null; scelta.textContent = ""; return; }
+      if (f.size > 5 * 1024 * 1024) {
+        fileScelto = null; inFile.value = ""; scelta.textContent = "";
+        return dillo("Quell’immagine pesa troppo: il limite è 5 MB.", false);
+      }
+      fileScelto = f; togliLaFoto = false;
+      scelta.textContent = f.name.length > 34 ? f.name.slice(0, 31) + "…" : f.name;
+    };
+    const viaFoto = modulo.querySelector("[data-rec-foto-via]");
+    if (viaFoto) viaFoto.onclick = () => {
+      togliLaFoto = true; fileScelto = null;
+      if (inFile) inFile.value = "";
+      scelta.textContent = "";
+      viaFoto.disabled = true;
+      dillo("La foto verrà tolta quando salvi.", true);
+    };
+
     const dillo = (t, buona) => {
       esito.innerHTML = t; esito.hidden = false;
       esito.className = "rec-esito " + (buona ? "buona" : "brutta");
@@ -168,7 +237,20 @@ window.VADORECE = (function () {
       const b = modulo.querySelector("[data-rec-salva]");
       b.disabled = true; const era = b.textContent; b.textContent = "Un momento…";
       try {
-        await VADO.salvaRecensione(sid, voto, testo.value, vediNome.checked);
+        /* prima la foto: se il caricamento va storto non si salva niente, cosi'
+           non resta una riga che promette un'immagine che non e' mai arrivata */
+        let foto;
+        if (fileScelto) {
+          b.textContent = "Carico la foto…";
+          foto = await VADO.caricaFoto(sid, fileScelto);
+        } else if (togliLaFoto) {
+          foto = null;
+        }
+        if ((togliLaFoto || fileScelto) && mia && mia.foto) {
+          try { await VADO.buttaFoto(mia.foto); } catch (_) { /* magari non c'e' piu' */ }
+        }
+        b.textContent = "Un momento…";
+        await VADO.salvaRecensione(sid, voto, testo.value, vediNome.checked, foto);
         /* Chi ha chiesto di mostrare il nome e non l'ha mai scritto comparirebbe
            come «Anonimo» senza capire perche'. Meglio dirlo subito, con il
            collegamento per rimediare in dieci secondi. */

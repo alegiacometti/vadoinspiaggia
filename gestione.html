@@ -7,11 +7,9 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#083c5c">
 <title>Gestione · Vado in spiaggia</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="carte-spiagge.css?v=202609122113">
-<script src="vado-dati.js?v=202609122113"></script>
+<link rel="stylesheet" href="carte-spiagge.css?v=202609130425">
+<link rel="stylesheet" href="caratteri/caratteri.css?v=202609130413">
+<script src="vado-dati.js?v=202609130425"></script>
 <style>
 /* Questa pagina NON e' protetta dal fatto di essere nascosta: chiunque puo'
    aprirla, e va benissimo. A proteggere sono le regole del database — senza
@@ -131,6 +129,8 @@ function fuori(titolo, testo, conPulsante){
 }
 
 let SEGN = [];
+let IMPOST = null;
+let IMP_DETTO = "";      /* il messaggio sopravvive al ridisegno che segue */
 async function carica(){
   if (!VADO.chiSono())
     return fuori("Questa pagina è riservata",
@@ -153,6 +153,7 @@ async function carica(){
       SEGN = await VADO.chiedi("segnalazioni?select=id,sid,regione,spiaggia,utente," +
         "genere,testo,creato,letta&order=creato.desc&limit=200");
     } catch (_) { SEGN = []; }
+    try { IMPOST = await VADO.impostazioni(true); } catch (_) { IMPOST = { _righe: [] }; }
   }catch(e){
     return fuori("Non riesco a leggere", "Il servizio non risponde: " + e.message, false);
   }
@@ -193,7 +194,8 @@ function disegna(){
       cifra(vivi.length, vivi.length === 1 ? "sblocco attivo" : "sblocchi attivi") +
       cifra(ACCESSI.length - vivi.length, "scaduti") +
     '</div>' +
-    '<p class="gest-sez">Le persone</p>' + noteLibere() + tabellaPersone(perUtente) +
+    '<p class="gest-sez">' + titoloImpostazioni() + '</p>' + moduloImpostazioni() +
+    '<p class="gest-sez" style="margin-top:26px">Le persone</p>' + noteLibere() + tabellaPersone(perUtente) +
     '<p class="gest-sez" style="margin-top:26px">Le regioni, per quante persone le hanno</p>' +
     tabellaRegioni(domanda, max) +
     '<p class="gest-sez" style="margin-top:26px">' + titoloSegnalazioni() + '</p>' + elencoSegnalazioni() +
@@ -209,6 +211,18 @@ function disegna(){
     b.onclick = () => segnaLetta(+b.dataset.segnLetta, b.dataset.come === "1"));
   corpo.querySelectorAll("[data-segn-via]").forEach(b =>
     b.onclick = () => buttaSegnalazione(+b.dataset.segnVia));
+  corpo.querySelectorAll("[data-imp-salva]").forEach(b =>
+    b.onclick = () => salvaImpostazioni(b));
+  corpo.querySelectorAll("[data-imp-campo]").forEach(c =>
+    c.addEventListener("input", () => {
+      const b = corpo.querySelector("[data-imp-salva]");
+      if (b) { b.disabled = false; b.textContent = "Salva i dati"; }
+    }));
+  corpo.querySelectorAll("[data-foto-si]").forEach(b =>
+    b.onclick = () => approvaLaFoto(b.dataset.fotoSi, b.dataset.chi, b.dataset.perc, b));
+  corpo.querySelectorAll("[data-foto-no]").forEach(b =>
+    b.onclick = () => rifiutaLaFoto(b.dataset.fotoNo, b.dataset.chi, b.dataset.perc, b));
+  appendiFotoGestione();
   corpo.querySelectorAll("[data-par]").forEach(b =>
     b.onclick = () => togliParere(b.dataset.par, b.dataset.chi, b));
 }
@@ -218,6 +232,51 @@ function disegna(){
    o poi qualcuno se lo ritrova davanti senza sapere perche' era li'. E si
    cancella per intero — voto e commento insieme — perche' un voto senza il
    commento che lo spiegava e' un numero senza motivo. */
+/* ------------------------------------------------------ le foto da approvare
+   Il parere e' gia' pubblico, la foto no: finche' sta in «attesa/» non la vede
+   nessuno tranne qui. Approvarla la sposta in «ok/», rifiutarla la cancella
+   dal deposito — non la nasconde soltanto: una foto rifiutata non deve restare
+   da nessuna parte. */
+function riquadroFoto(r){
+  if (!r.foto) return "";
+  return '<div class="gest-foto">' +
+    '<img data-gfoto="' + esc(r.foto) + '" alt="Foto allegata al parere">' +
+    '<div class="gest-foto-lato">' +
+      '<span class="gest-foto-stato">' + (r.foto_ok ? "pubblicata" : "in attesa") + '</span>' +
+      (r.foto_ok ? '' :
+        '<button type="button" class="si" data-foto-si="' + esc(r.sid) +
+          '" data-chi="' + esc(r.utente) + '" data-perc="' + esc(r.foto) + '">approva</button>') +
+      '<button type="button" class="no" data-foto-no="' + esc(r.sid) +
+        '" data-chi="' + esc(r.utente) + '" data-perc="' + esc(r.foto) + '">' +
+        (r.foto_ok ? 'togli dal sito' : 'rifiuta') + '</button>' +
+    '</div></div>';
+}
+
+/* Il deposito e' chiuso: anche all'amministratore le immagini arrivano con un
+   indirizzo firmato, chiesto dopo aver disegnato la tabella. */
+function appendiFotoGestione(){
+  corpo.querySelectorAll("img[data-gfoto]").forEach(async img => {
+    try {
+      const u = await VADO.firmaFoto(img.dataset.gfoto, 3600);
+      if (u) img.src = u; else img.replaceWith(document.createTextNode("(immagine sparita)"));
+    } catch (_) { img.alt = "non riesco a mostrarla"; }
+  });
+}
+
+async function approvaLaFoto(sid, utente, percorso, bottone){
+  bottone.disabled = true;
+  try { await VADO.approvaFoto(sid, utente, percorso); }
+  catch (e) { bottone.disabled = false; return alert("Non ha funzionato: " + e.message.slice(0,200)); }
+  await carica();
+}
+async function rifiutaLaFoto(sid, utente, percorso, bottone){
+  if (!confirm("Cancellare questa foto?\n\nSparisce dal deposito e non si recupera. Il parere resta.")) return;
+  bottone.disabled = true;
+  try { await VADO.rifiutaFoto(sid, utente, percorso); }
+  catch (e) { bottone.disabled = false; return alert("Non ha funzionato: " + e.message.slice(0,200)); }
+  await carica();
+}
+
 function tabellaPareri(){
   if (!PARERI.length) return '<div class="gest-vuoto">Ancora nessun parere.</div>';
   return '<table class="gest-tab"><thead><tr>' +
@@ -228,7 +287,8 @@ function tabellaPareri(){
       '<td class="gest-nascondi"><div class="gest-chi">' + esc(r.email || "—") + '</div>' +
         (r.mostra_nome ? '' : '<span class="gest-ruolo">firmato Anonimo</span>') + '</td>' +
       '<td class="gest-quando">' + "★".repeat(r.voto) + '</td>' +
-      '<td>' + (r.commento ? esc(r.commento) : '<span class="gest-ruolo">solo voto</span>') + '</td>' +
+      '<td>' + (r.commento ? esc(r.commento) : '<span class="gest-ruolo">solo voto</span>') +
+        riquadroFoto(r) + '</td>' +
       '<td class="gest-nascondi gest-quando">' + giorno(r.creata) + '</td>' +
       '<td><button type="button" class="gest-x" data-par="' + esc(r.sid) +
         '" data-chi="' + esc(r.utente) + '" title="Cancella questo parere">✕</button></td>' +
@@ -278,6 +338,70 @@ function bottoneRuolo(p){
     '" data-a="' + (admin ? "utente" : "admin") +
     '" data-chi="' + esc(p.email || p.nome || "questa persona") + '">' +
     (admin ? "togli i permessi" : "rendi amministratore") + '</button>';
+}
+
+/* ---------------------------------------------------- i dati dell'azienda
+   Stavano scritti a mano dentro privacy.html. Da qui si cambiano una volta e
+   cambiano ovunque: nell'informativa e nel piede di ogni pagina.
+   I gruppi servono solo a leggerli in ordine — chi siamo, la privacy, il
+   piede — perche' dodici campi in fila sono un modulo che nessuno finisce. */
+const GRUPPI_IMP = {
+  chi:     ["Chi sei", "Vanno nel piede di ogni pagina e in cima all’informativa."],
+  privacy: ["Per l’informativa", "A chi scrive chi vuole i suoi dati, e chi sono i fornitori da nominare."],
+  piede:   ["Il piede del sito", "Il copyright in fondo alle pagine."]
+};
+function titoloImpostazioni(){
+  const righe = (IMPOST && IMPOST._righe) || [];
+  const vuoti = righe.filter(r => !(r.valore || "").trim()).length;
+  if (!righe.length) return "Dati dell’azienda";
+  return "Dati dell’azienda" + (vuoti ? " · " + vuoti + " da compilare" : "");
+}
+function moduloImpostazioni(){
+  const righe = (IMPOST && IMPOST._righe) || [];
+  if (!righe.length)
+    return '<div class="gest-vuoto">Non riesco a leggere le impostazioni.</div>';
+  let html = '<div class="gest-imp">';
+  Object.keys(GRUPPI_IMP).forEach(g => {
+    const sue = righe.filter(r => r.gruppo === g);
+    if (!sue.length) return;
+    html += '<div class="gest-imp-gruppo"><h4>' + esc(GRUPPI_IMP[g][0]) + '</h4>' +
+            '<p class="gest-imp-nota">' + esc(GRUPPI_IMP[g][1]) + '</p>';
+    sue.forEach(r => {
+      const vuoto = !(r.valore || "").trim();
+      html += '<label class="gest-imp-campo' + (vuoto ? ' vuoto' : '') + '">' +
+        '<span>' + esc(r.etichetta || r.chiave) + '</span>' +
+        '<input type="text" data-imp-campo="' + esc(r.chiave) + '" value="' +
+          esc(r.valore || "") + '" placeholder="' + esc(r.aiuto || "") + '">' +
+        (r.aiuto ? '<i>' + esc(r.aiuto) + '</i>' : '') + '</label>';
+    });
+    html += '</div>';
+  });
+  return html + '<div class="gest-imp-fondo">' +
+    '<button type="button" data-imp-salva disabled>Salva i dati</button>' +
+    '<span class="gest-imp-esito" data-imp-esito>' + esc(IMP_DETTO) + '</span></div></div>';
+}
+/* Si salvano solo quelli cambiati: mandare dodici scritture per correggere un
+   CAP vuol dire dodici righe toccate nel registro del database, e dodici
+   occasioni perche' una vada storta. */
+async function salvaImpostazioni(bottone){
+  const righe = (IMPOST && IMPOST._righe) || [];
+  const esito = corpo.querySelector("[data-imp-esito]");
+  const cambiati = [];
+  corpo.querySelectorAll("[data-imp-campo]").forEach(c => {
+    const vecchio = (righe.find(r => r.chiave === c.dataset.impCampo) || {}).valore || "";
+    if (c.value.trim() !== vecchio.trim()) cambiati.push([c.dataset.impCampo, c.value.trim()]);
+  });
+  if (!cambiati.length) { esito.textContent = "Non è cambiato niente."; return; }
+  bottone.disabled = true; bottone.textContent = "Un momento…";
+  try {
+    for (const [k, v] of cambiati) await VADO.salvaImpostazione(k, v);
+    IMP_DETTO = cambiati.length === 1 ? "Salvato." : "Salvati " + cambiati.length + " campi.";
+    await carica();          /* ridisegna: il messaggio se lo porta IMP_DETTO */
+    IMP_DETTO = "";
+  } catch (e) {
+    bottone.disabled = false; bottone.textContent = "Salva i dati";
+    esito.textContent = "Non ha funzionato: " + e.message.slice(0, 160);
+  }
 }
 
 function tabellaPersone(perUtente){
@@ -466,6 +590,8 @@ async function revoca(id, che){
 
 VADO.alCambio(s => { IO = s; carica(); });
 </script>
-<script src="vado-conto.js?v=202609122113"></script>
+<script src="vado-conto.js?v=202609130425"></script>
+<script src="vado-cookie.js?v=202609130425"></script>
+<script src="vado-piede.js?v=202609130425"></script>
 </body>
 </html>

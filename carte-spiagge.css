@@ -911,3 +911,139 @@ a.conto-chi:hover{color:var(--azzurro)}
   padding:4px 10px;cursor:pointer;transition:.14s}
 .gest-segn-pie button:hover{border-color:var(--azzurro);color:var(--azzurro);background:var(--schiuma)}
 .gest-segn-pie a{font-size:12px;color:var(--azzurro)}
+
+/* ---------------- le caselle dei consensi nella finestra dell'account ---- */
+.conto-consensi{display:grid;gap:10px;margin:2px 0 14px}
+.conto-consensi label{display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:start;
+  font-size:12.5px;line-height:1.5;color:var(--blu);cursor:pointer}
+.conto-consensi input{margin:2px 0 0;width:16px;height:16px;accent-color:var(--azzurro);cursor:pointer}
+.conto-consensi a{color:var(--azzurro)}
+.conto-consensi i{display:block;font-style:normal;color:var(--grigio);font-size:11.5px;margin-top:2px}
+
+/* ---------------- entrare con Google ------------------------------------
+   Il pulsante sta sopra il modulo perche' e' la strada piu' corta: chi ce
+   l'ha non deve leggere due campi per accorgersene. Il «oppure» e' una riga
+   con una parola in mezzo, non un titolo: separa senza pesare. */
+.conto-google{margin:0 0 14px}
+.conto-g{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;
+  background:#fff;border:1px solid var(--basso);border-radius:10px;cursor:pointer;
+  font-family:var(--dati);font-size:12px;letter-spacing:.03em;color:var(--blu);
+  padding:11px 14px;box-shadow:var(--ombra);transition:.14s}
+.conto-g:hover{background:var(--schiuma);border-color:var(--azzurro)}
+.conto-g:focus-visible{outline:2px solid var(--ambra);outline-offset:2px}
+.conto-g svg{flex:0 0 auto}
+.conto-oppure{display:flex;align-items:center;gap:10px;margin:13px 0 0;
+  font-family:var(--dati);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--grigio)}
+.conto-oppure::before,.conto-oppure::after{content:"";flex:1;height:1px;background:var(--tratto)}
+
+/* ---------------- la foto nelle recensioni ------------------------------ */
+.rec-foto-vista{margin:8px 0 0;border-radius:9px;overflow:hidden;border:1px solid var(--tratto);
+  background:var(--nebbia);max-width:420px}
+.rec-foto-vista img{display:block;width:100%;height:auto}
+.rec-foto{margin:2px 0 10px}
+.rec-foto-scegli{font-family:var(--dati);font-size:10px;letter-spacing:.07em;text-transform:uppercase;
+  background:#fff;border:1px solid var(--basso);border-radius:999px;color:var(--blu);
+  padding:7px 13px;cursor:pointer;transition:.14s}
+.rec-foto-scegli:hover{background:var(--schiuma);border-color:var(--azzurro);color:var(--azzurro)}
+.rec-foto-scelta{font-size:12px;color:var(--grigio);margin-left:9px}
+.rec-foto-riga{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0 0}
+.rec-foto-stato{font-family:var(--dati);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;
+  border-radius:999px;padding:3px 9px;border:1px solid}
+.rec-foto-stato.ok{background:#e8f6ec;color:#1c6b36;border-color:#b6dfc3}
+.rec-foto-stato.attesa{background:#fff3d4;color:#7a5a08;border-color:#e4c56a}
+.rec-foto-via{font-size:11.5px;color:var(--grigio);background:none;border:0;padding:0;
+  cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.rec-foto-via:hover{color:var(--corallo)}
+.rec-foto-via:disabled{opacity:.5;cursor:default;text-decoration:none}
+.rec-foto-nota{margin:7px 0 0;font-size:11.5px;line-height:1.5;color:var(--grigio)}
+
+/* ---------------- le foto da approvare, in gestione --------------------- */
+.gest-foto{display:flex;gap:10px;align-items:flex-start;margin:8px 0 0;
+  background:var(--nebbia);border:1px solid var(--tratto);border-radius:10px;padding:9px}
+.gest-foto img{width:150px;height:100px;object-fit:cover;border-radius:7px;display:block;
+  background:#dde8ee;flex:0 0 auto}
+.gest-foto-lato{display:flex;flex-direction:column;gap:6px;min-width:0}
+.gest-foto-stato{font-family:var(--dati);font-size:9px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--grigio)}
+.gest-foto-lato button{font-family:var(--dati);font-size:9.5px;letter-spacing:.07em;
+  text-transform:uppercase;border:1px solid var(--tratto);border-radius:999px;background:#fff;
+  color:var(--grigio);padding:5px 11px;cursor:pointer;transition:.14s;align-self:flex-start}
+.gest-foto-lato button.si:hover{border-color:#3a9b5c;color:#1c6b36;background:#e8f6ec}
+.gest-foto-lato button.no:hover{border-color:var(--corallo);color:#8d2b22;background:#fdecea}
+
+/* ---------------- il piede del sito -------------------------------------
+   Si chiama «piede-sito» e non «piede» perche' .piede esisteva gia': e' la
+   riga dei crediti sotto le carte regionali. Due cose diverse con lo stesso
+   nome e' il modo piu' rapido per farne sparire una. */
+.piede-sito{margin:34px 0 0;border-top:1px solid var(--tratto);background:var(--nebbia)}
+.piede-dentro{padding:18px 0 26px;display:grid;gap:7px}
+.piede-copy{margin:0;font-size:13px;color:var(--blu)}
+.piede-dati{margin:0;font-size:11.5px;line-height:1.7;color:var(--grigio);
+  display:flex;flex-wrap:wrap;gap:3px 14px}
+.piede-voce i{font-style:normal;font-family:var(--dati);font-size:9.5px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--basso)}
+.piede-vie{margin:5px 0 0;display:flex;flex-wrap:wrap;gap:16px}
+.piede-vie a{font-size:12.5px;color:var(--azzurro);text-decoration:none}
+.piede-vie a:hover{text-decoration:underline}
+
+/* ---------------- la fascia dei cookie ---------------------------------- */
+.ck{position:fixed;left:0;right:0;bottom:0;z-index:80;background:#fff;
+  border-top:1px solid var(--basso);box-shadow:0 -8px 28px rgba(8,60,92,.16)}
+.ck-dentro{max-width:960px;margin:0 auto;padding:16px 18px;display:grid;gap:13px;
+  grid-template-columns:1fr auto;align-items:center}
+.ck-testo p{margin:0 0 6px;font-size:13px;line-height:1.55;color:#20536e}
+.ck-testo p:last-child{margin-bottom:0}
+.ck-testo a{color:var(--azzurro)}
+/* Le due risposte pesano uguale: stessa misura, stesso carattere, un clic
+   ciascuna. Se rifiutare costasse piu' fatica non sarebbe un consenso libero. */
+.ck-scelte{display:flex;flex-wrap:wrap;gap:9px}
+.ck-scelte button{font-family:var(--dati);font-size:11px;letter-spacing:.05em;
+  border-radius:999px;padding:11px 17px;cursor:pointer;border:1px solid var(--profondo);
+  background:var(--profondo);color:#fff;transition:.14s;white-space:nowrap}
+.ck-scelte button[data-ck-no]{background:#fff;color:var(--profondo)}
+.ck-scelte button:hover{background:var(--azzurro);border-color:var(--azzurro);color:#fff}
+.ck-ora{grid-column:1/-1;margin:0;font-size:11.5px;color:var(--grigio)}
+@media (max-width:700px){
+  .ck-dentro{grid-template-columns:1fr}
+  .ck-scelte button{flex:1 1 auto;text-align:center}
+}
+.ck-bloccato{display:flex;flex-direction:column;align-items:flex-start;gap:7px;
+  justify-content:center;padding:18px;background:var(--nebbia);
+  border:1px dashed var(--basso);border-radius:10px;min-height:180px}
+.ck-bloccato p{margin:0;font-size:13.5px;color:var(--blu)}
+.ck-bloccato .ck-perche{font-size:12px;line-height:1.5;color:var(--grigio)}
+.ck-bloccato button{font-family:var(--dati);font-size:10px;letter-spacing:.06em;
+  text-transform:uppercase;border:1px solid var(--profondo);background:var(--profondo);
+  color:#fff;border-radius:999px;padding:8px 14px;cursor:pointer;transition:.14s}
+.ck-bloccato button.ck-sempre{background:#fff;color:var(--profondo)}
+.ck-bloccato button:hover{background:var(--azzurro);border-color:var(--azzurro);color:#fff}
+
+/* ---------------- i dati dell'azienda, in gestione ---------------------- */
+.gest-imp{background:var(--carta);border:1px solid var(--tratto);border-radius:10px;
+  box-shadow:var(--ombra);overflow:hidden}
+.gest-imp-gruppo{padding:14px 16px;border-bottom:1px solid var(--tratto)}
+.gest-imp-gruppo h4{margin:0;font-size:14px;font-weight:600;color:var(--profondo)}
+.gest-imp-nota{margin:2px 0 12px;font-size:12px;color:var(--grigio)}
+.gest-imp-campo{display:grid;grid-template-columns:minmax(150px,24%) 1fr;gap:4px 14px;
+  align-items:center;margin:0 0 9px}
+.gest-imp-campo>span{font-family:var(--dati);font-size:10px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--grigio)}
+.gest-imp-campo input{font:inherit;font-size:14px;color:var(--blu);background:#fff;
+  border:1px solid var(--basso);border-radius:8px;padding:8px 11px;width:100%;
+  box-sizing:border-box;transition:border-color .14s,box-shadow .14s}
+.gest-imp-campo input:focus{outline:0;border-color:var(--azzurro);
+  box-shadow:0 0 0 3px rgba(23,134,189,.16)}
+.gest-imp-campo.vuoto input{background:#fff9ec;border-color:#e4c56a}
+.gest-imp-campo>i{grid-column:2;font-style:normal;font-size:11.5px;color:var(--grigio)}
+.gest-imp-fondo{display:flex;align-items:center;gap:12px;padding:13px 16px;background:var(--nebbia)}
+.gest-imp-fondo button{font-family:var(--dati);font-size:10.5px;letter-spacing:.07em;
+  text-transform:uppercase;border:1px solid var(--profondo);background:var(--profondo);
+  color:#fff;border-radius:999px;padding:9px 18px;cursor:pointer;transition:.14s}
+.gest-imp-fondo button:hover:not(:disabled){background:var(--azzurro);border-color:var(--azzurro)}
+.gest-imp-fondo button:disabled{opacity:.45;cursor:default}
+.gest-imp-esito{font-size:12.5px;color:var(--grigio)}
+@media (max-width:620px){
+  .gest-imp-campo{grid-template-columns:1fr}
+  .gest-imp-campo>i{grid-column:1}
+}

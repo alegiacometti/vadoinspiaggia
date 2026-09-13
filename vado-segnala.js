@@ -54,7 +54,7 @@
         '</div>' +
         '<div class="azioni">' +
           '<button type="button" class="primaria" data-sg-manda>Manda la segnalazione</button>' +
-          '<button type="button" data-sg-chiudi>Annulla</button>' +
+          '<button type="button" data-sg-chiudi data-sg-annulla>Annulla</button>' +
         '</div>' +
       '</form>';
     document.body.appendChild(velo);
@@ -70,7 +70,13 @@
     });
     velo.querySelector(".chiudi").addEventListener("click", () => velo.close());
     velo.querySelector("[data-sg-chiudi]").addEventListener("click", () => velo.close());
-    velo.querySelector("[data-sg-manda]").addEventListener("click", manda);
+    velo.querySelector("[data-sg-manda]").addEventListener("click", function () {
+      /* Lo stesso pulsante fa due mestieri in due momenti diversi: prima
+         manda, dopo chiude. Cosi' dopo l'invio non resta niente su cui
+         cliccare per sbaglio, e niente si chiude da solo mentre si legge. */
+      if (this.dataset.fatto === "1") { velo.close(); return; }
+      manda();
+    });
     return velo;
   }
 
@@ -93,6 +99,7 @@
     const manda  = velo.querySelector("[data-sg-manda]");
     modulo.hidden = !dentro;
     manda.hidden  = !dentro;
+    velo.querySelector("[data-sg-nota]").textContent = "";
     velo.querySelector("[data-sg-nota]").innerHTML = dentro
       ? "Scrivi che cosa hai visto di diverso. Guardo io, e correggo alla fonte: " +
         "la correzione arriva a tutti, non solo a te."
@@ -105,9 +112,16 @@
       if (typeof window.apriConto === "function") window.apriConto("accedi");
     });
     const t = velo.querySelector("[data-sg-testo]");
-    if (t) { t.value = ""; }
+    if (t) t.value = "";
     const e = velo.querySelector("[data-sg-esito]");
     if (e) e.hidden = true;
+    /* La finestra si riusa: se l'ultima volta era rimasta sul ringraziamento,
+       va rimessa com'era prima, o alla seconda segnalazione si trova davanti
+       un pulsante che dice "Chiudi" e nessun modulo. */
+    manda.textContent = "Manda la segnalazione";
+    manda.disabled = false;
+    manda.dataset.fatto = "";
+    velo.querySelector("[data-sg-annulla]").hidden = !dentro;
     velo.showModal();
     if (dentro && t) t.focus();
   }
@@ -139,8 +153,17 @@
         },
         intestazioni: { "Prefer": "return=minimal" }
       });
-      dillo("Arrivata, grazie. La leggo e ti faccio sapere.", true);
-      setTimeout(() => velo.close(), 1500);
+      /* Niente timer che la chiude da solo: la finestra resta finche' non la
+         chiude chi l'ha aperta. Un timer e una X che fanno la stessa cosa nello
+         stesso momento sono due modi di litigare per la stessa finestra. */
+      velo.querySelector("[data-sg-modulo]").hidden = true;
+      velo.querySelector("[data-sg-nota]").textContent = "Segnalazione inviata, grazie!";
+      velo.querySelector("[data-sg-annulla]").hidden = true;
+      bottone.disabled = false;
+      bottone.textContent = "Chiudi";
+      bottone.dataset.fatto = "1";
+      bottone.focus();
+      return;
     } catch (err) {
       dillo("Non è partita: " + String(err.message || err).slice(0, 200), false);
     }

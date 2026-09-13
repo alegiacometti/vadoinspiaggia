@@ -13,11 +13,9 @@
 <meta property="og:title" content="Vado in spiaggia">
 <meta property="og:description" content="5534 spiagge in 11 paesi d'Europa, dall'Atlantico all'Egeo: carte navigabili, meteo e stato del mare, accessi, servizi e pareri di chi c'è stato.">
 <title>Vado in spiaggia · carte, meteo e mare in tempo reale</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="carte-spiagge.css?v=202609122113">
-<script src="vado-dati.js?v=202609122113"></script>
+<link rel="stylesheet" href="carte-spiagge.css?v=202609130425">
+<link rel="stylesheet" href="caratteri/caratteri.css?v=202609130413">
+<script src="vado-dati.js?v=202609130425"></script>
 <style>/* misure di questa pagina — vedi carte-spiagge.css */
 :root{--colonna-carta:820px;--telaio-h:min(41vh,380px)}
 
@@ -31,7 +29,9 @@ svg.carta{cursor:default;touch-action:auto}
 /* --- le regioni sulla carta --- */
 .reg-carta path{stroke-linejoin:round;vector-effect:non-scaling-stroke;transition:fill .16s,stroke .16s}
 /* due soli stati: la terra, e le regioni che hanno una pagina */
-.paese{fill:#f4efe1;stroke:#ded2b8;stroke-width:.7;vector-effect:non-scaling-stroke}
+/* stesso beige delle carte regionali: erano due tinte vicine ma non uguali,
+   e sulla stessa pagina la differenza si vedeva come una sbavatura */
+.paese{fill:var(--terra);stroke:var(--terra-b);stroke-width:.7;vector-effect:non-scaling-stroke}
 /* il riquadro fuori scala */
 .riquadro{fill:rgba(255,255,255,.72);stroke:var(--tratto);stroke-width:1;stroke-dasharray:4 3;vector-effect:non-scaling-stroke}
 .riq-eti{font-family:var(--dati);font-size:8px;letter-spacing:.12em;text-transform:uppercase;
@@ -54,13 +54,21 @@ svg.carta{cursor:default;touch-action:auto}
 .cv3r{stroke:var(--azzurro);stroke-width:7;opacity:.15}
 .cv2r{stroke:var(--azzurro);stroke-width:3.6;opacity:.28}
 .cv1r{stroke:var(--profondo);stroke-width:1.9}
+/* La terraferma e' beige, come nelle carte regionali: e' terra, e la terra ha
+   un colore solo. Prima i pezzi che si possono aprire erano azzurri, e sulla
+   stessa carta convivevano una terra beige (lo sfondo) e una terra azzurra
+   (le regioni): due colori per la stessa cosa, che il mare lo faceva sembrare
+   dentro la costa.
+   Adesso il colore non dice piu' «si puo' aprire» — lo dice il contorno, che
+   sui pezzi vivi e' netto e blu. L'azzurro e' rimasto a fare un mestiere solo:
+   segnare dove sei. */
 .stato-carta{cursor:pointer}
-.stato-carta path{fill:var(--secca);stroke:var(--blu);stroke-width:1.2;stroke-linejoin:round;
+.stato-carta path{fill:var(--terra);stroke:var(--blu);stroke-width:1.2;stroke-linejoin:round;
   vector-effect:non-scaling-stroke;transition:fill .16s,stroke .16s}
 .stato-carta:hover path,.stato-carta:focus-visible path,
 .stato-carta.acceso path{fill:var(--basso);stroke:var(--profondo);stroke-width:2}
 .stato-carta{outline:none}
-.reg-carta.pronta path{fill:var(--secca);stroke:var(--blu);stroke-width:1.2}
+.reg-carta.pronta path{fill:var(--terra);stroke:var(--blu);stroke-width:1.2}
 .reg-carta.pronta:hover path,.reg-carta.pronta:focus-visible path,
 .reg-carta.pronta.acceso path{fill:var(--basso);stroke:var(--profondo);stroke-width:2}
 /* Il fuoco da tastiera non usa l'outline: su una sagoma disegnerebbe un rettangolo
@@ -146,8 +154,11 @@ button.ritorno{cursor:pointer;margin:0}   /* il resto viene da .ritorno, uguale 
 
 /* le regioni degli altri paesi restano disegnate, ma spente */
 svg.carta.filtrata .reg-carta.pronta:not(.dentro){pointer-events:none;cursor:default}
+/* Le spente erano gia' beige. Ora che il beige e' anche lo stato normale, a
+   distinguerle resta il contorno: sottile e sabbia invece che netto e blu, e
+   un velo di trasparenza in piu' che le manda indietro. */
 svg.carta.filtrata .reg-carta.pronta:not(.dentro) path{fill:var(--terra);stroke:var(--terra-b);
-  stroke-width:.7;opacity:.7}
+  stroke-width:.7;opacity:.55}
 svg.carta{transition:none}
 
 @media (max-width:960px){
@@ -875,6 +886,8 @@ document.querySelectorAll(".reg-carta.pronta").forEach(a=>{
   });
 });
 </script>
-<script src="vado-conto.js?v=202609122113"></script>
+<script src="vado-conto.js?v=202609130425"></script>
+<script src="vado-cookie.js?v=202609130425"></script>
+<script src="vado-piede.js?v=202609130425"></script>
 </body>
 </html>

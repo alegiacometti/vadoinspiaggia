@@ -168,15 +168,36 @@ const VADO = (() => {
   const conCaptcha = (corpo, gettone) =>
     gettone ? Object.assign({}, corpo, { gotrue_meta_security: { captcha_token: gettone } }) : corpo;
 
-  const iscriviti = (email, password, captcha) =>
+  /* I consensi viaggiano nei metadati dell'utente: e' l'unico posto che
+     GoTrue accetta al momento dell'iscrizione, e da li' il database se li
+     porta dentro il profilo appena nasce. La DATA del consenso non la manda
+     il browser — la scrive il database — perche' una data scritta dal client
+     non prova niente. */
+  const iscriviti = (email, password, captcha, consensi) =>
     auth("signup?redirect_to=" + encodeURIComponent(RITORNO),
-         conCaptcha({ email, password }, captcha)).then(d => {
+         conCaptcha({ email, password, data: {
+           privacy_versione: (consensi && consensi.versione) || "",
+           terzi: !!(consensi && consensi.terzi)
+         } }, captcha)).then(d => {
     /* Se la conferma per email e' attiva, qui NON arriva nessun gettone: e'
        normale, e va detto a chi si e' iscritto invece di lasciarlo davanti a
        una schermata che non cambia. */
     if (d && d.access_token) apriSessione(d);
     return { entrato: !!(d && d.access_token), email: d && d.user && d.user.email };
   });
+
+  /* Entrare con Google.
+     Non e' una richiesta: e' un viaggio. Si esce dal sito, si passa da Google,
+     si torna con i gettoni appesi dopo il # — e li raccoglie gia' raccogli()
+     qui sotto, lo stesso pezzo che raccoglie quelli della posta.
+     Il segno lasciato nel sessionStorage serve solo a dire, al ritorno, da
+     dove si veniva: senza, chi torna da Google si vede annunciare che ha
+     confermato un indirizzo email, che non e' quello che ha fatto. */
+  const entraConGoogle = () => {
+    try { sessionStorage.setItem("vado.daGoogle", "1"); } catch (_) {}
+    location.href = BASE + "/auth/v1/authorize?provider=google&redirect_to=" +
+                    encodeURIComponent(RITORNO);
+  };
 
   const accedi = (email, password, captcha) =>
     auth("token?grant_type=password", conCaptcha({ email, password }, captcha)).then(apriSessione);
@@ -206,7 +227,7 @@ const VADO = (() => {
      SLEGATA e pensa che non abbia funzionato. Qui si raccolgono, si apre la
      sessione, e si ripulisce l'indirizzo: quei gettoni non devono restare
      scritti nella barra del browser, ne' finire nella cronologia. */
-  let arrivo = null;                       /* "signup" | "recovery" | "errore" */
+  let arrivo = null;             /* "signup" | "recovery" | "google" | "errore" */
   (function raccogli() {
     const f = location.hash.slice(1);
     if (!f || f.indexOf("access_token=") < 0 && f.indexOf("error") < 0) return;
@@ -214,7 +235,12 @@ const VADO = (() => {
     if (p.get("access_token")) {
       apriSessione({ access_token: p.get("access_token"), refresh_token: p.get("refresh_token"),
                      expires_in: +(p.get("expires_in") || 3600) });
-      arrivo = p.get("type") || "signup";
+      let daGoogle = false;
+      try {
+        daGoogle = sessionStorage.getItem("vado.daGoogle") === "1";
+        sessionStorage.removeItem("vado.daGoogle");
+      } catch (_) {}
+      arrivo = p.get("type") || (daGoogle ? "google" : "signup");
     } else {
       arrivo = "errore";
     }
@@ -258,6 +284,102 @@ const VADO = (() => {
     apriSessione(null);
     if (g) { try { await auth("logout", {}, g); } catch (_) {} }
   }
+
+  /* ---------------------------------------------------------- impostazioni
+     I dati dell'azienda: chi e' il titolare, la sede, la partita IVA. Servono
+     al piede di ogni pagina e all'informativa, quindi si chiedono una volta
+     sola e restano qui — sono una manciata di righe che cambiano una volta
+     all'anno, chiederle a ogni pagina sarebbe uno spreco.
+     Se il servizio non risponde si torna un oggetto vuoto invece di far
+     saltare la pagina: un piede senza partita IVA e' brutto, una pagina bianca
+     e' peggio. */
+  let _imp = null, _impAttesa = null;
+  function impostazioni(rifai) {
+    if (rifai) { _imp = null; _impAttesa = null; }
+    if (_imp) return Promise.resolve(_imp);
+    if (_impAttesa) return _impAttesa;
+    _impAttesa = chiedi("impostazioni?select=chiave,valore,etichetta,aiuto,gruppo,ordine&order=gruppo,ordine")
+      .then(righe => {
+        _imp = { _righe: righe || [] };
+        (righe || []).forEach(r => { _imp[r.chiave] = r.valore || ""; });
+        return _imp;
+      })
+      .catch(() => { _imp = { _righe: [] }; return _imp; });
+    return _impAttesa;
+  }
+
+  const salvaImpostazione = (chiave, valore) =>
+    chiedi("impostazioni?chiave=eq." + encodeURIComponent(chiave),
+      { metodo: "PATCH", corpo: { valore: valore },
+        intestazioni: { "Prefer": "return=minimal" } });
+
+  /* ------------------------------------------------------------ il deposito
+     Le immagini non passano da PostgREST ma dal deposito di Supabase, che ha
+     un indirizzo suo. Stesso gettone, stessa logica di rinnovo: cambia solo
+     che il corpo puo' essere un file invece che del JSON. */
+  async function deposito(percorso, opzioni) {
+    const o = opzioni || {};
+    const manda = g => fetch(BASE + "/storage/v1/" + percorso, {
+      method: o.metodo || "GET",
+      headers: Object.assign({
+        "apikey": CHIAVE,
+        "Authorization": "Bearer " + (g || CHIAVE)
+      }, o.tipo ? { "Content-Type": o.tipo } : {},
+         o.corpo ? { "Content-Type": "application/json" } : {},
+         o.intestazioni || {}),
+      body: o.file ? o.file : (o.corpo ? JSON.stringify(o.corpo) : undefined)
+    });
+    let g = await gettoneVivo();
+    let r = await manda(g);
+    if (r.status === 401 && g) {
+      if (sessione) sessione.scade = 0;
+      const g2 = await gettoneVivo();
+      if (g2 && g2 !== g) r = await manda(g2);
+    }
+    if (!r.ok) throw new Error("HTTP " + r.status + " " + (await r.text()).slice(0, 200));
+    const testo = await r.text();
+    try { return testo ? JSON.parse(testo) : null; } catch (_) { return null; }
+  }
+
+  const ESTENSIONI = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+  const LIMITE_FOTO = 5 * 1024 * 1024;
+
+  /* Il nome del file non lo sceglie chi carica: se lo scegliesse, potrebbe
+     scriverlo sopra a quello di un altro, o infilarci un ../ per uscire dalla
+     sua cartella. Lo si fabbrica qui, con il sid davanti per ritrovarlo. */
+  function nomeFoto(sid, tipo) {
+    const casuale = (crypto && crypto.randomUUID) ? crypto.randomUUID()
+                  : String(Date.now()) + "-" + Math.random().toString(36).slice(2);
+    return "attesa/" + String(sid).replace(/[^a-z0-9-]/gi, "") + "/" +
+           casuale + "." + (ESTENSIONI[tipo] || "jpg");
+  }
+
+  async function caricaFoto(sid, file) {
+    if (!chiSono()) throw new Error("serve essere entrati");
+    if (!ESTENSIONI[file.type]) throw new Error("formato non accettato");
+    if (file.size > LIMITE_FOTO) throw new Error("immagine troppo pesante");
+    const percorso = nomeFoto(sid, file.type);
+    await deposito("object/foto/" + percorso,
+      { metodo: "POST", file: file, tipo: file.type,
+        intestazioni: { "x-upsert": "false", "cache-control": "3600" } });
+    return percorso;
+  }
+
+  /* Il deposito e' chiuso: per mostrare una foto approvata si chiede un
+     indirizzo firmato, che scade da solo. Cosi' quelle in attesa restano
+     irraggiungibili anche a chi ne indovinasse il percorso. */
+  async function firmaFoto(percorso, secondi) {
+    if (!percorso) return null;
+    const d = await deposito("object/sign/foto/" + percorso,
+      { metodo: "POST", corpo: { expiresIn: secondi || 3600 } });
+    if (!d || !d.signedURL) return null;
+    return BASE + "/storage/v1" + d.signedURL;
+  }
+
+  const spostaFoto = (da, a) => deposito("object/move",
+    { metodo: "POST", corpo: { bucketId: "foto", sourceKey: da, destinationKey: a } });
+
+  const buttaFoto = percorso => deposito("object/foto/" + percorso, { metodo: "DELETE" });
 
   /* --------------------------------------------------------------- richieste */
   async function chiedi(percorso, opzioni) {
@@ -453,7 +575,7 @@ const VADO = (() => {
          invece di farlo riscrivere da capo. */
   const recensioniSpiaggia = sid => chiedi(
     "recensioni_pubbliche?sid=eq." + encodeURIComponent(sid) +
-    "&select=voto,commento,firma,creata&order=creata.desc");
+    "&select=voto,commento,firma,creata,foto&order=creata.desc");
 
   /* Le ultime di una regione: serve alla fascia di chi la regione non ce l'ha,
      per far vedere che dietro c'e' gente vera. */
@@ -478,20 +600,47 @@ const VADO = (() => {
   const miaRecensione = async sid => {
     if (!chiSono()) return null;
     const r = await chiedi("recensioni?sid=eq." + encodeURIComponent(sid) +
-                           "&select=sid,voto,commento,mostra_nome,creata");
+                           "&select=sid,voto,commento,mostra_nome,creata,foto,foto_ok");
     return r[0] || null;
   };
 
   const mieRecensioni = () => chiedi(
-    "recensioni?select=sid,voto,commento,mostra_nome,creata&order=creata.desc");
+    "recensioni?select=sid,voto,commento,mostra_nome,creata,foto,foto_ok&order=creata.desc");
 
   /* Salvare e correggere sono la stessa cosa: la chiave e' (persona, spiaggia),
      quindi la seconda volta si sovrascrive invece di aggiungere una riga. */
-  const salvaRecensione = (sid, voto, commento, mostraNome) => chiedi("recensioni", {
-    metodo: "POST",
-    corpo: { utente: chiSono().id, sid: sid, voto: voto,
-             commento: (commento || "").trim() || null, mostra_nome: !!mostraNome },
-    intestazioni: { "Prefer": "resolution=merge-duplicates,return=minimal" } });
+  /* foto: undefined = non si tocca quella che c'e'; null = si toglie; una
+     stringa = e' il percorso di quella appena caricata. L'approvazione non la
+     manda nessuno da qui: la mette a false il database, sempre. */
+  const salvaRecensione = (sid, voto, commento, mostraNome, foto) => {
+    const riga = { utente: chiSono().id, sid: sid, voto: voto,
+                   commento: (commento || "").trim() || null, mostra_nome: !!mostraNome };
+    if (foto !== undefined) riga.foto = foto;
+    return chiedi("recensioni", { metodo: "POST", corpo: riga,
+      intestazioni: { "Prefer": "resolution=merge-duplicates,return=minimal" } });
+  };
+
+  /* L'approvazione: la foto trasloca da attesa/ a ok/, e solo dopo la riga
+     dice che si puo' vedere. Se il trasloco fallisce non si approva niente —
+     meglio una foto che non compare di una riga che promette un file che non
+     c'e' dove dice. */
+  const approvaFoto = async (sid, utente, percorso) => {
+    const nuovo = percorso.replace(/^attesa\//, "ok/");
+    await spostaFoto(percorso, nuovo);
+    await chiedi("recensioni?sid=eq." + encodeURIComponent(sid) +
+                 "&utente=eq." + encodeURIComponent(utente),
+      { metodo: "PATCH", corpo: { foto: nuovo, foto_ok: true, foto_il: new Date().toISOString() },
+        intestazioni: { "Prefer": "return=minimal" } });
+    return nuovo;
+  };
+
+  const rifiutaFoto = async (sid, utente, percorso) => {
+    try { await buttaFoto(percorso); } catch (_) { /* se non c'e' piu', tanto meglio */ }
+    await chiedi("recensioni?sid=eq." + encodeURIComponent(sid) +
+                 "&utente=eq." + encodeURIComponent(utente),
+      { metodo: "PATCH", corpo: { foto: null, foto_ok: false, foto_il: null },
+        intestazioni: { "Prefer": "return=minimal" } });
+  };
 
   /* Senza utente si cancella la propria — le regole del database non ne
      lascerebbero toccare altre. Con l'utente e' l'amministratore che modera:
@@ -505,10 +654,10 @@ const VADO = (() => {
      chi modera, e a chi non modera la vista risponde vuoto. */
   const recensioniModerabili = sid => chiedi(
     "recensioni_admin?sid=eq." + encodeURIComponent(sid) +
-    "&select=sid,utente,voto,creata&order=creata.desc");
+    "&select=sid,utente,voto,creata,foto,foto_ok&order=creata.desc");
 
   const daModerare = (quante) => chiedi(
-    "recensioni_admin?select=sid,spiaggia,regione,utente,email,voto,commento,mostra_nome,creata" +
+    "recensioni_admin?select=sid,spiaggia,regione,utente,email,voto,commento,mostra_nome,creata,foto,foto_ok" +
     "&order=creata.desc&limit=" + (quante || 50));
 
   /* ---------------------------------------------------------------- profilo
@@ -525,7 +674,23 @@ const VADO = (() => {
       corpo: { nome: (nome || "").trim() || null, cognome: (cognome || "").trim() || null },
       intestazioni: { "Prefer": "return=minimal" } });
 
+  /* Per chi entra con Google l'informativa non l'ha mai vista: non e' passato
+     dal nostro modulo. Si guarda se il consenso c'e' gia', e se manca glielo
+     si chiede prima di lasciarlo proseguire. */
+  const consensoMio = async () => {
+    if (!chiSono()) return null;
+    const r = await chiedi("profili?utente=eq." + chiSono().id +
+                           "&select=privacy_il,privacy_versione,terzi");
+    return (r && r[0]) || null;
+  };
+  const accettaPrivacy = (versione, terzi) =>
+    chiedi("rpc/accetta_privacy", { metodo: "POST",
+      corpo: { versione: versione, con_terzi: !!terzi } });
+
   return { regione, catalogo, dettaglioRegione, chiedi, BASE,
+           consensoMio, accettaPrivacy, entraConGoogle,
+           caricaFoto, firmaFoto, approvaFoto, rifiutaFoto, buttaFoto,
+           impostazioni, salvaImpostazione,
            iscriviti, accedi, esci, scordata, alCambio, chiSono,
            nuovaPassword, daPosta, sonoAdmin,
            preferitiSpiagge, preferitiZone, stelleAccese, salvaSpiaggia, togliSpiaggia,
