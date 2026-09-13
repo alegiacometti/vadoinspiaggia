@@ -1059,3 +1059,82 @@ a.pref-nome:focus-visible::after{outline:2px solid var(--azzurro);outline-offset
   .gest-imp-campo{grid-template-columns:1fr}
   .gest-imp-campo>i{grid-column:1}
 }
+
+/* ==================== le immagini di chi c'è stato ========================
+   Una griglia che si riempie sola: le foto arrivano una per una con il loro
+   indirizzo firmato, e il riquadro le aspetta gia' della misura giusta —
+   senza aspect-ratio la pagina salterebbe a ogni immagine che atterra. */
+.imm-griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+  gap:8px;margin:0 0 6px;align-items:start}
+.imm-scatto{margin:0;background:var(--nebbia);border:1px solid var(--tratto);
+  border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.imm-scatto img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;
+  background:var(--nebbia);max-width:100%}
+.imm-scatto figcaption{padding:7px 10px 8px;font-size:11.5px;line-height:1.45;
+  color:var(--grigio)}
+.imm-scatto.attesa{border-color:var(--ambra);border-style:dashed}
+.imm-scatto.attesa img{opacity:.72}
+.imm-attesa{color:var(--ambra) !important;font-family:var(--dati);font-size:9.5px;
+  letter-spacing:.05em}
+.imm-invito{margin:4px 0 0;font-size:12.5px;color:var(--grigio)}
+.imm-invito.imm-fuori{color:var(--secca)}
+.imm-manda{font-family:var(--dati);font-size:9.5px;letter-spacing:.08em;
+  text-transform:uppercase;background:none;border:1px dashed var(--basso);
+  border-radius:999px;padding:4px 11px;color:var(--azzurro);cursor:pointer}
+.imm-manda:hover{background:var(--nebbia);border-style:solid}
+.imm-anteprima{margin:10px 0 0;border-radius:10px;overflow:hidden;
+  border:1px solid var(--tratto)}
+.imm-anteprima img{display:block;width:100%;max-height:220px;object-fit:cover}
+.imm-velo .conto-spunta{display:grid;grid-template-columns:auto 1fr;gap:9px;
+  align-items:start;font-size:12.5px;line-height:1.5;color:#20536e;margin:12px 0 2px}
+.imm-velo .conto-spunta input{margin:2px 0 0;width:16px;height:16px;
+  accent-color:var(--azzurro);cursor:pointer}
+.imm-velo .conto-spunta a{color:var(--azzurro)}
+
+/* ========================= si dice in giro =============================== */
+.notiz{border:1px solid var(--tratto);border-left:3px solid var(--azzurro);
+  border-radius:0 11px 11px 0;background:var(--carta);margin:20px 0 0;overflow:hidden}
+.notiz h3{display:flex;align-items:baseline;gap:10px;margin:0;padding:11px 14px 9px;
+  font-family:var(--dati);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--profondo);font-weight:500;border-bottom:1px solid var(--tratto)}
+.notiz h3 em{font-style:normal;font-size:9px;letter-spacing:.06em;color:var(--grigio);
+  text-transform:none;margin-left:auto}
+.notiz ol{list-style:none;margin:0;padding:0}
+.notiz li{border-bottom:1px solid var(--nebbia)}
+.notiz li:last-child{border-bottom:0}
+.notiz a{display:block;padding:10px 14px;text-decoration:none;color:var(--profondo);
+  font-size:13.5px;line-height:1.45}
+.notiz a:hover{background:var(--schiuma)}
+.notiz .fonte{display:block;margin-top:3px;font-family:var(--dati);font-size:9.5px;
+  letter-spacing:.05em;color:var(--grigio)}
+
+/* ============================ qui intorno =============================== */
+.sponsor-testa{display:flex;align-items:baseline;gap:10px;margin:24px 0 9px}
+.sponsor-testa p{margin:0;font-family:var(--dati);font-size:9.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--azzurro)}
+.sponsor-testa small{margin-left:auto;font-size:11px;color:var(--grigio)}
+.sponsor{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.spon{position:relative;display:flex;flex-direction:column;gap:6px;
+  background:var(--carta);border:1px solid var(--tratto);border-radius:11px;
+  padding:13px 14px 12px;transition:border-color .14s}
+.spon:hover{border-color:var(--azzurro)}
+.spon-alto{display:flex;align-items:center;gap:8px}
+.spon-alto svg{width:18px;height:18px;flex:0 0 auto;stroke:var(--azzurro);fill:none;
+  stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.spon h4{margin:0;font-family:var(--display);font-variation-settings:"SOFT" 30,"WONK" 1,"opsz" 100;
+  font-weight:400;font-size:18px;line-height:1.15;color:var(--profondo)}
+.spon .ann{margin-left:auto;font-family:var(--dati);font-size:8px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--secca);border:1px solid var(--tratto);
+  border-radius:3px;padding:2px 5px}
+.spon p{margin:0;font-size:12.5px;line-height:1.5;color:var(--grigio)}
+.spon p b{color:#20536e;font-weight:600}
+.spon a.vai{margin-top:auto;align-self:flex-start;font-family:var(--dati);font-size:9.5px;
+  letter-spacing:.1em;text-transform:uppercase;text-decoration:none;
+  background:var(--profondo);color:#fff;border-radius:999px;padding:6px 14px}
+.spon a.vai:hover{background:var(--azzurro)}
+.spon a.vai::after{content:"";position:absolute;inset:0;border-radius:11px}
+.spon a.vai:focus-visible{outline:none}
+.spon a.vai:focus-visible::after{outline:2px solid var(--ambra);outline-offset:2px}
+.spon .chi{font-family:var(--dati);font-size:9px;letter-spacing:.05em;color:var(--secca)}
+.trasparenza{margin:10px 0 0;font-size:11.5px;line-height:1.55;color:var(--secca)}
+@media (max-width:560px){ .sponsor{grid-template-columns:1fr} }

@@ -423,6 +423,7 @@ const VADO = (() => {
       chiedi("zone?regione=eq." + chiave + "&select=chiave,etichetta&order=ordine"),
       chiedi("spiagge?regione=eq." + chiave +
              "&select=sid,n,com,zona,lat,lon,lato,lung,fondo,folla,acc,camm,park,sv,id,nota,sc,pid,vo,mid,apa,lag" +
+             "," + "notizie_com,aff_ristorante,aff_albergo,aff_ombrellone,aff_attivita" +
              "&order=sid")
     ]);
     return {
@@ -719,6 +720,69 @@ const VADO = (() => {
      con una PATCH normale: il database accetta la scrittura solo su quelle
      sette colonne, e solo da chi amministra. Il permesso e' per colonna, non
      per riga: anche sbagliando la richiesta, latitudine e nome non si toccano. */
+  /* --------------------------------------------------- le immagini libere
+     Una fotografia si puo' mandare anche senza scrivere un parere: e' un
+     contributo per conto suo, e ha una tabella sua. La regola non cambia —
+     finche' un amministratore non l'ha guardata non la vede nessuno tranne
+     chi l'ha mandata.
+
+     Il consenso si registra con la foto: data e versione dell'informativa
+     accettata mentre si caricava. Un consenso che non si puo' dimostrare
+     e' come non averlo chiesto. */
+  async function mandaFoto(sid, file, didascalia, versione) {
+    if (!chiSono()) throw new Error("serve essere entrati");
+    const percorso = await caricaFoto(sid, file);
+    try {
+      await chiedi("foto", { metodo: "POST",
+        corpo: { sid: sid, percorso: percorso,
+                 didascalia: (didascalia || "").trim() || null,
+                 consenso_ver: versione || null },
+        intestazioni: { "Prefer": "return=minimal" } });
+    } catch (e) {
+      /* la riga non e' entrata: il file resta nel deposito a ingombrare, e
+         nessuno saprebbe di chi e'. Si toglie subito. */
+      try { await buttaFoto(percorso); } catch (_) {}
+      throw e;
+    }
+    return percorso;
+  }
+
+  const fotoSpiaggia = sid => chiedi("foto?sid=eq." + encodeURIComponent(sid) +
+    "&ok=is.true&select=id,percorso,didascalia,creata&order=creata.desc&limit=24");
+
+  const mieFoto = sid => !chiSono() ? Promise.resolve([]) :
+    chiedi("foto?sid=eq." + encodeURIComponent(sid) +
+      "&utente=eq." + chiSono().id + "&select=id,percorso,didascalia,ok,creata&order=creata.desc");
+
+  const fotoDaModerare = quante =>
+    chiedi("rpc/foto_da_moderare", { metodo: "POST", corpo: { p_quante: quante || 120 } });
+
+  /* Approvare sposta il file da «attesa/» a «ok/» e poi scrive la riga: in
+     quest'ordine, perche' una riga che dice «pubblicata» puntando a un file
+     ancora in attesa mostrerebbe un riquadro rotto a tutti. */
+  const approvaFotoLibera = async (id, percorso) => {
+    const nuovo = percorso.replace(/^attesa\//, "ok/");
+    if (nuovo !== percorso) await spostaFoto(percorso, nuovo);
+    await chiedi("foto?id=eq." + id, { metodo: "PATCH",
+      corpo: { percorso: nuovo, ok: true },
+      intestazioni: { "Prefer": "return=minimal" } });
+    return nuovo;
+  };
+
+  const rifiutaFotoLibera = async (id, percorso) => {
+    try { await buttaFoto(percorso); } catch (_) {}
+    await chiedi("foto?id=eq." + id, { metodo: "DELETE",
+      intestazioni: { "Prefer": "return=minimal" } });
+  };
+
+  /* Le notizie del comune. La tabella oggi e' vuota: c'e' perche' le schede
+     abbiano dove guardare, e perche' il giorno che si accendono i feed non si
+     debba toccare niente qui. */
+  const notizieComune = (comune, quante) => !comune ? Promise.resolve([]) :
+    chiedi("notizie?comune=eq." + encodeURIComponent(comune) +
+      "&select=titolo,fonte,url,pubblicata&order=pubblicata.desc.nullslast&limit=" +
+      (quante || 4));
+
   const correggiSpiaggia = (sid, campi) =>
     chiedi("spiagge?sid=eq." + encodeURIComponent(sid),
       { metodo: "PATCH", corpo: campi,
@@ -727,6 +791,8 @@ const VADO = (() => {
   return { regione, catalogo, dettaglioRegione, chiedi, BASE,
            consensoMio, accettaPrivacy, entraConGoogle, statoRegioni,
            registro, segnaLavoro, correggiSpiaggia,
+           mandaFoto, fotoSpiaggia, mieFoto, fotoDaModerare,
+           approvaFotoLibera, rifiutaFotoLibera, notizieComune,
            caricaFoto, firmaFoto, approvaFoto, rifiutaFoto, buttaFoto,
            impostazioni, salvaImpostazione,
            iscriviti, accedi, esci, scordata, alCambio, chiSono,

@@ -12,13 +12,15 @@
 <meta property="og:title" content="Le spiagge di Budua e della sua riviera">
 <meta property="og:description" content="Le spiagge di Budua e della sua riviera: 17 spiagge in 4 zone costiere, con carta navigabile, meteo, stato del mare, accessi, servizi e parcheggi.">
 <title>Vado in spiaggia · le spiagge di Budua e della sua riviera · carta, meteo e mare</title>
-<link rel="stylesheet" href="carte-spiagge.css?v=202609131744">
+<link rel="stylesheet" href="carte-spiagge.css?v=202609132017">
 <link rel="stylesheet" href="caratteri/caratteri.css?v=202609130413">
-<script src="configurazione.js?v=202609131744"></script>
-<script src="vado-dati.js?v=202609131744"></script>
-<script src="vado-recensioni.js?v=202609131744"></script>
-<script src="vado-segnala.js?v=202609131744"></script>
-<script src="vado-vento.js?v=202609131744"></script>
+<script src="configurazione.js?v=202609132017"></script>
+<script src="vado-dati.js?v=202609132017"></script>
+<script src="vado-recensioni.js?v=202609132017"></script>
+<script src="vado-foto.js?v=202609132017"></script>
+<script src="vado-extra.js?v=202609132017"></script>
+<script src="vado-segnala.js?v=202609132017"></script>
+<script src="vado-vento.js?v=202609132017"></script>
 <style>/* misure di questa regione — vedi carte-spiagge.css */
 :root{--colonna-carta:620px;--telaio-h:min(66vh,610px)}</style>
 </head>
@@ -1233,6 +1235,9 @@ function corpo(b){
    '<p class="titoletto">Servizi in spiaggia</p><div class="servizi">'+chips+'</div>'+
    '<p class="titoletto">Da sapere</p><p class="nota">'+(b.nota||'Descrizione non ancora disponibile.')+'</p>'+
    '<div class="tag">'+b.id.map(t=>'<span'+(t==="Bandiera Blu"?' class="bb"':'')+'>'+t+'</span>').join("")+'</div>'+
+   '<div id="slotImmagini"></div>'+
+   '<div id="slotNotizie"></div>'+
+   '<div id="slotIntorno"></div>'+
    '<div id="slotPareri"></div>'+'</div>';
 }
 function vetrinaSat(b,i){
@@ -1278,6 +1283,14 @@ function mostra(i){
      passati a un'altra spiaggia, la risposta che torna qui non vale piu'. */
   const slotP=scheda.querySelector("#slotPareri");
   VADORECE.disegna(b.sid, b.n, slotP).catch(()=>{});
+  /* Le immagini e i due riquadri di contorno arrivano dopo, come i pareri: la
+     scheda non aspetta la rete per comparire, e se una di queste tre cose non
+     risponde le altre due si vedono lo stesso. */
+  if(typeof VADOFOTO!=="undefined")
+    VADOFOTO.disegna(b.sid, b.n, scheda.querySelector("#slotImmagini"));
+  if(typeof VADOEXTRA!=="undefined")
+    VADOEXTRA.disegna(b, scheda.querySelector("#slotNotizie"),
+                         scheda.querySelector("#slotIntorno"));
   const slot=scheda.querySelector("#slotLive");
   slot.innerHTML='<div class="live"><div class="live-testa"><span><i class="pulse"></i>Adesso in spiaggia</span></div>'+
     '<div class="live-nota">Interrogo il modello meteo-marino…</div></div>';
@@ -2172,8 +2185,8 @@ avvia();
 VADO.alCambio((function(){ let primo=true;
   return ()=>{ if(primo){ primo=false; return; } location.reload(); }; })());
 </script>
-<script src="vado-conto.js?v=202609131744"></script>
-<script src="vado-cookie.js?v=202609131744"></script>
-<script src="vado-piede.js?v=202609131744"></script>
+<script src="vado-conto.js?v=202609132017"></script>
+<script src="vado-cookie.js?v=202609132017"></script>
+<script src="vado-piede.js?v=202609132017"></script>
 </body>
 </html>
