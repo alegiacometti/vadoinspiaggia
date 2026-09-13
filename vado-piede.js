@@ -49,7 +49,8 @@
           (i.titolare ? ' · <b>' + esc(i.titolare) + '</b>' : '') + '</p>' +
         (dati ? '<p class="piede-dati">' + dati + '</p>' : '') +
         '<p class="piede-vie">' +
-          '<a href="privacy.html">Privacy e condizioni</a>' +
+          '<a href="privacy.html">Privacy</a>' +
+          '<a href="termini.html">Termini di servizio</a>' +
           '<a href="crediti.html">Crediti e licenze</a>' +
           '<a href="#" data-cookie-apri>Preferenze cookie</a>' +
         '</p>' +
