@@ -1216,23 +1216,11 @@ function corpo(b){
      '<div class="sotto">'+b.com+' · '+gradi(b.lat,b.lat<0?"S":"N")+' '+gradi(b.lon,b.lon<0?"W":"E")+'</div></div>'+
      '<div class="zona">'+ZONE[b.z]+'</div></div>'+
    '<div class="rec-riassunto" data-riassunto="'+b.sid+'">'+VADORECE.riassunto(b.sid)+'</div>'+
-   /* se lì sotto ce n'è più d'una, conviene dirlo: altrimenti sembra che il
-      clic non risponda, mentre sta solo scegliendo la prima */
-   /* Le spiagge che sulla carta cadono sotto lo stesso punto: invece di
-      chiedere un clic al buio, si scrivono i nomi e ci si va premendoli. */
-   (function(){
-     const mio=SPIAGGE.indexOf(b);
-     const g=(typeof grappoloDi==="function")?grappoloDi(mio):[];
-     const altri=g.filter(j=>j!==mio);
-     if(!altri.length) return "";
-     const una=altri.length===1;
-     return '<p class="grappolo"><b>'+(una?'Qui sotto ce n\'è un\'altra':
-       'Qui sotto ce ne sono altre '+altri.length)+'</b>, '+
-       (una?'nascosta':'nascoste')+' dietro lo stesso segno: '+
-       altri.map(j=>'<button type="button" class="vicina" data-vai-a="'+j+'">'+
-         escA(SPIAGGE[j].n)+'</button>').join(" ")+
-       (altri.length>5?' <span>Ingrandisci la carta per separarle.</span>':'')+'</p>';
-   })()+
+   /* Qui c'era l'avviso sulle spiagge sovrapposte sotto lo stesso segno, con
+      i nomi da premere. Tolto: parlava di come e' disegnata la carta, non
+      della spiaggia che si sta leggendo. A quelle spiagge si arriva lo stesso
+      dall'elenco di fianco, e sulla carta un secondo tocco passa alla
+      successiva. */
    '<div class="badge-accesso" style="background:'+a.col+'14;border:1px solid '+a.col+'4d;color:'+a.col+'">'+
      '<span class="glifo">'+a.glifo+'</span> '+a.et+'</div>'+
    '<div id="slotLive"></div>'+
