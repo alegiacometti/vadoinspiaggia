@@ -23,6 +23,7 @@ window.VADOFOTO = (function () {
     { day: "numeric", month: "long", year: "numeric" }) : "";
 
   let veloF = null, sidCorrente = null, nomeCorrente = "", fileScelto = null;
+  let SCATTI = [];        /* quel che la lente sfoglia: percorso, didascalia, indirizzo firmato */
 
   /* ------------------------------------------------------------- la finestra
      Si costruisce una volta sola e resta: aprirla e chiuderla non deve
@@ -168,16 +169,23 @@ window.VADOFOTO = (function () {
       return;
     }
 
+    SCATTI = scatti;
     dove.innerHTML =
-      '<p class="titoletto">Le immagini <em>di chi c’è stato</em></p>' +
-      '<div class="imm-griglia">' + scatti.map((f, i) =>
-        '<figure class="imm-scatto' + (f.stato === "attesa" ? " attesa" : "") + '">' +
-          '<img data-imm-vedi="' + esc(f.percorso) + '" alt="' +
-            esc(f.did || ("Foto di " + nome)) + '" loading="lazy" decoding="async">' +
-          (f.stato === "attesa"
-            ? '<figcaption class="imm-attesa">La tua, in attesa che la guardi io</figcaption>'
-            : (f.did ? '<figcaption>' + esc(f.did) + '</figcaption>' : "")) +
-        '</figure>').join("") +
+      '<p class="titoletto">Le immagini <em>di chi c’è stato</em>' +
+        (scatti.length > 1 ? '<span class="imm-quante">' + scatti.length + '</span>' : '') +
+      '</p>' +
+      '<div class="imm-riga">' +
+        '<button type="button" class="imm-frec sx" data-imm-scorri="-1" aria-label="Indietro" hidden>‹</button>' +
+        '<div class="imm-striscia" data-imm-striscia>' + scatti.map((f, i) =>
+          '<figure class="imm-scatto' + (f.stato === "attesa" ? " attesa" : "") + '">' +
+            '<img data-imm-vedi="' + esc(f.percorso) + '" data-imm-i="' + i + '" alt="' +
+              esc(f.did || ("Foto di " + nome)) + '" loading="lazy" decoding="async">' +
+            (f.stato === "attesa"
+              ? '<figcaption class="imm-attesa">La tua, in attesa che la guardi io</figcaption>'
+              : (f.did ? '<figcaption>' + esc(f.did) + '</figcaption>' : "")) +
+          '</figure>').join("") +
+        '</div>' +
+        '<button type="button" class="imm-frec dx" data-imm-scorri="1" aria-label="Avanti" hidden>›</button>' +
       '</div>' +
       (entrato
         ? '<p class="imm-invito">Ne hai una anche tu? ' +
@@ -185,16 +193,111 @@ window.VADOFOTO = (function () {
         : '<p class="imm-invito imm-fuori">Le foto le mandano le persone iscritte.</p>');
 
     legaInvito(dove, sid, nome);
+    legaStriscia(dove);
 
     /* Il deposito e' chiuso: ogni immagine si chiede con un indirizzo firmato
-       che scade da sola. Arrivano una per una, dopo la griglia: la sezione
+       che scade da sola. Arrivano una per una, dopo la striscia: la sezione
        compare subito con i riquadri vuoti e si riempie mentre si guarda. */
     dove.querySelectorAll("img[data-imm-vedi]").forEach(async img => {
       try {
         const u = await VADO.firmaFoto(img.dataset.immVedi, 3600);
-        if (u) img.src = u; else togli(img);
+        if (u) { img.src = u; SCATTI[+img.dataset.immI].url = u; }
+        else togli(img);
       } catch (_) { togli(img); }
     });
+  }
+
+  /* ------------------------------------------------------------ la striscia
+     Con una foto sola non c'e' niente da sfogliare e le frecce non compaiono.
+     Con piu' di una la striscia scorre di lato, si aggancia alle immagini e le
+     frecce si accendono solo dal lato dove c'e' ancora qualcosa. */
+  function legaStriscia(dove){
+    const str = dove.querySelector("[data-imm-striscia]");
+    if (!str) return;
+    const frecce = dove.querySelectorAll("[data-imm-scorri]");
+    const aggiorna = () => {
+      const scorre = str.scrollWidth - str.clientWidth > 4;
+      frecce.forEach(b => {
+        const avanti = +b.dataset.immScorri > 0;
+        b.hidden = !scorre || (avanti
+          ? str.scrollLeft >= str.scrollWidth - str.clientWidth - 4
+          : str.scrollLeft <= 4);
+      });
+    };
+    frecce.forEach(b => b.onclick = () => {
+      str.scrollBy({ left: (+b.dataset.immScorri) * (str.clientWidth * 0.8), behavior: "smooth" });
+    });
+    str.addEventListener("scroll", aggiorna, { passive: true });
+    window.addEventListener("resize", aggiorna);
+    /* le immagini arrivano dopo: la striscia cambia larghezza mentre si
+       riempie, e le frecce vanno ricontate quando succede */
+    if (window.ResizeObserver) new ResizeObserver(aggiorna).observe(str);
+    setTimeout(aggiorna, 60);
+    str.querySelectorAll("img[data-imm-i]").forEach(img => {
+      img.onclick = () => lente(+img.dataset.immI);
+    });
+  }
+
+  /* ---------------------------------------------------------------- la lente
+     A schermo intero, con le frecce, la tastiera e lo scorrimento del dito.
+     L'indirizzo firmato e' gia' stato chiesto per l'anteprima: qui si riusa
+     quello, che e' lo stesso file — una richiesta in meno e nessuna attesa. */
+  let veloL = null, iLente = 0;
+
+  function costruisciLente(){
+    if (veloL) return veloL;
+    veloL = document.createElement("dialog");
+    veloL.className = "imm-lente";
+    veloL.innerHTML =
+      '<button type="button" class="imm-chiudi" data-l-chiudi aria-label="Chiudi">✕</button>' +
+      '<button type="button" class="imm-lfrec sx" data-l-vai="-1" aria-label="Precedente">‹</button>' +
+      '<img alt="">' +
+      '<button type="button" class="imm-lfrec dx" data-l-vai="1" aria-label="Successiva">›</button>' +
+      '<p class="imm-lsotto"><span data-l-did></span><span data-l-conta></span></p>';
+    document.body.appendChild(veloL);
+    veloL.querySelector("[data-l-chiudi]").onclick = () => veloL.close();
+    veloL.querySelectorAll("[data-l-vai]").forEach(b =>
+      b.onclick = e => { e.stopPropagation(); muovi(+b.dataset.lVai); });
+    /* fuori dall'immagine si chiude, come ci si aspetta da una lente */
+    veloL.addEventListener("click", e => { if (e.target === veloL) veloL.close(); });
+    veloL.addEventListener("keydown", e => {
+      if (e.key === "ArrowRight") { e.preventDefault(); muovi(1); }
+      if (e.key === "ArrowLeft")  { e.preventDefault(); muovi(-1); }
+    });
+    let x0 = null;
+    veloL.addEventListener("touchstart", e => { x0 = e.touches[0].clientX; }, { passive: true });
+    veloL.addEventListener("touchend", e => {
+      if (x0 == null) return;
+      const dx = e.changedTouches[0].clientX - x0;
+      x0 = null;
+      if (Math.abs(dx) > 45) muovi(dx < 0 ? 1 : -1);
+    }, { passive: true });
+    return veloL;
+  }
+
+  function muovi(passo){
+    if (!SCATTI.length) return;
+    iLente = (iLente + passo + SCATTI.length) % SCATTI.length;
+    mostraLente();
+  }
+
+  function mostraLente(){
+    const v = costruisciLente(), f = SCATTI[iLente];
+    if (!f) return;
+    const img = v.querySelector("img");
+    img.src = f.url || "";
+    img.alt = f.did || "Foto della spiaggia";
+    v.querySelector("[data-l-did]").textContent =
+      f.stato === "attesa" ? "La tua, in attesa che la guardi io" : (f.did || "");
+    v.querySelector("[data-l-conta]").textContent =
+      SCATTI.length > 1 ? (iLente + 1) + " di " + SCATTI.length : "";
+    v.querySelectorAll(".imm-lfrec").forEach(b => b.hidden = SCATTI.length < 2);
+  }
+
+  function lente(i){
+    const v = costruisciLente();
+    iLente = i; mostraLente();
+    if (!v.open) v.showModal();
   }
 
   const togli = img => { const f = img.closest(".imm-scatto"); if (f) f.remove(); };
@@ -204,5 +307,5 @@ window.VADOFOTO = (function () {
       b.onclick = () => apri(sid, nome));
   }
 
-  return { disegna: disegna, apri: apri };
+  return { disegna: disegna, apri: apri, lente: lente };
 })();

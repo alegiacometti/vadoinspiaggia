@@ -354,13 +354,76 @@ const VADO = (() => {
            casuale + "." + (ESTENSIONI[tipo] || "jpg");
   }
 
+  /* Le foto di un telefono moderno pesano cinque, otto, dodici megabyte, e
+     nella scheda si vedono larghe trecento pixel: caricarle intere vuol dire
+     pagare un deposito pieno di roba che nessuno guardera' mai a quella
+     misura, e far aspettare chi le manda con la rete del cellulare.
+
+     Si rimpiccioliscono QUI, nel browser di chi carica, prima che partano.
+     Il lato lungo scende a 1600 pixel — abbastanza per vederle a schermo
+     intero su un portatile — e l'immagine esce sempre in JPEG di qualita' 82.
+
+     C'e' un secondo effetto, e non e' secondario: ridisegnare l'immagine su
+     una tela BUTTA VIA I DATI EXIF, e fra quelli ci sono spesso le coordinate
+     GPS di dove e' stato scattato. Nessuno si aspetta che mandare la foto di
+     una spiaggia riveli dove abita. Che sparisca e' un bene.
+
+     Se qualcosa va storto — un formato che il browser non sa disegnare, una
+     tela troppo grande — si carica il file originale: meglio una foto pesante
+     di nessuna foto. */
+  const LATO_MAX = 1600, QUALITA = 0.82;
+
+  async function rimpicciolisci(file) {
+    if (!/^image\//.test(file.type)) return file;
+    let bitmap = null;
+    try {
+      if (typeof createImageBitmap === "function") {
+        /* «from-image» applica la rotazione scritta nell'EXIF: senza, le foto
+           verticali dell'iPhone finirebbero coricate. */
+        try { bitmap = await createImageBitmap(file, { imageOrientation: "from-image" }); }
+        catch (_) { bitmap = await createImageBitmap(file); }
+      } else {
+        bitmap = await new Promise((ok, no) => {
+          const i = new Image();
+          i.onload = () => ok(i);
+          i.onerror = no;
+          i.src = URL.createObjectURL(file);
+        });
+      }
+    } catch (_) { return file; }
+
+    const w = bitmap.width || bitmap.naturalWidth, h = bitmap.height || bitmap.naturalHeight;
+    if (!w || !h) return file;
+    const k = Math.min(1, LATO_MAX / Math.max(w, h));
+    /* Gia' piccola e gia' leggera: non si tocca. Ricomprimere un JPEG che va
+       bene lo peggiora e basta. */
+    if (k === 1 && file.size <= 900 * 1024) return file;
+
+    try {
+      const tela = document.createElement("canvas");
+      tela.width = Math.round(w * k); tela.height = Math.round(h * k);
+      const c = tela.getContext("2d");
+      c.imageSmoothingQuality = "high";
+      c.drawImage(bitmap, 0, 0, tela.width, tela.height);
+      if (bitmap.close) bitmap.close();
+      const pezzo = await new Promise(ok => tela.toBlob(ok, "image/jpeg", QUALITA));
+      if (!pezzo || pezzo.size >= file.size) return file;   /* non ci guadagniamo */
+      return new File([pezzo], (file.name || "foto").replace(/\.[^.]+$/, "") + ".jpg",
+                      { type: "image/jpeg" });
+    } catch (_) { return file; }
+  }
+
   async function caricaFoto(sid, file) {
     if (!chiSono()) throw new Error("serve essere entrati");
     if (!ESTENSIONI[file.type]) throw new Error("formato non accettato");
-    if (file.size > LIMITE_FOTO) throw new Error("immagine troppo pesante");
-    const percorso = nomeFoto(sid, file.type);
+    const leggera = await rimpicciolisci(file);
+    /* il controllo del peso si fa DOPO: una foto da otto megabyte che scende a
+       quattrocento kilobyte e' una foto buona, e rifiutarla prima di averci
+       provato sarebbe stupido */
+    if (leggera.size > LIMITE_FOTO) throw new Error("immagine troppo pesante");
+    const percorso = nomeFoto(sid, leggera.type);
     await deposito("object/foto/" + percorso,
-      { metodo: "POST", file: file, tipo: file.type,
+      { metodo: "POST", file: leggera, tipo: leggera.type,
         intestazioni: { "x-upsert": "false", "cache-control": "3600" } });
     return percorso;
   }
