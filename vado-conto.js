@@ -459,7 +459,17 @@
   if (arrivo === "recovery") { scheda("nuova"); velo.showModal(); f.password.focus(); }
   else if (arrivo === "google") fascetta("Sei dentro con Google.");
   else if (arrivo === "signup" || arrivo === "magiclink") fascetta("Indirizzo confermato: sei dentro.");
-  else if (arrivo === "errore") fascetta("Quel collegamento non è più valido: chiedine un altro dalla finestra d’accesso.", true);
+  else if (arrivo === "errore") {
+    /* «Collegamento non piu' valido» va bene per un collegamento della posta
+       scaduto, ma NON per un accesso con Google che si e' rotto: li' il
+       servizio dice il perche', e nasconderlo manda a cercare il guasto dalla
+       parte sbagliata. Se c'e' un motivo, si scrive quello. */
+    const perche = (VADO.perche && VADO.perche()) || "";
+    fascetta(perche
+      ? "L’accesso non è riuscito: " + perche.replace(/\+/g, " ")
+      : "Quel collegamento non è più valido: chiedine un altro dalla finestra d’accesso.",
+      true);
+  }
 
   /* Se la sessione cambia in un'altra scheda del browser — si esce di là — qui
      il pulsante deve accorgersene, altrimenti si resta a guardare un "Esci"

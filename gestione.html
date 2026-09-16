@@ -7,10 +7,10 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#083c5c">
 <title>Gestione · Vado in spiaggia</title>
-<link rel="stylesheet" href="carte-spiagge.css?v=202609132111">
+<link rel="stylesheet" href="carte-spiagge.css?v=202609162014">
 <link rel="stylesheet" href="caratteri/caratteri.css?v=202609130413">
-<script src="configurazione.js?v=202609132111"></script>
-<script src="vado-dati.js?v=202609132111"></script>
+<script src="configurazione.js?v=202609162014"></script>
+<script src="vado-dati.js?v=202609162014"></script>
 <style>
 /* Questa pagina NON e' protetta dal fatto di essere nascosta: chiunque puo'
    aprirla, e va benissimo. A proteggere sono le regole del database — senza
@@ -774,6 +774,8 @@ function disegna(){
     b.onclick = () => revoca(+b.dataset.revoca, b.dataset.che));
   corpo.querySelectorAll("[data-ruolo]").forEach(b =>
     b.onclick = () => cambiaRuolo(b.dataset.ruolo, b.dataset.a, b.dataset.chi));
+  corpo.querySelectorAll("[data-via]").forEach(b =>
+    b.onclick = () => cancellaPersona(b.dataset.via, b.dataset.chi, b));
   corpo.querySelectorAll("[data-segn-letta]").forEach(b =>
     b.onclick = () => segnaLetta(+b.dataset.segnLetta, b.dataset.come === "1"));
   corpo.querySelectorAll("[data-segn-via]").forEach(b =>
@@ -1033,7 +1035,7 @@ function tabellaPersone(perUtente){
   if (!PROFILI.length) return '<div class="gest-vuoto">Ancora nessun iscritto.</div>';
   return '<table class="gest-tab"><thead><tr>' +
     '<th>Chi</th><th class="gest-nascondi">Iscritto</th><th class="gest-nascondi">Ultimo accesso</th>' +
-    '<th>Ha sbloccato</th></tr></thead><tbody>' +
+    '<th>Ha sbloccato</th><th></th></tr></thead><tbody>' +
     PROFILI.map(p => {
       const suoi = (perUtente[p.utente] || [])
         .sort((a,b) => (a.pacchetto?0:1) - (b.pacchetto?0:1));
@@ -1056,8 +1058,47 @@ function tabellaPersone(perUtente){
             '" aria-label="Revoca">✕</button></span>').join("")
             : '<span class="gest-niente">niente</span>') +
           '<button type="button" class="gest-piu" data-sblocca="' + p.utente + '">+ sblocca</button>' +
-        '</div></td></tr>';
+        '</div></td>' +
+        '<td>' + bottoneVia(p) + '</td></tr>';
     }).join("") + '</tbody></table>';
+}
+
+/* ------------------------------------------------ cancellare una persona
+   Il proprio account non si tocca da qui: chi lo cancellasse per sbaglio
+   resterebbe fuori dalla propria gestione, senza nessuno a cui chiedere. Il
+   database rifiuta comunque — anche l'ultimo amministratore rimasto — ma un
+   pulsante che non c'e' e' meglio di un errore che arriva dopo. */
+function bottoneVia(p){
+  const io = VADO.chiSono();
+  if (io && p.utente === io.id) return '';
+  return '<button type="button" class="gest-x" data-via="' + p.utente +
+    '" data-chi="' + esc(p.email || p.nome || "questa persona") +
+    '" title="Cancella questo account">✕</button>';
+}
+
+async function cancellaPersona(utente, chi, bottone){
+  /* Due domande, non una. La prima dice cosa sparisce, la seconda chiede di
+     scrivere l'indirizzo: e' l'unico modo perche' un dito sul telefono non
+     cancelli un iscritto passando sopra una X. */
+  if (!confirm("Cancellare l’account di " + chi + "?\n\n" +
+      "Spariscono per sempre: il profilo, gli sblocchi, i preferiti, le recensioni, " +
+      "le segnalazioni e le immagini che ha mandato — file compresi.\n\n" +
+      "Non si recupera.")) return;
+  const scritto = prompt("Per conferma, scrivi l’indirizzo dell’account da cancellare:");
+  if (scritto == null) return;
+  if (scritto.trim().toLowerCase() !== String(chi).trim().toLowerCase())
+    return alert("L’indirizzo non corrisponde: non ho cancellato niente.");
+
+  bottone.disabled = true;
+  let file = 0;
+  try { file = await VADO.cancellaPersona(utente); }
+  catch (e) {
+    bottone.disabled = false;
+    return alert(e.message.slice(0, 300));
+  }
+  await carica();
+  alert("Account cancellato." + (file ? " Tolte anche " + file +
+        (file === 1 ? " immagine" : " immagini") + " dal deposito." : ""));
 }
 
 /* ------------------------------------------------------- le segnalazioni
@@ -1359,8 +1400,8 @@ window.addEventListener("hashchange", () => { if (PROFILI.length) disegna(); });
 
 VADO.alCambio(s => { IO = s; carica(); });
 </script>
-<script src="vado-conto.js?v=202609132111"></script>
-<script src="vado-cookie.js?v=202609132111"></script>
-<script src="vado-piede.js?v=202609132111"></script>
+<script src="vado-conto.js?v=202609162014"></script>
+<script src="vado-cookie.js?v=202609162014"></script>
+<script src="vado-piede.js?v=202609162014"></script>
 </body>
 </html>

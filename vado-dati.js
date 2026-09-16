@@ -228,10 +228,18 @@ const VADO = (() => {
      sessione, e si ripulisce l'indirizzo: quei gettoni non devono restare
      scritti nella barra del browser, ne' finire nella cronologia. */
   let arrivo = null;             /* "signup" | "recovery" | "google" | "errore" */
+  let motivo = "";               /* quel che il servizio ha detto, quando ha detto no */
   (function raccogli() {
+    /* L'errore puo' tornare nel frammento (dopo il #) o fra i parametri: il
+       primo caso e' il collegamento della posta, il secondo l'accesso con
+       Google che si e' rotto per strada. Si guardano tutti e due, altrimenti
+       meta' dei guasti diventano una pagina che non dice niente. */
     const f = location.hash.slice(1);
-    if (!f || f.indexOf("access_token=") < 0 && f.indexOf("error") < 0) return;
-    const p = new URLSearchParams(f);
+    const q = location.search.slice(1);
+    const fonte = (f && (f.indexOf("access_token=") >= 0 || f.indexOf("error") >= 0)) ? f
+                : (q && q.indexOf("error") >= 0) ? q : "";
+    if (!fonte) return;
+    const p = new URLSearchParams(fonte);
     if (p.get("access_token")) {
       apriSessione({ access_token: p.get("access_token"), refresh_token: p.get("refresh_token"),
                      expires_in: +(p.get("expires_in") || 3600) });
@@ -243,10 +251,16 @@ const VADO = (() => {
       arrivo = p.get("type") || (daGoogle ? "google" : "signup");
     } else {
       arrivo = "errore";
+      /* Il servizio scrive PERCHE' ha rifiutato. Buttarlo via e dire soltanto
+         «collegamento non valido» manda a cercare il guasto dalla parte
+         sbagliata: l'errore vero puo' essere tutt'altro — un provider spento,
+         un segreto storto, un indirizzo di ritorno non ammesso. */
+      motivo = p.get("error_description") || p.get("error_code") || p.get("error") || "";
     }
-    history.replaceState(null, "", location.pathname + location.search);
+    history.replaceState(null, "", location.pathname);
   })();
   const daPosta = () => arrivo;
+  const perche  = () => motivo;
 
   /* Tornando dal collegamento della posta i gettoni arrivano nudi: dentro non
      c'e' chi sei. Senza questo, dopo aver confermato l'indirizzo la sessione
@@ -846,6 +860,22 @@ const VADO = (() => {
       "&select=titolo,fonte,url,pubblicata&order=pubblicata.desc.nullslast&limit=" +
       (quante || 4));
 
+  /* ---------------------------------------------------- cancellare un account
+     Il database porta via tutto quello che era legato alla persona — profilo,
+     sblocchi, preferiti, recensioni, segnalazioni, immagini — perche' ogni
+     chiave esterna verso gli utenti e' «a cascata». Quel che non puo' portarsi
+     via sono i FILE nel deposito: la funzione li elenca prima di cancellare e
+     li restituisce, e li togliamo qui. Una fotografia che resta nel deposito
+     di un account cancellato e' esattamente il genere di cosa che non deve
+     succedere su un sito che promette di cancellare i dati. */
+  const cancellaPersona = async utente => {
+    const file = await chiedi("rpc/cancella_persona",
+      { metodo: "POST", corpo: { p_utente: utente } });
+    const elenco = Array.isArray(file) ? file : [];
+    for (const f of elenco) { try { await buttaFoto(f); } catch (_) {} }
+    return elenco.length;
+  };
+
   const correggiSpiaggia = (sid, campi) =>
     chiedi("spiagge?sid=eq." + encodeURIComponent(sid),
       { metodo: "PATCH", corpo: campi,
@@ -859,7 +889,7 @@ const VADO = (() => {
            caricaFoto, firmaFoto, approvaFoto, rifiutaFoto, buttaFoto,
            impostazioni, salvaImpostazione,
            iscriviti, accedi, esci, scordata, alCambio, chiSono,
-           nuovaPassword, daPosta, sonoAdmin,
+           nuovaPassword, daPosta, perche, sonoAdmin, cancellaPersona,
            preferitiSpiagge, preferitiZone, stelleAccese, salvaSpiaggia, togliSpiaggia,
            salvaZona, togliZona, mieiAccessi, vicine, quanteVicine, cercaNomi, nomiRegione, paginaSpiaggia, rullo, mieiAssaggi, assaggia,
            recensioniSpiaggia, recensioniRegione, votiSpiagge, miaRecensione, mieRecensioni,
