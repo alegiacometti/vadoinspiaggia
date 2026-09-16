@@ -7,10 +7,10 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#083c5c">
 <title>Gestione · Vado in spiaggia</title>
-<link rel="stylesheet" href="carte-spiagge.css?v=202609162014">
+<link rel="stylesheet" href="carte-spiagge.css?v=202609162119">
 <link rel="stylesheet" href="caratteri/caratteri.css?v=202609130413">
-<script src="configurazione.js?v=202609162014"></script>
-<script src="vado-dati.js?v=202609162014"></script>
+<script src="configurazione.js?v=202609162119"></script>
+<script src="vado-dati.js?v=202609162119"></script>
 <style>
 /* Questa pagina NON e' protetta dal fatto di essere nascosta: chiunque puo'
    aprirla, e va benissimo. A proteggere sono le regole del database — senza
@@ -276,7 +276,7 @@ function fuori(titolo, testo, conPulsante){
   if (b) b.onclick = () => window.apriConto && window.apriConto("accedi");
 }
 
-let SEGN = [], FOTOLIB = [];
+let SEGN = [], FOTOLIB = [], MOVIM = [], RIEP = [];
 let IMPOST = null;
 let IMP_DETTO = "";      /* il messaggio sopravvive al ridisegno che segue */
 async function carica(){
@@ -305,6 +305,10 @@ async function carica(){
     /* Le immagini mandate senza parere: stessa cura dei pareri, se questa
        richiesta va storta il resto della dashboard deve restare in piedi. */
     try { FOTOLIB = await VADO.fotoDaModerare(200); } catch (_) { FOTOLIB = []; }
+    /* La storia e il diario delle spedizioni: stessa regola. Sono utili, non
+       indispensabili; se il database non li ha ancora, la pagina vive uguale. */
+    try { MOVIM = await VADO.movimenti(300); } catch (_) { MOVIM = []; }
+    try { RIEP  = await VADO.riepiloghi();   } catch (_) { RIEP  = []; }
   }catch(e){
     return fuori("Non riesco a leggere", "Il servizio non risponde: " + e.message, false);
   }
@@ -625,6 +629,100 @@ async function salvaRegistro(bottone){
 }
 document.getElementById("regVai").onclick = e => salvaRegistro(e.currentTarget);
 
+/* -------------------------------------------------------- storia e backup
+   La domanda a cui rispondono queste due cose e' la stessa: «se domani il
+   database sparisse, cosa resta?». La tabella dei movimenti da sola non
+   risponde — sta dentro il database di cui dovrebbe essere la copia. Serve che
+   una copia ESCA.
+
+   Due strade, e ci sono tutte e due apposta. Il pulsante scarica il file
+   adesso, sul computer: funziona oggi, senza iscriversi a niente, e il file lo
+   si mette dove si vuole. La mail giornaliera fa la stessa cosa da sola tutte
+   le mattine, ma serve un servizio di posta esterno — e finche' non c'e', qui
+   sotto sta scritto che non c'e', invece di far finta.
+
+   Il CSV usa il punto e virgola e comincia con un carattere invisibile (il BOM)
+   perche' e' l'unico modo perche' Excel italiano apra le accentate giuste e non
+   infili tutta la riga in una colonna sola. */
+function statoPosta(){
+  const righe = (IMPOST && IMPOST._righe) || [];
+  const dove  = (righe.find(r => r.chiave === "backup_a")  || {}).valore || "";
+  const da    = (righe.find(r => r.chiave === "backup_da") || {}).valore || "";
+  const ultimo = RIEP[0];
+  if (!dove || !da)
+    return '<p class="gest-post spenta">La mail giornaliera <b>non è accesa</b>. ' +
+      'Servono i due indirizzi qui sotto e la chiave del servizio di posta, che si ' +
+      'mette una volta sola dentro Supabase — le istruzioni sono nel file ' +
+      '<i>RIEPILOGO-GIORNALIERO.md</i>.</p>';
+  if (!ultimo)
+    return '<p class="gest-post attesa">Indirizzi a posto: la prima mail parte domattina. ' +
+      'Se non arriva, qui comparirà il motivo.</p>';
+  return '<p class="gest-post ' + (ultimo.esito === "spedito" ? "buona" : "spenta") + '">' +
+    'Ultimo riepilogo: <b>' + esc(ultimo.esito) + '</b> il ' + giorno(ultimo.quando) +
+    (ultimo.righe ? ' · ' + ultimo.righe + ' righe' : '') +
+    (ultimo.dettaglio ? ' · ' + esc(ultimo.dettaglio) : '') + '</p>';
+}
+
+function bloccoBackup(){
+  const righe  = ((IMPOST && IMPOST._righe) || []).filter(r => r.gruppo === "backup");
+  const campi  = righe.map(r =>
+    '<label class="gest-imp-campo"><span>' + esc(r.etichetta || r.chiave) + '</span>' +
+    '<input type="text" data-imp-campo="' + esc(r.chiave) + '" value="' +
+      esc(r.valore || "") + '" placeholder="' + esc(r.aiuto || "") + '">' +
+    (r.aiuto ? '<i>' + esc(r.aiuto) + '</i>' : '') + '</label>').join("");
+  return '<div class="gest-backup">' +
+    '<div class="gest-backup-ora">' +
+      '<button type="button" class="conto-vai" data-backup>Scarica il registro (CSV)</button>' +
+      '<span class="gest-niente">' + MOVIM.length +
+        (MOVIM.length === 1 ? ' movimento' : ' movimenti') +
+        ' · mettilo dove vuoi: è il tuo backup di oggi</span>' +
+    '</div>' +
+    statoPosta() +
+    (campi ? '<div class="gest-imp">' + campi +
+      '<div class="gest-imp-fondo">' +
+        '<button type="button" data-imp-salva disabled>Salva i dati</button>' +
+        '<span class="gest-imp-esito" data-imp-esito></span></div></div>' : '') +
+    '</div>';
+}
+
+function tabellaMovimenti(){
+  if (!MOVIM.length)
+    return '<div class="gest-vuoto">Ancora nessun movimento.</div>';
+  return '<div class="gest-scorri"><table class="gest-tab"><thead><tr>' +
+    '<th>Quando</th><th>Cosa</th><th>Chi</th><th>Che cosa</th><th>Perché</th>' +
+    '</tr></thead><tbody>' +
+    MOVIM.map(m => {
+      const che = m.pacchetto
+        ? (PACCHETTI.find(p => p.chiave === m.pacchetto) || {}).nome || m.pacchetto
+        : (REGIONI.find(r => r.chiave === m.regione) || {}).nome || m.regione || '—';
+      return '<tr><td class="gest-quando">' + esc(giorno(m.quando)) + '</td>' +
+        '<td><span class="gest-mov ' + (m.cosa === "sblocco" ? "su" : "giu") + '">' +
+          esc(m.cosa) + '</span></td>' +
+        '<td>' + esc(m.email || "—") + '</td>' +
+        '<td>' + esc(che) + (m.pacchetto ? ' <i class="gest-niente">(paese)</i>' : '') + '</td>' +
+        '<td class="gest-niente">' + esc([m.origine, m.nota].filter(Boolean).join(" · ")) +
+          (m.da_email ? '<br>da ' + esc(m.da_email) : '') + '</td></tr>';
+    }).join("") + '</tbody></table></div>';
+}
+
+async function scaricaBackup(bottone){
+  bottone.disabled = true; const era = bottone.textContent;
+  bottone.textContent = "Un momento…";
+  try{
+    const foglio = await VADO.backupCsv();
+    const testo  = typeof foglio === "string" ? foglio : String(foglio || "");
+    const blob = new Blob(["﻿" + testo], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "vado-registro-" + new Date().toISOString().slice(0, 10) + ".csv";
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 600);
+  }catch(e){
+    alert("Non sono riuscito a preparare il file: " + e.message);
+  }
+  bottone.disabled = false; bottone.textContent = era;
+}
+
 /* ------------------------------------------------------------- le schede
    Una pagina sola con sei sezioni in fila voleva dire scorrere fino in fondo
    per sapere se c'era una foto da approvare. Adesso sono schede, e il nome
@@ -632,6 +730,7 @@ document.getElementById("regVai").onclick = e => salvaRegistro(e.currentTarget);
    un collegamento a «#segnalazioni» porta dritto li'. */
 const SCHEDE = [
   ["persone",      "Le persone"],
+  ["storia",       "Storia e backup"],
   ["regioni",      "Diffusione regioni"],
   ["contenuti",    "Contenuti"],
   ["registro",     "Registro spiagge"],
@@ -653,7 +752,7 @@ function contoScheda(chiave){
                                         FOTOLIB.filter(f => !f.ok).length;
   if (chiave === "azienda") {
     const righe = (IMPOST && IMPOST._righe) || [];
-    return righe.filter(r => !(r.valore || "").trim()).length;
+    return righe.filter(r => r.gruppo !== "backup" && !(r.valore || "").trim()).length;
   }
   return 0;
 }
@@ -699,6 +798,13 @@ function disegna(){
         cifra(vivi.length, vivi.length === 1 ? "sblocco attivo" : "sblocchi attivi") +
         cifra(ACCESSI.length - vivi.length, "scaduti") +
       '</div>' + noteLibere() + tabellaPersone(perUtente);
+
+  } else if (ora === "storia") {
+    dentro = '<p class="gest-intro">Ogni sblocco e ogni revoca lasciano una riga qui, e ' +
+      'la lascia <b>il database</b>, non questa pagina: se un accesso venisse dato da ' +
+      'un\u2019altra strada — un pagamento, una riga scritta a mano — comparirebbe lo ' +
+      'stesso. Le righe non si cancellano e non si correggono, nemmeno da qui.</p>' +
+      bloccoBackup() + tabellaMovimenti();
 
   } else if (ora === "regioni") {
     dentro = '<p class="gest-intro">Quante persone hanno ciascuna regione. Uno sblocco ' +
@@ -776,6 +882,12 @@ function disegna(){
     b.onclick = () => cambiaRuolo(b.dataset.ruolo, b.dataset.a, b.dataset.chi));
   corpo.querySelectorAll("[data-via]").forEach(b =>
     b.onclick = () => cancellaPersona(b.dataset.via, b.dataset.chi, b));
+  corpo.querySelectorAll("[data-tutto]").forEach(b =>
+    b.onclick = () => sbloccaTutto(b.dataset.tutto, b.dataset.chi, b));
+  corpo.querySelectorAll("[data-niente]").forEach(b =>
+    b.onclick = () => bloccaTutto(b.dataset.niente, b.dataset.chi, b));
+  corpo.querySelectorAll("[data-backup]").forEach(b =>
+    b.onclick = () => scaricaBackup(b));
   corpo.querySelectorAll("[data-segn-letta]").forEach(b =>
     b.onclick = () => segnaLetta(+b.dataset.segnLetta, b.dataset.come === "1"));
   corpo.querySelectorAll("[data-segn-via]").forEach(b =>
@@ -1033,34 +1145,74 @@ async function salvaImpostazioni(bottone){
 
 function tabellaPersone(perUtente){
   if (!PROFILI.length) return '<div class="gest-vuoto">Ancora nessun iscritto.</div>';
-  return '<table class="gest-tab"><thead><tr>' +
-    '<th>Chi</th><th class="gest-nascondi">Iscritto</th><th class="gest-nascondi">Ultimo accesso</th>' +
-    '<th>Ha sbloccato</th><th></th></tr></thead><tbody>' +
+  return '<div class="gest-scorri"><table class="gest-tab"><thead><tr>' +
+    '<th>Chi</th><th class="gest-nascondi">Ultimo accesso</th>' +
+    '<th>Che cosa vede</th><th></th></tr></thead><tbody>' +
     PROFILI.map(p => {
       const suoi = (perUtente[p.utente] || [])
         .sort((a,b) => (a.pacchetto?0:1) - (b.pacchetto?0:1));
       return '<tr>' +
         '<td><div class="gest-chi">' + esc(p.email || p.nome || "—") + '</div>' +
+          '<div class="gest-quando">iscritto il ' + giorno(p.creato) + '</div>' +
           '<div class="gest-ruoli">' +
           (p.ruolo === "admin" ? '<span class="gest-ruolo admin">amministratore</span>' : '') +
           bottoneRuolo(p) + '</div></td>' +
-        '<td class="gest-nascondi gest-quando">' + giorno(p.creato) + '</td>' +
         '<td class="gest-nascondi gest-quando">' + giorno(p.ultimo_accesso) + '</td>' +
-        '<td><div class="gest-sbl">' +
-          (suoi.length ? suoi.map(a =>
-            '<span class="gest-pat' + (a.pacchetto ? ' paese' : '') + (scaduto(a) ? ' scaduto' : '') + '"' +
-            ' title="' + esc((a.origine === "acquisto" ? "acquistato" : "concesso a mano") +
-                    " il " + giorno(a.concesso_il) +
-                    (a.scade_il ? " · scade il " + giorno(a.scade_il) : "") +
-                    (a.nota ? " · " + a.nota : "")) + '">' +
-            esc(nomeDi(a)) +
-            '<button type="button" data-revoca="' + a.id + '" data-che="' + esc(nomeDi(a)) +
-            '" aria-label="Revoca">✕</button></span>').join("")
-            : '<span class="gest-niente">niente</span>') +
-          '<button type="button" class="gest-piu" data-sblocca="' + p.utente + '">+ sblocca</button>' +
-        '</div></td>' +
+        '<td>' + cosaVede(p, suoi) + '</td>' +
         '<td>' + bottoneVia(p) + '</td></tr>';
-    }).join("") + '</tbody></table>';
+    }).join("") + '</tbody></table></div>';
+}
+
+/* Chi amministra vede tutto il sito, e lo vede perche' amministra — non
+   perche' qualcuno gliel'abbia sbloccato. Stampargli sotto l'elenco degli
+   sblocchi sarebbe scrivere due volte la stessa cosa, e per giunta una delle
+   due falsa: togliergli quelle righe non gli toglierebbe niente. */
+function cosaVede(p, suoi){
+  if (p.ruolo === "admin")
+    return '<div class="gest-tutto">' +
+      '<span class="gest-pat tutto">tutto il sito</span>' +
+      '<span class="gest-niente">perché amministra, non per uno sblocco</span></div>';
+
+  const righe = suoi.length
+    ? suoi.map(a =>
+        '<span class="gest-pat' + (a.pacchetto ? ' paese' : '') + (scaduto(a) ? ' scaduto' : '') + '">' +
+          '<span class="gest-pat-testo">' + esc(nomeDi(a)) +
+            '<i>' + (a.origine === "acquisto" ? "comprato" : "sbloccato") + ' il ' +
+              giorno(a.concesso_il) +
+              (a.scade_il ? ' · ' + (scaduto(a) ? 'scaduto' : 'scade') + ' il ' + giorno(a.scade_il) : '') +
+              (a.nota ? ' · ' + esc(a.nota) : '') + '</i></span>' +
+          '<button type="button" data-revoca="' + a.id + '" data-che="' + esc(nomeDi(a)) +
+          '" aria-label="Revoca">✕</button></span>').join("")
+    : '<span class="gest-niente">solo le regioni libere</span>';
+
+  return '<div class="gest-sbl">' + righe + '</div>' +
+    '<div class="gest-sbl gest-mosse-sbl">' +
+      '<button type="button" class="gest-piu" data-sblocca="' + p.utente + '">+ sblocca</button>' +
+      '<button type="button" class="gest-piu" data-tutto="' + p.utente +
+        '" data-chi="' + esc(p.email || p.nome || "questa persona") + '">sblocca tutto</button>' +
+      (suoi.length ? '<button type="button" class="gest-piu via" data-niente="' + p.utente +
+        '" data-chi="' + esc(p.email || p.nome || "questa persona") + '">blocca tutto</button>' : '') +
+    '</div>';
+}
+
+async function sbloccaTutto(utente, chi, bottone){
+  if (!confirm("Sbloccare TUTTO a " + chi + "?\n\n" +
+      "Gli sblocchi che ha adesso vengono sostituiti da undici sblocchi di paese, " +
+      "che coprono tutte le regioni — comprese quelle che aggiungeremo in futuro.")) return;
+  bottone.disabled = true;
+  try { await VADO.sbloccaTutto(utente); }
+  catch (e) { bottone.disabled = false; return alert(e.message.slice(0, 300)); }
+  await carica();
+}
+
+async function bloccaTutto(utente, chi, bottone){
+  if (!confirm("Togliere TUTTI gli sblocchi a " + chi + "?\n\n" +
+      "Restano visibili solo le regioni libere per tutti. I preferiti e le " +
+      "recensioni non si toccano.")) return;
+  bottone.disabled = true;
+  try { await VADO.bloccaTutto(utente); }
+  catch (e) { bottone.disabled = false; return alert(e.message.slice(0, 300)); }
+  await carica();
 }
 
 /* ------------------------------------------------ cancellare una persona
@@ -1400,8 +1552,8 @@ window.addEventListener("hashchange", () => { if (PROFILI.length) disegna(); });
 
 VADO.alCambio(s => { IO = s; carica(); });
 </script>
-<script src="vado-conto.js?v=202609162014"></script>
-<script src="vado-cookie.js?v=202609162014"></script>
-<script src="vado-piede.js?v=202609162014"></script>
+<script src="vado-conto.js?v=202609162119"></script>
+<script src="vado-cookie.js?v=202609162119"></script>
+<script src="vado-piede.js?v=202609162119"></script>
 </body>
 </html>

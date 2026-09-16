@@ -868,6 +868,14 @@ const VADO = (() => {
      li restituisce, e li togliamo qui. Una fotografia che resta nel deposito
      di un account cancellato e' esattamente il genere di cosa che non deve
      succedere su un sito che promette di cancellare i dati. */
+  /* Tutto o niente, in una richiesta sola. «Tutto» si scrive con gli undici
+     pacchetti-paese invece che con cinquantanove righe di regione: si legge
+     meglio nella gestione, e copre da solo le regioni che aggiungeremo. */
+  const sbloccaTutto = (utente, nota) => chiedi("rpc/sblocca_tutto",
+    { metodo: "POST", corpo: { p_utente: utente, p_nota: nota || null } });
+  const bloccaTutto = utente => chiedi("rpc/blocca_tutto",
+    { metodo: "POST", corpo: { p_utente: utente } });
+
   const cancellaPersona = async utente => {
     const file = await chiedi("rpc/cancella_persona",
       { metodo: "POST", corpo: { p_utente: utente } });
@@ -875,6 +883,24 @@ const VADO = (() => {
     for (const f of elenco) { try { await buttaFoto(f); } catch (_) {} }
     return elenco.length;
   };
+
+  /* --------------------------------------------------------------- la storia
+     Ogni sblocco e ogni revoca lasciano una riga in «movimenti», e la lascia il
+     database stesso — un innesco sulla tabella degli accessi — non questa
+     pagina. Conta: se domani un accesso venisse dato da un'altra strada, da un
+     pagamento automatico o da una riga scritta a mano nella console, la riga
+     nella storia ci sarebbe lo stesso.
+
+     L'email della persona viene ricopiata nella riga al momento del fatto. E'
+     una ripetizione voluta: quando un account viene cancellato la sua storia
+     deve restare leggibile, e «utente: 3f7a-…» non e' leggibile. */
+  const movimenti = quante =>
+    chiedi("movimenti?select=quando,cosa,email,regione,pacchetto,origine,nota,da_email" +
+           "&order=quando.desc&limit=" + (quante || 200));
+  const backupCsv    = () => chiedi("rpc/backup_csv",    { metodo: "POST", corpo: {} });
+  const backupNumeri = () => chiedi("rpc/backup_numeri", { metodo: "POST", corpo: {} });
+  const riepiloghi   = () =>
+    chiedi("riepiloghi?select=quando,esito,righe,dettaglio&order=quando.desc&limit=12");
 
   const correggiSpiaggia = (sid, campi) =>
     chiedi("spiagge?sid=eq." + encodeURIComponent(sid),
@@ -884,12 +910,13 @@ const VADO = (() => {
   return { regione, catalogo, dettaglioRegione, chiedi, BASE,
            consensoMio, accettaPrivacy, entraConGoogle, statoRegioni,
            registro, segnaLavoro, correggiSpiaggia,
+           movimenti, backupCsv, backupNumeri, riepiloghi,
            mandaFoto, fotoSpiaggia, mieFoto, fotoDaModerare,
            approvaFotoLibera, rifiutaFotoLibera, notizieComune,
            caricaFoto, firmaFoto, approvaFoto, rifiutaFoto, buttaFoto,
            impostazioni, salvaImpostazione,
            iscriviti, accedi, esci, scordata, alCambio, chiSono,
-           nuovaPassword, daPosta, perche, sonoAdmin, cancellaPersona,
+           nuovaPassword, daPosta, perche, sonoAdmin, cancellaPersona, sbloccaTutto, bloccaTutto,
            preferitiSpiagge, preferitiZone, stelleAccese, salvaSpiaggia, togliSpiaggia,
            salvaZona, togliZona, mieiAccessi, vicine, quanteVicine, cercaNomi, nomiRegione, paginaSpiaggia, rullo, mieiAssaggi, assaggia,
            recensioniSpiaggia, recensioniRegione, votiSpiagge, miaRecensione, mieRecensioni,

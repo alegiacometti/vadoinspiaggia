@@ -1184,3 +1184,32 @@ a.pref-nome:focus-visible::after{outline:2px solid var(--azzurro);outline-offset
   .imm-frec.sx{left:-2px} .imm-frec.dx{right:-2px}
   .imm-lente img{max-width:96vw;max-height:74vh}
 }
+
+/* ============ gestione · che cosa vede ogni persona ====================== */
+.gest-pat-testo{display:flex;flex-direction:column;line-height:1.25}
+.gest-pat-testo i{font-style:normal;font-family:var(--dati);font-size:9px;
+  letter-spacing:.04em;color:var(--grigio);margin-top:2px}
+.gest-pat.scaduto .gest-pat-testo i{color:var(--secca)}
+.gest-pat.tutto{background:var(--profondo);border-color:var(--profondo);color:#fff;
+  padding:4px 12px}
+.gest-tutto{display:flex;flex-direction:column;gap:5px;align-items:flex-start}
+.gest-mosse-sbl{margin-top:7px}
+.gest-piu.via{color:var(--corallo);border-color:#e8b8b0}
+.gest-piu.via:hover{background:#fdecea;border-color:var(--corallo)}
+
+/* ------------------------------------------------- storia e backup (gestione)
+   Il riquadro sta in cima alla scheda perche' la cosa da fare — portare fuori
+   il file — viene prima della cosa da leggere, cioe' l'elenco dei movimenti. */
+.gest-backup{background:var(--carta);border:1px solid var(--tratto);border-radius:11px;
+  padding:16px;margin:0 0 18px;display:flex;flex-direction:column;gap:12px}
+.gest-backup-ora{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.gest-post{margin:0;font-size:12.5px;line-height:1.55;padding:9px 12px;border-radius:8px}
+.gest-post.spenta{background:#fdf3ef;color:#8a3a28;border:1px solid #f0d2c8}
+.gest-post.attesa{background:#fdf8ea;color:#7a5a12;border:1px solid #efe0b6}
+.gest-post.buona {background:#eff8f1;color:#1d5a32;border:1px solid #cfe6d6}
+.gest-backup .gest-imp{display:flex;flex-direction:column;gap:12px;margin:0}
+.gest-mov{font-family:var(--dati);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;
+  padding:3px 8px;border-radius:99px;border:1px solid var(--tratto);white-space:nowrap}
+.gest-mov.su{background:#eff8f1;border-color:#cfe6d6;color:#1d5a32}
+.gest-mov.giu{background:#fdf3ef;border-color:#f0d2c8;color:#8a3a28}
+.gest-quando{white-space:nowrap;font-family:var(--dati);font-size:11px;color:var(--grigio)}
