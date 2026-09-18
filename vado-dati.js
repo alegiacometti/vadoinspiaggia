@@ -361,10 +361,11 @@ const VADO = (() => {
   /* Il nome del file non lo sceglie chi carica: se lo scegliesse, potrebbe
      scriverlo sopra a quello di un altro, o infilarci un ../ per uscire dalla
      sua cartella. Lo si fabbrica qui, con il sid davanti per ritrovarlo. */
-  function nomeFoto(sid, tipo) {
+  function nomeFoto(sid, tipo, cartella) {
     const casuale = (crypto && crypto.randomUUID) ? crypto.randomUUID()
                   : String(Date.now()) + "-" + Math.random().toString(36).slice(2);
-    return "attesa/" + String(sid).replace(/[^a-z0-9-]/gi, "") + "/" +
+    return (cartella === "ok" ? "ok/" : "attesa/") +
+           String(sid).replace(/[^a-z0-9-]/gi, "") + "/" +
            casuale + "." + (ESTENSIONI[tipo] || "jpg");
   }
 
@@ -427,7 +428,7 @@ const VADO = (() => {
     } catch (_) { return file; }
   }
 
-  async function caricaFoto(sid, file) {
+  async function caricaFoto(sid, file, cartella) {
     if (!chiSono()) throw new Error("serve essere entrati");
     if (!ESTENSIONI[file.type]) throw new Error("formato non accettato");
     const leggera = await rimpicciolisci(file);
@@ -435,7 +436,7 @@ const VADO = (() => {
        quattrocento kilobyte e' una foto buona, e rifiutarla prima di averci
        provato sarebbe stupido */
     if (leggera.size > LIMITE_FOTO) throw new Error("immagine troppo pesante");
-    const percorso = nomeFoto(sid, leggera.type);
+    const percorso = nomeFoto(sid, leggera.type, cartella);
     await deposito("object/foto/" + percorso,
       { metodo: "POST", file: leggera, tipo: leggera.type,
         intestazioni: { "x-upsert": "false", "cache-control": "3600" } });
@@ -835,6 +836,39 @@ const VADO = (() => {
     return percorso;
   }
 
+  /* Una foto d'archivio l'admin l'ha gia' guardata nel momento in cui ha detto
+     «tieni»: farla passare per la coda d'attesa vorrebbe dire approvare due
+     volte la stessa cosa. Va dritta in «ok/», e la riga nasce gia' pubblicata.
+
+     Non e' una scorciatoia pericolosa: la regola d'inserimento del database
+     lascia nascere una riga con ok = true SOLO a chi amministra. Se questa
+     funzione la chiamasse un utente normale, il database direbbe di no. */
+  async function pubblicaArchivio(sid, file, credito) {
+    if (!chiSono()) throw new Error("serve essere entrati");
+    const percorso = await caricaFoto(sid, file, "ok");
+    try {
+      await chiedi("foto", { metodo: "POST",
+        corpo: { sid: sid, percorso: percorso, ok: true, ok_il: new Date().toISOString(),
+                 archivio: true,
+                 fonte:   (credito && credito.fonte)   || null,
+                 autore:  (credito && credito.autore)  || null,
+                 licenza: (credito && credito.licenza) || null,
+                 pagina:  (credito && credito.pagina)  || null },
+        intestazioni: { "Prefer": "return=minimal" } });
+    } catch (e) {
+      try { await buttaFoto(percorso); } catch (_) {}
+      throw e;
+    }
+    return percorso;
+  }
+
+  const scartate = () => chiedi("archivio_scartate?select=sid");
+  const scarta   = sid => chiedi("archivio_scartate",
+    { metodo: "POST", corpo: { sid: sid },
+      intestazioni: { "Prefer": "return=minimal,resolution=merge-duplicates" } });
+  const rimetti  = sid => chiedi("archivio_scartate?sid=eq." + encodeURIComponent(sid),
+    { metodo: "DELETE", intestazioni: { "Prefer": "return=minimal" } });
+
   const fotoSpiaggia = sid => chiedi("foto?sid=eq." + encodeURIComponent(sid) +
     "&ok=is.true&select=id,percorso,didascalia,creata,fonte,autore,licenza,pagina,archivio&order=creata.desc&limit=24");
 
@@ -922,6 +956,7 @@ const VADO = (() => {
            consensoMio, accettaPrivacy, entraConGoogle, statoRegioni,
            registro, segnaLavoro, correggiSpiaggia,
            movimenti, backupCsv, backupNumeri, riepiloghi,
+           pubblicaArchivio, scartate, scarta, rimetti,
            mandaFoto, fotoSpiaggia, mieFoto, fotoDaModerare,
            approvaFotoLibera, rifiutaFotoLibera, notizieComune,
            caricaFoto, firmaFoto, approvaFoto, rifiutaFoto, buttaFoto,

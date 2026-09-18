@@ -7,11 +7,11 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#083c5c">
 <title>Gestione · Vado in spiaggia</title>
-<link rel="stylesheet" href="carte-spiagge.css?v=202609182016">
+<link rel="stylesheet" href="carte-spiagge.css?v=202609182115">
 <link rel="stylesheet" href="caratteri/caratteri.css?v=202609130413">
-<script src="configurazione.js?v=202609182016"></script>
-<script src="vado-dati.js?v=202609182016"></script>
-<script src="vado-archivio.js?v=202609182016"></script>
+<script src="configurazione.js?v=202609182115"></script>
+<script src="vado-dati.js?v=202609182115"></script>
+<script src="vado-archivio.js?v=202609182115"></script>
 <style>
 /* Questa pagina NON e' protetta dal fatto di essere nascosta: chiunque puo'
    aprirla, e va benissimo. A proteggere sono le regole del database — senza
@@ -310,6 +310,9 @@ async function carica(){
        indispensabili; se il database non li ha ancora, la pagina vive uguale. */
     try { MOVIM = await VADO.movimenti(300); } catch (_) { MOVIM = []; }
     try { RIEP  = await VADO.riepiloghi();   } catch (_) { RIEP  = []; }
+    /* le foto d'archivio gia' scartate: senza questa lettura tornerebbero a
+       farsi vedere tutte a ogni ricarica della pagina */
+    try { SCARTATE = new Set((await VADO.scartate()).map(x => x.sid)); } catch (_) {}
   }catch(e){
     return fuori("Non riesco a leggere", "Il servizio non risponde: " + e.message, false);
   }
@@ -889,12 +892,7 @@ function disegna(){
     b.onclick = () => bloccaTutto(b.dataset.niente, b.dataset.chi, b));
   corpo.querySelectorAll(".gest-arch").forEach(d =>
     d.addEventListener("toggle", () => { ARCH_APERTO = d.open; }));
-  corpo.querySelectorAll("[data-arch-tutte]").forEach(b =>
-    b.onclick = () => portaDentroTutte(b));
-  corpo.querySelectorAll("[data-arch-una]").forEach(b =>
-    b.onclick = () => portaDentroUna(b.dataset.archUna));
-  corpo.querySelectorAll("[data-arch-file]").forEach(c =>
-    c.onchange = () => archivioAMano(c.dataset.archFile, c.files && c.files[0]));
+  legaArchivio(corpo);
   corpo.querySelectorAll("[data-backup]").forEach(b =>
     b.onclick = () => scaricaBackup(b));
   corpo.querySelectorAll("[data-segn-letta]").forEach(b =>
@@ -1015,102 +1013,192 @@ function galleriaFoto(){
 }
 
 /* ---------------------------------------------------- foto dall'archivio
-   Le immagini d'archivio le sceglie chi scrive la lista (il file
-   vado-archivio.js), ma a scaricarle e' QUESTO browser, non il server e non
-   chi ha preparato la lista. Non e' un dettaglio tecnico: significa che nessun
-   file entra nel deposito senza che tu sia qui davanti, con la tua sessione di
-   amministratore, e dopo entra comunque in attesa di approvazione come
-   qualunque foto mandata da un visitatore. Due porte, non una.
+   Una griglia di provini, non un elenco. La differenza non e' estetica: qui si
+   guarda, e per guardare servono immagini grandi e vicine, non righe alte
+   cinquanta pixel separate da spazio vuoto. Passando sopra a un provino
+   escono i due soli gesti che hanno senso — tieni, scarta — e ognuno chiude la
+   faccenda per quella foto.
 
-   Il prelievo puo' fallire per una ragione sola che non dipende da noi: il
-   server delle immagini potrebbe non permettere a un'altra pagina di leggere i
-   suoi file (le regole CORS). Se succede, la riga non muore: mostra il
-   collegamento per scaricare a mano e un campo per ridarci il file. Il resto
-   — rimpicciolimento, deposito, riga nel database, credito — e' identico. */
+   «Tieni» pubblica subito. Non c'e' una seconda approvazione perche' non ci
+   sarebbe niente da approvare: la foto l'hai appena guardata, e dire due volte
+   di si' alla stessa immagine e' lavoro che non produce niente. La coda
+   d'attesa serve per le foto che arrivano dai visitatori, dove il si' non
+   l'hai ancora dato.
+
+   «Scarta» si ricorda, e si ricorda nel database, non in questo browser:
+   altrimenti cambiando computer tornerebbero tutte. Ed e' reversibile — in
+   fondo alla griglia c'e' il modo di rivederle.
+
+   Quattro alla volta e non una: il collo di bottiglia e' la rete, non il
+   processore, e mentre un file scende gli altri tre possono scendere insieme.
+   Tutte insieme no — venti caricamenti in parallelo li fa fallire quasi tutti. */
 let ARCH = {};          /* sid -> {stato, detto} */
 let ARCH_CORSO = false;
-/* ogni riga portata dentro ridisegna la pagina, e un <details> ridisegnato
-   torna chiuso: si perde il posto dopo ogni singola foto. L'apertura va
-   ricordata fuori dal DOM. */
 let ARCH_APERTO = false;
+let SCARTATE = new Set();
+let ARCH_VEDI_SCARTATE = false;
+const ARCH_INSIEME = 4;
 
 function archivioPronto(){
   return typeof ARCHIVIO_FOTO !== "undefined" && Array.isArray(ARCHIVIO_FOTO);
 }
-/* una spiaggia che ha gia' una foto non si ricarica: l'importatore si puo'
+/* una spiaggia che ha gia' una foto non si ripropone: il pulsante si puo'
    premere due volte per sbaglio, e due volte la stessa immagine e' spazzatura */
 function giaDentro(sid){
   return (FOTOLIB || []).some(f => f.sid === sid) ||
          (PARERI  || []).some(r => r.sid === sid && r.foto);
 }
+function daFare(){
+  return ARCHIVIO_FOTO.filter(r => !giaDentro(r.sid) && !SCARTATE.has(r.sid) &&
+                                   (ARCH[r.sid] || {}).stato !== "fatta");
+}
 
 function bloccoArchivio(){
   if (!archivioPronto())
     return '<div class="gest-vuoto">La lista delle immagini d’archivio non è stata caricata.</div>';
-  const righe = ARCHIVIO_FOTO;
-  const restano = righe.filter(r => !giaDentro(r.sid) && (ARCH[r.sid] || {}).stato !== "fatta");
+  const restano = daFare();
   const dubbie  = restano.filter(r => !r.sicuro).length;
+  const viste   = ARCHIVIO_FOTO.filter(r =>
+    ARCH_VEDI_SCARTATE ? SCARTATE.has(r.sid)
+                       : (!giaDentro(r.sid) && !SCARTATE.has(r.sid)));
 
   return '<details class="gest-arch"' + (ARCH_APERTO || ARCH_CORSO ? ' open' : '') + '>' +
-    '<summary>Porta dentro dall’archivio' +
+    '<summary>Foto d’archivio da scegliere' +
       '<span class="gest-conta calma">' + restano.length + '</span></summary>' +
+
     '<p class="gest-arch-nota">Immagini da <b>Pexels</b>: uso commerciale libero, ' +
       'attribuzione non obbligatoria — l’autore lo scriviamo lo stesso, sotto la foto. ' +
-      'Le scarica il tuo browser, non il server, e finiscono <b>in attesa</b>: ' +
-      'le approvi qui accanto come tutte le altre.' +
-      (dubbie ? ' <b class="gest-arch-att">' + dubbie + (dubbie === 1
-        ? ' è da controllare</b>: il nome della spiaggia non compare nel titolo della foto, solo nella descrizione.'
-        : ' sono da controllare</b>: il nome della spiaggia non compare nel titolo della foto, solo nella descrizione.') : '') +
+      'Passa sopra a una e scegli: <b>tieni</b> la pubblica subito nella scheda, ' +
+      '<b>scarta</b> la toglie da qui per sempre.' +
+      (dubbie ? ' <b class="gest-arch-att">' + dubbie +
+        (dubbie === 1 ? ' ha' : ' hanno') + ' il punto interrogativo</b>: il nome della ' +
+        'spiaggia non compare nel titolo della foto, solo nella descrizione. Guardale bene.' : '') +
     '</p>' +
-    '<div class="gest-arch-mosse">' +
-      '<button type="button" class="conto-vai" data-arch-tutte' +
-        (restano.length ? '' : ' disabled') + '>Porta dentro le ' + restano.length + '</button>' +
-      '<span class="gest-niente">una alla volta, con calma: sono file veri</span>' +
-    '</div>' +
-    '<div class="gest-arch-elenco">' + righe.map(rigaArchivio).join("") + '</div>' +
+
+    '<div class="gest-arch-mosse">' + mosseArchivio() + '</div>' +
+
+    (viste.length
+      ? '<div class="gest-prov">' + viste.map(tessera).join("") + '</div>'
+      : '<div class="gest-vuoto">' +
+          (ARCH_VEDI_SCARTATE ? 'Non hai scartato niente.'
+                              : 'Le hai viste tutte: non resta nessuna foto d’archivio da scegliere.') +
+        '</div>') +
     '</details>';
 }
 
-function rigaArchivio(r){
-  const dentro = giaDentro(r.sid);
-  const st = dentro ? { stato: "fatta", detto: "c’è già una foto" } : (ARCH[r.sid] || {});
-  const classe = st.stato === "fatta" ? " fatta" : st.stato === "male" ? " male"
-               : st.stato === "corso" ? " corso" : "";
-  return '<div class="gest-arch-riga' + classe + '" data-arch-riga="' + esc(r.sid) + '">' +
-    '<img src="' + esc(r.url) + '" alt="" loading="lazy" decoding="async">' +
-    '<div class="gest-arch-testo">' +
-      '<b>' + esc(r.nome) + '</b>' +
-      '<span class="gest-niente">' + esc(r.autore || "autore non indicato") +
-        ' · ' + esc(r.fonte) + ' · ' + esc(r.sid) + '</span>' +
-      (r.sicuro ? '' : '<span class="gest-arch-att">da controllare: il nome non è nel titolo della foto</span>') +
-      (st.detto ? '<span class="gest-arch-detto">' + esc(st.detto) + '</span>' : '') +
-      (st.stato === "amano"
-        ? '<span class="gest-arch-amano">' +
-            '<a href="' + esc(r.pagina) + '" target="_blank" rel="noopener noreferrer">apri su ' +
-              esc(r.fonte) + '</a>, scarica il file, poi ' +
-            '<input type="file" accept="image/jpeg,image/png,image/webp" data-arch-file="' +
-              esc(r.sid) + '">' +
-          '</span>' : '') +
+function mosseArchivio(){
+  const restano = daFare();
+  return (ARCH_VEDI_SCARTATE
+    ? '<button type="button" class="gest-piu" data-arch-torna>← torna alle altre</button>'
+    : '<button type="button" class="conto-vai" data-arch-tutte' +
+        (restano.length && !ARCH_CORSO ? '' : ' disabled') + '>' +
+        (ARCH_CORSO ? 'un momento…' : 'Tieni tutte (' + restano.length + ')') + '</button>') +
+    (!ARCH_VEDI_SCARTATE && SCARTATE.size
+      ? '<button type="button" class="gest-piu" data-arch-scartate>' +
+          SCARTATE.size + (SCARTATE.size === 1 ? ' scartata' : ' scartate') +
+          ' · rivedile</button>' : '');
+}
+
+/* Dopo uno scarto la griglia si aggiorna da sola togliendo la tessera, ma la
+   barra dei pulsanti no: senza questo, la prima foto scartata spariva e non
+   compariva il modo di ritrovarla — scartare sembrava definitivo quando non
+   lo e'. */
+function ritoccaMosse(){
+  const barra = corpo.querySelector(".gest-arch-mosse");
+  if (!barra) return;
+  barra.innerHTML = mosseArchivio();
+  legaArchivio(barra);
+  const c = corpo.querySelector(".gest-arch > summary .gest-conta");
+  if (c) c.textContent = daFare().length;
+}
+
+/* I gesti dell'archivio si legano in due momenti — al ridisegno di tutta la
+   pagina e al ritocco della sola barra — quindi stanno qui una volta sola. */
+function legaArchivio(dove){
+  dove.querySelectorAll("[data-arch-tutte]").forEach(b =>
+    b.onclick = () => tieniTutte(b));
+  dove.querySelectorAll("[data-arch-si]").forEach(b =>
+    b.onclick = () => tieni(b.dataset.archSi));
+  dove.querySelectorAll("[data-arch-no]").forEach(b =>
+    b.onclick = () => scartaUna(b.dataset.archNo));
+  dove.querySelectorAll("[data-arch-rimetti]").forEach(b =>
+    b.onclick = () => rimettiUna(b.dataset.archRimetti));
+  dove.querySelectorAll("[data-arch-scartate]").forEach(b =>
+    b.onclick = () => { ARCH_VEDI_SCARTATE = true; disegna(); });
+  dove.querySelectorAll("[data-arch-torna]").forEach(b =>
+    b.onclick = () => { ARCH_VEDI_SCARTATE = false; disegna(); });
+  dove.querySelectorAll("[data-arch-file]").forEach(c =>
+    c.onchange = () => archivioAMano(c.dataset.archFile, c.files && c.files[0]));
+}
+
+function tessera(r){
+  const st = ARCH[r.sid] || {};
+  const fuori = SCARTATE.has(r.sid);
+  return '<figure class="prov' + (st.stato ? ' ' + st.stato : '') + '" data-arch-t="' +
+      esc(r.sid) + '">' +
+    '<img src="' + esc(r.url) + '" alt="' + esc(r.nome) + '" loading="lazy" decoding="async">' +
+    (r.sicuro ? '' : '<span class="prov-dubbio" title="Il nome della spiaggia non compare nel ' +
+      'titolo della foto, solo nella descrizione: controllala bene">?</span>') +
+    '<figcaption><b>' + esc(r.nome) + '</b><span>' +
+      esc(r.autore || 'autore non indicato') + '</span></figcaption>' +
+    '<div class="prov-mosse">' +
+      (fuori
+        ? '<button type="button" class="prov-si" data-arch-rimetti="' + esc(r.sid) + '">rimetti</button>'
+        : '<button type="button" class="prov-si" data-arch-si="' + esc(r.sid) + '">tieni</button>' +
+          '<button type="button" class="prov-no" data-arch-no="' + esc(r.sid) + '">scarta</button>') +
+      '<a class="prov-vai" href="' + esc(r.pagina) + '" target="_blank" rel="noopener noreferrer" ' +
+        'title="Apri l’originale">↗</a>' +
     '</div>' +
-    '<button type="button" class="gest-piu" data-arch-una="' + esc(r.sid) + '"' +
-      (st.stato === "fatta" || st.stato === "corso" ? ' disabled' : '') + '>' +
-      (st.stato === "fatta" ? 'dentro' : 'porta dentro') + '</button>' +
-    '</div>';
+    '<div class="prov-stato"' + (st.detto ? '' : ' hidden') + '>' + esc(st.detto || '') +
+      (st.stato === 'amano'
+        ? ' <label class="prov-amano">scegli il file<input type="file" ' +
+          'accept="image/jpeg,image/png,image/webp" data-arch-file="' + esc(r.sid) + '"></label>'
+        : '') +
+    '</div>' +
+    '</figure>';
+}
+
+/* Cambiare una tessera senza ridisegnare la pagina: con venti provini a
+   schermo, un ridisegno per ogni foto fa sfarfallare tutto e fa perdere il
+   punto in cui si stava guardando. */
+function ritocca(sid){
+  const t = corpo.querySelector('[data-arch-t="' + CSS.escape(sid) + '"]');
+  if (!t) return;
+  const st = ARCH[sid] || {};
+  t.className = 'prov' + (st.stato ? ' ' + st.stato : '');
+  const p = t.querySelector('.prov-stato');
+  if (p) {
+    p.hidden = !st.detto;
+    p.textContent = (st.detto || '') + ' ';
+    if (st.stato === 'amano') {
+      const l = document.createElement('label');
+      l.className = 'prov-amano';
+      l.textContent = 'scegli il file ';
+      const i = document.createElement('input');
+      i.type = 'file'; i.accept = 'image/jpeg,image/png,image/webp';
+      /* stesso contrassegno della tessera disegnata da zero: due strade che
+         producono due cose diverse sono due strade da provare due volte */
+      i.dataset.archFile = sid;
+      i.onchange = () => archivioAMano(sid, i.files && i.files[0]);
+      l.appendChild(i); p.appendChild(l);
+    }
+  }
+  t.querySelectorAll('.prov-mosse button').forEach(b => b.disabled = st.stato === 'corso');
 }
 
 function credito(r){
   return { fonte: r.fonte, autore: r.autore, licenza: r.licenza, pagina: r.pagina };
 }
 
-/* Il prelievo vero. Torna il File pronto da caricare, oppure alza un errore
-   con dentro il motivo scritto in italiano — perche' «TypeError: Failed to
-   fetch» su una pagina di gestione non dice niente a nessuno. */
+/* Il prelievo vero. Torna il File pronto, oppure alza un errore con dentro il
+   motivo scritto in italiano — «TypeError: Failed to fetch» su una pagina di
+   gestione non dice niente a nessuno. */
 async function prelevaArchivio(r){
   let risposta;
   try {
     risposta = await fetch(r.url, { mode: "cors", credentials: "omit", cache: "no-store" });
   } catch (_) {
-    const e = new Error("il server delle immagini non lascia prelevare il file da qui");
+    const e = new Error("il server non lascia prelevare il file da qui");
     e.amano = true; throw e;
   }
   if (!risposta.ok) throw new Error("il server ha risposto " + risposta.status);
@@ -1120,47 +1208,73 @@ async function prelevaArchivio(r){
   return new File([blob], r.id + ".jpg", { type: blob.type });
 }
 
-async function portaDentroUna(sid){
+async function tieni(sid){
   const r = ARCHIVIO_FOTO.find(x => x.sid === sid);
-  if (!r) return;
-  ARCH[sid] = { stato: "corso", detto: "un momento…" }; disegna();
+  if (!r || (ARCH[sid] || {}).stato === "corso") return;
+  ARCH[sid] = { stato: "corso", detto: "un momento…" }; ritocca(sid);
   try {
     const file = await prelevaArchivio(r);
-    await VADO.mandaFoto(sid, file, null, null, credito(r));
-    ARCH[sid] = { stato: "fatta", detto: "portata dentro, ora è in attesa" };
+    await VADO.pubblicaArchivio(sid, file, credito(r));
+    ARCH[sid] = { stato: "fatta", detto: "è nella scheda" };
+    ritoccaMosse();
   } catch (e) {
     ARCH[sid] = e && e.amano
       ? { stato: "amano", detto: e.message }
-      : { stato: "male",  detto: "non ha funzionato: " + (e && e.message || e) };
+      : { stato: "male",  detto: "non ha funzionato: " + ((e && e.message) || e) };
   }
+  ritocca(sid);
+}
+
+async function scartaUna(sid){
+  ARCH[sid] = { stato: "corso", detto: "" }; ritocca(sid);
+  try {
+    await VADO.scarta(sid);
+    SCARTATE.add(sid);
+    delete ARCH[sid];
+    const t = corpo.querySelector('[data-arch-t="' + CSS.escape(sid) + '"]');
+    if (t) t.remove();
+    ritoccaMosse();
+  } catch (e) {
+    ARCH[sid] = { stato: "male", detto: "non ha funzionato: " + ((e && e.message) || e) };
+    ritocca(sid);
+  }
+}
+
+async function rimettiUna(sid){
+  try { await VADO.rimetti(sid); SCARTATE.delete(sid); } catch (_) {}
+  /* rimessa l'ultima, restare nella vista delle scartate vuol dire fissare una
+     griglia vuota chiedendosi dove sia finita: si torna da soli */
+  if (!SCARTATE.size) ARCH_VEDI_SCARTATE = false;
   disegna();
 }
 
-/* Una per volta e non tutte insieme: sono venti file veri che passano per il
-   deposito, e venti caricamenti in parallelo li fa fallire quasi tutti. */
-async function portaDentroTutte(bottone){
+/* Quattro per volta. La coda e' esplicita e non ricorsiva: con la ricorsione,
+   su ventotto foto, un errore in fondo si trascina dietro tutto lo stack. */
+async function tieniTutte(bottone){
   if (ARCH_CORSO) return;
-  ARCH_CORSO = true; bottone.disabled = true;
-  const restano = ARCHIVIO_FOTO.filter(r => !giaDentro(r.sid) && (ARCH[r.sid] || {}).stato !== "fatta");
-  for (const r of restano) await portaDentroUna(r.sid);
+  ARCH_CORSO = true; if (bottone) { bottone.disabled = true; bottone.textContent = "un momento…"; }
+  const coda = daFare().slice();
+  const operai = Array.from({ length: Math.min(ARCH_INSIEME, coda.length) }, async () => {
+    while (coda.length) { const r = coda.shift(); await tieni(r.sid); }
+  });
+  await Promise.all(operai);
   ARCH_CORSO = false;
   try { FOTOLIB = await VADO.fotoDaModerare(200); } catch (_) {}
   disegna();
 }
 
-/* Il ripiego: il file ce lo da' lui, il resto e' identico. */
+/* Il ripiego, quando il prelievo non passa: il file ce lo da' lui. */
 async function archivioAMano(sid, file){
   const r = ARCHIVIO_FOTO.find(x => x.sid === sid);
   if (!r || !file) return;
-  ARCH[sid] = { stato: "corso", detto: "un momento…" }; disegna();
+  ARCH[sid] = { stato: "corso", detto: "un momento…" }; ritocca(sid);
   try {
-    await VADO.mandaFoto(sid, file, null, null, credito(r));
-    ARCH[sid] = { stato: "fatta", detto: "portata dentro, ora è in attesa" };
-    try { FOTOLIB = await VADO.fotoDaModerare(200); } catch (_) {}
+    await VADO.pubblicaArchivio(sid, file, credito(r));
+    ARCH[sid] = { stato: "fatta", detto: "è nella scheda" };
   } catch (e) {
-    ARCH[sid] = { stato: "male", detto: "non ha funzionato: " + (e && e.message || e) };
+    ARCH[sid] = { stato: "male", detto: "non ha funzionato: " + ((e && e.message) || e) };
   }
-  disegna();
+  ritocca(sid);
 }
 
 /* Le immagini mandate da sole hanno una riga tutta loro: approvarla sposta il
@@ -1711,8 +1825,8 @@ window.addEventListener("hashchange", () => { if (PROFILI.length) disegna(); });
 
 VADO.alCambio(s => { IO = s; carica(); });
 </script>
-<script src="vado-conto.js?v=202609182016"></script>
-<script src="vado-cookie.js?v=202609182016"></script>
-<script src="vado-piede.js?v=202609182016"></script>
+<script src="vado-conto.js?v=202609182115"></script>
+<script src="vado-cookie.js?v=202609182115"></script>
+<script src="vado-piede.js?v=202609182115"></script>
 </body>
 </html>
