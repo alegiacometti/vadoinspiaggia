@@ -146,7 +146,9 @@ window.VADOFOTO = (function () {
     const viste = new Set(libere.map(f => f.percorso));
     const attesa = mie.filter(f => !f.ok);
     const scatti = libere.map(f => ({ percorso: f.percorso, did: f.didascalia,
-                                      quando: f.creata, stato: "" }))
+                                      quando: f.creata, stato: "",
+                                      archivio: !!f.archivio, autore: f.autore,
+                                      fonte: f.fonte, pagina: f.pagina }))
       .concat(daPareri.filter(r => !viste.has(r.foto))
         .map(r => ({ percorso: r.foto, did: r.commento ? "" : "", quando: r.creata,
                      stato: "", firma: r.firma })))
@@ -171,7 +173,9 @@ window.VADOFOTO = (function () {
 
     SCATTI = scatti;
     dove.innerHTML =
-      '<p class="titoletto">Le immagini <em>di chi c’è stato</em>' +
+      '<p class="titoletto">Le immagini ' +
+        (scatti.every(f => f.archivio) ? '<em>della spiaggia</em>'
+                                       : '<em>di chi c’è stato</em>') +
         (scatti.length > 1 ? '<span class="imm-quante">' + scatti.length + '</span>' : '') +
       '</p>' +
       '<div class="imm-riga">' +
@@ -182,7 +186,11 @@ window.VADOFOTO = (function () {
               esc(f.did || ("Foto di " + nome)) + '" loading="lazy" decoding="async">' +
             (f.stato === "attesa"
               ? '<figcaption class="imm-attesa">La tua, in attesa che la guardi io</figcaption>'
-              : (f.did ? '<figcaption>' + esc(f.did) + '</figcaption>' : "")) +
+              : f.archivio
+                ? '<figcaption class="imm-arch">' +
+                    (f.did ? esc(f.did) + ' · ' : '') + 'archivio' +
+                    (f.autore ? ' · ' + esc(f.autore) : '') + '</figcaption>'
+                : (f.did ? '<figcaption>' + esc(f.did) + '</figcaption>' : "")) +
           '</figure>').join("") +
         '</div>' +
         '<button type="button" class="imm-frec dx" data-imm-scorri="1" aria-label="Avanti" hidden>›</button>' +
@@ -287,8 +295,20 @@ window.VADOFOTO = (function () {
     const img = v.querySelector("img");
     img.src = f.url || "";
     img.alt = f.did || "Foto della spiaggia";
-    v.querySelector("[data-l-did]").textContent =
-      f.stato === "attesa" ? "La tua, in attesa che la guardi io" : (f.did || "");
+    const sotto = v.querySelector("[data-l-did]");
+    if (f.stato === "attesa") sotto.textContent = "La tua, in attesa che la guardi io";
+    else if (f.archivio) {
+      /* la licenza Pexels non obbliga a citare: lo facciamo per scelta, ed e'
+         anche il modo piu' onesto di dire al visitatore che questa foto non
+         l'ha scattata qualcuno che c'era */
+      const chi = esc(f.autore || "autore non indicato"),
+            dove = f.fonte ? esc(f.fonte) : "archivio";
+      sotto.innerHTML = (f.did ? esc(f.did) + " · " : "") +
+        'foto d’archivio di ' + chi + ' · ' +
+        (f.pagina ? '<a href="' + esc(f.pagina) + '" target="_blank" rel="noopener noreferrer">' +
+                    dove + '</a>' : dove);
+    }
+    else sotto.textContent = f.did || "";
     v.querySelector("[data-l-conta]").textContent =
       SCATTI.length > 1 ? (iLente + 1) + " di " + SCATTI.length : "";
     v.querySelectorAll(".imm-lfrec").forEach(b => b.hidden = SCATTI.length < 2);

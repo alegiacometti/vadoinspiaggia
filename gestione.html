@@ -7,10 +7,11 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#083c5c">
 <title>Gestione · Vado in spiaggia</title>
-<link rel="stylesheet" href="carte-spiagge.css?v=202609162119">
+<link rel="stylesheet" href="carte-spiagge.css?v=202609182016">
 <link rel="stylesheet" href="caratteri/caratteri.css?v=202609130413">
-<script src="configurazione.js?v=202609162119"></script>
-<script src="vado-dati.js?v=202609162119"></script>
+<script src="configurazione.js?v=202609182016"></script>
+<script src="vado-dati.js?v=202609182016"></script>
+<script src="vado-archivio.js?v=202609182016"></script>
 <style>
 /* Questa pagina NON e' protetta dal fatto di essere nascosta: chiunque puo'
    aprirla, e va benissimo. A proteggere sono le regole del database — senza
@@ -836,7 +837,7 @@ function disegna(){
       'Finché stanno in attesa non le vede nessuno tranne te e chi le ha mandate. ' +
       'Approvarle le mette nella scheda della spiaggia; rifiutarle le cancella dal ' +
       'deposito — non le nasconde, le cancella.</p>' +
-      galleriaFoto();
+      bloccoArchivio() + galleriaFoto();
 
   } else if (ora === "pareri") {
     dentro = '<p class="gest-intro">Gli ultimi sessanta pareri. Si cancellano <b>per ' +
@@ -886,6 +887,14 @@ function disegna(){
     b.onclick = () => sbloccaTutto(b.dataset.tutto, b.dataset.chi, b));
   corpo.querySelectorAll("[data-niente]").forEach(b =>
     b.onclick = () => bloccaTutto(b.dataset.niente, b.dataset.chi, b));
+  corpo.querySelectorAll(".gest-arch").forEach(d =>
+    d.addEventListener("toggle", () => { ARCH_APERTO = d.open; }));
+  corpo.querySelectorAll("[data-arch-tutte]").forEach(b =>
+    b.onclick = () => portaDentroTutte(b));
+  corpo.querySelectorAll("[data-arch-una]").forEach(b =>
+    b.onclick = () => portaDentroUna(b.dataset.archUna));
+  corpo.querySelectorAll("[data-arch-file]").forEach(c =>
+    c.onchange = () => archivioAMano(c.dataset.archFile, c.files && c.files[0]));
   corpo.querySelectorAll("[data-backup]").forEach(b =>
     b.onclick = () => scaricaBackup(b));
   corpo.querySelectorAll("[data-segn-letta]").forEach(b =>
@@ -969,7 +978,7 @@ function galleriaFoto(){
     chiave: "l:" + f.id,
     percorso: f.percorso, ok: !!f.ok, spiaggia: f.spiaggia || f.sid,
     email: f.email, creata: f.creata, voto: 0, testo: f.didascalia,
-    id: f.id, libera: true
+    id: f.id, libera: true, archivio: !!f.archivio, autore: f.autore
   }));
   const tutte = daPareri.concat(libere)
     .sort((a, b) => (a.ok ? 1 : 0) - (b.ok ? 1 : 0) ||
@@ -990,9 +999,10 @@ function galleriaFoto(){
       '<img data-gfoto="' + esc(f.percorso) + '" alt="Immagine di ' + esc(f.spiaggia) + '">' +
       '<div class="bollo' + (f.ok ? ' viva' : '') + '">' +
         (f.ok ? 'pubblicata' : 'in attesa') +
-        (f.libera ? ' · mandata da sola' : ' · con un parere') + '</div>' +
+        (f.archivio ? ' · archivio' : f.libera ? ' · mandata da sola' : ' · con un parere') + '</div>' +
       '<div class="dove">' + esc(f.spiaggia) + '</div>' +
-      '<div class="chi">' + esc(f.email || '—') + ' · ' + giorno(f.creata) +
+      '<div class="chi">' + esc(f.archivio ? (f.autore || 'autore non indicato')
+                                               : (f.email || '—')) + ' · ' + giorno(f.creata) +
         (f.voto ? ' · ' + "\u2605".repeat(f.voto) : '') + '</div>' +
       (f.testo ? '<div class="dice">' + esc(String(f.testo).slice(0, 140)) +
         (String(f.testo).length > 140 ? '…' : '') + '</div>' : '') +
@@ -1002,6 +1012,155 @@ function galleriaFoto(){
           (f.ok ? 'togli dal sito' : 'rifiuta') + '</button>' +
       '</div></div>';
   }).join("") + '</div>';
+}
+
+/* ---------------------------------------------------- foto dall'archivio
+   Le immagini d'archivio le sceglie chi scrive la lista (il file
+   vado-archivio.js), ma a scaricarle e' QUESTO browser, non il server e non
+   chi ha preparato la lista. Non e' un dettaglio tecnico: significa che nessun
+   file entra nel deposito senza che tu sia qui davanti, con la tua sessione di
+   amministratore, e dopo entra comunque in attesa di approvazione come
+   qualunque foto mandata da un visitatore. Due porte, non una.
+
+   Il prelievo puo' fallire per una ragione sola che non dipende da noi: il
+   server delle immagini potrebbe non permettere a un'altra pagina di leggere i
+   suoi file (le regole CORS). Se succede, la riga non muore: mostra il
+   collegamento per scaricare a mano e un campo per ridarci il file. Il resto
+   — rimpicciolimento, deposito, riga nel database, credito — e' identico. */
+let ARCH = {};          /* sid -> {stato, detto} */
+let ARCH_CORSO = false;
+/* ogni riga portata dentro ridisegna la pagina, e un <details> ridisegnato
+   torna chiuso: si perde il posto dopo ogni singola foto. L'apertura va
+   ricordata fuori dal DOM. */
+let ARCH_APERTO = false;
+
+function archivioPronto(){
+  return typeof ARCHIVIO_FOTO !== "undefined" && Array.isArray(ARCHIVIO_FOTO);
+}
+/* una spiaggia che ha gia' una foto non si ricarica: l'importatore si puo'
+   premere due volte per sbaglio, e due volte la stessa immagine e' spazzatura */
+function giaDentro(sid){
+  return (FOTOLIB || []).some(f => f.sid === sid) ||
+         (PARERI  || []).some(r => r.sid === sid && r.foto);
+}
+
+function bloccoArchivio(){
+  if (!archivioPronto())
+    return '<div class="gest-vuoto">La lista delle immagini d’archivio non è stata caricata.</div>';
+  const righe = ARCHIVIO_FOTO;
+  const restano = righe.filter(r => !giaDentro(r.sid) && (ARCH[r.sid] || {}).stato !== "fatta");
+  const dubbie  = restano.filter(r => !r.sicuro).length;
+
+  return '<details class="gest-arch"' + (ARCH_APERTO || ARCH_CORSO ? ' open' : '') + '>' +
+    '<summary>Porta dentro dall’archivio' +
+      '<span class="gest-conta calma">' + restano.length + '</span></summary>' +
+    '<p class="gest-arch-nota">Immagini da <b>Pexels</b>: uso commerciale libero, ' +
+      'attribuzione non obbligatoria — l’autore lo scriviamo lo stesso, sotto la foto. ' +
+      'Le scarica il tuo browser, non il server, e finiscono <b>in attesa</b>: ' +
+      'le approvi qui accanto come tutte le altre.' +
+      (dubbie ? ' <b class="gest-arch-att">' + dubbie + (dubbie === 1
+        ? ' è da controllare</b>: il nome della spiaggia non compare nel titolo della foto, solo nella descrizione.'
+        : ' sono da controllare</b>: il nome della spiaggia non compare nel titolo della foto, solo nella descrizione.') : '') +
+    '</p>' +
+    '<div class="gest-arch-mosse">' +
+      '<button type="button" class="conto-vai" data-arch-tutte' +
+        (restano.length ? '' : ' disabled') + '>Porta dentro le ' + restano.length + '</button>' +
+      '<span class="gest-niente">una alla volta, con calma: sono file veri</span>' +
+    '</div>' +
+    '<div class="gest-arch-elenco">' + righe.map(rigaArchivio).join("") + '</div>' +
+    '</details>';
+}
+
+function rigaArchivio(r){
+  const dentro = giaDentro(r.sid);
+  const st = dentro ? { stato: "fatta", detto: "c’è già una foto" } : (ARCH[r.sid] || {});
+  const classe = st.stato === "fatta" ? " fatta" : st.stato === "male" ? " male"
+               : st.stato === "corso" ? " corso" : "";
+  return '<div class="gest-arch-riga' + classe + '" data-arch-riga="' + esc(r.sid) + '">' +
+    '<img src="' + esc(r.url) + '" alt="" loading="lazy" decoding="async">' +
+    '<div class="gest-arch-testo">' +
+      '<b>' + esc(r.nome) + '</b>' +
+      '<span class="gest-niente">' + esc(r.autore || "autore non indicato") +
+        ' · ' + esc(r.fonte) + ' · ' + esc(r.sid) + '</span>' +
+      (r.sicuro ? '' : '<span class="gest-arch-att">da controllare: il nome non è nel titolo della foto</span>') +
+      (st.detto ? '<span class="gest-arch-detto">' + esc(st.detto) + '</span>' : '') +
+      (st.stato === "amano"
+        ? '<span class="gest-arch-amano">' +
+            '<a href="' + esc(r.pagina) + '" target="_blank" rel="noopener noreferrer">apri su ' +
+              esc(r.fonte) + '</a>, scarica il file, poi ' +
+            '<input type="file" accept="image/jpeg,image/png,image/webp" data-arch-file="' +
+              esc(r.sid) + '">' +
+          '</span>' : '') +
+    '</div>' +
+    '<button type="button" class="gest-piu" data-arch-una="' + esc(r.sid) + '"' +
+      (st.stato === "fatta" || st.stato === "corso" ? ' disabled' : '') + '>' +
+      (st.stato === "fatta" ? 'dentro' : 'porta dentro') + '</button>' +
+    '</div>';
+}
+
+function credito(r){
+  return { fonte: r.fonte, autore: r.autore, licenza: r.licenza, pagina: r.pagina };
+}
+
+/* Il prelievo vero. Torna il File pronto da caricare, oppure alza un errore
+   con dentro il motivo scritto in italiano — perche' «TypeError: Failed to
+   fetch» su una pagina di gestione non dice niente a nessuno. */
+async function prelevaArchivio(r){
+  let risposta;
+  try {
+    risposta = await fetch(r.url, { mode: "cors", credentials: "omit", cache: "no-store" });
+  } catch (_) {
+    const e = new Error("il server delle immagini non lascia prelevare il file da qui");
+    e.amano = true; throw e;
+  }
+  if (!risposta.ok) throw new Error("il server ha risposto " + risposta.status);
+  const blob = await risposta.blob();
+  if (!/^image\//.test(blob.type || ""))
+    throw new Error("quello che è arrivato non è un’immagine");
+  return new File([blob], r.id + ".jpg", { type: blob.type });
+}
+
+async function portaDentroUna(sid){
+  const r = ARCHIVIO_FOTO.find(x => x.sid === sid);
+  if (!r) return;
+  ARCH[sid] = { stato: "corso", detto: "un momento…" }; disegna();
+  try {
+    const file = await prelevaArchivio(r);
+    await VADO.mandaFoto(sid, file, null, null, credito(r));
+    ARCH[sid] = { stato: "fatta", detto: "portata dentro, ora è in attesa" };
+  } catch (e) {
+    ARCH[sid] = e && e.amano
+      ? { stato: "amano", detto: e.message }
+      : { stato: "male",  detto: "non ha funzionato: " + (e && e.message || e) };
+  }
+  disegna();
+}
+
+/* Una per volta e non tutte insieme: sono venti file veri che passano per il
+   deposito, e venti caricamenti in parallelo li fa fallire quasi tutti. */
+async function portaDentroTutte(bottone){
+  if (ARCH_CORSO) return;
+  ARCH_CORSO = true; bottone.disabled = true;
+  const restano = ARCHIVIO_FOTO.filter(r => !giaDentro(r.sid) && (ARCH[r.sid] || {}).stato !== "fatta");
+  for (const r of restano) await portaDentroUna(r.sid);
+  ARCH_CORSO = false;
+  try { FOTOLIB = await VADO.fotoDaModerare(200); } catch (_) {}
+  disegna();
+}
+
+/* Il ripiego: il file ce lo da' lui, il resto e' identico. */
+async function archivioAMano(sid, file){
+  const r = ARCHIVIO_FOTO.find(x => x.sid === sid);
+  if (!r || !file) return;
+  ARCH[sid] = { stato: "corso", detto: "un momento…" }; disegna();
+  try {
+    await VADO.mandaFoto(sid, file, null, null, credito(r));
+    ARCH[sid] = { stato: "fatta", detto: "portata dentro, ora è in attesa" };
+    try { FOTOLIB = await VADO.fotoDaModerare(200); } catch (_) {}
+  } catch (e) {
+    ARCH[sid] = { stato: "male", detto: "non ha funzionato: " + (e && e.message || e) };
+  }
+  disegna();
 }
 
 /* Le immagini mandate da sole hanno una riga tutta loro: approvarla sposta il
@@ -1552,8 +1711,8 @@ window.addEventListener("hashchange", () => { if (PROFILI.length) disegna(); });
 
 VADO.alCambio(s => { IO = s; carica(); });
 </script>
-<script src="vado-conto.js?v=202609162119"></script>
-<script src="vado-cookie.js?v=202609162119"></script>
-<script src="vado-piede.js?v=202609162119"></script>
+<script src="vado-conto.js?v=202609182016"></script>
+<script src="vado-cookie.js?v=202609182016"></script>
+<script src="vado-piede.js?v=202609182016"></script>
 </body>
 </html>

@@ -806,14 +806,25 @@ const VADO = (() => {
      Il consenso si registra con la foto: data e versione dell'informativa
      accettata mentre si caricava. Un consenso che non si puo' dimostrare
      e' come non averlo chiesto. */
-  async function mandaFoto(sid, file, didascalia, versione) {
+  /* «credito» c'e' solo per le foto d'archivio: fonte, autore, licenza e il
+     collegamento all'originale. Per una foto di un visitatore resta vuoto — e
+     deve restare vuoto, perche' e' proprio l'assenza del credito a distinguere
+     «l'ho scattata io» da «viene da una banca di immagini». */
+  async function mandaFoto(sid, file, didascalia, versione, credito) {
     if (!chiSono()) throw new Error("serve essere entrati");
     const percorso = await caricaFoto(sid, file);
     try {
-      await chiedi("foto", { metodo: "POST",
-        corpo: { sid: sid, percorso: percorso,
-                 didascalia: (didascalia || "").trim() || null,
-                 consenso_ver: versione || null },
+      const corpo = { sid: sid, percorso: percorso,
+                      didascalia: (didascalia || "").trim() || null,
+                      consenso_ver: versione || null };
+      if (credito) {
+        corpo.fonte    = credito.fonte   || null;
+        corpo.autore   = credito.autore  || null;
+        corpo.licenza  = credito.licenza || null;
+        corpo.pagina   = credito.pagina  || null;
+        corpo.archivio = true;
+      }
+      await chiedi("foto", { metodo: "POST", corpo: corpo,
         intestazioni: { "Prefer": "return=minimal" } });
     } catch (e) {
       /* la riga non e' entrata: il file resta nel deposito a ingombrare, e
@@ -825,7 +836,7 @@ const VADO = (() => {
   }
 
   const fotoSpiaggia = sid => chiedi("foto?sid=eq." + encodeURIComponent(sid) +
-    "&ok=is.true&select=id,percorso,didascalia,creata&order=creata.desc&limit=24");
+    "&ok=is.true&select=id,percorso,didascalia,creata,fonte,autore,licenza,pagina,archivio&order=creata.desc&limit=24");
 
   const mieFoto = sid => !chiSono() ? Promise.resolve([]) :
     chiedi("foto?sid=eq." + encodeURIComponent(sid) +
