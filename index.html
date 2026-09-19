@@ -13,10 +13,10 @@
 <meta property="og:title" content="Vado in spiaggia">
 <meta property="og:description" content="5534 spiagge in 11 paesi d'Europa, dall'Atlantico all'Egeo: carte navigabili, meteo e stato del mare, accessi, servizi e pareri di chi c'è stato.">
 <title>Vado in spiaggia · carte, meteo e mare in tempo reale</title>
-<link rel="stylesheet" href="carte-spiagge.css?v=202609190624">
+<link rel="stylesheet" href="carte-spiagge.css?v=202609190648">
 <link rel="stylesheet" href="caratteri/caratteri.css?v=202609130413">
-<script src="configurazione.js?v=202609190624"></script>
-<script src="vado-dati.js?v=202609190624"></script>
+<script src="configurazione.js?v=202609190648"></script>
+<script src="vado-dati.js?v=202609190648"></script>
 <style>/* misure di questa pagina — vedi carte-spiagge.css */
 :root{--colonna-carta:820px;--telaio-h:min(41vh,380px)}
 
@@ -235,7 +235,19 @@ svg.carta{cursor:default;touch-action:auto}
 /* mai su due righe: la barra ha un'altezza sola, e una riga in piu' qui
    dentro la raddoppierebbe */
 .barra-conto .conto{gap:8px;flex-wrap:nowrap}
-@media (max-width:1200px){ .barra-conto .conto-chi{max-width:13ch} }
+
+/* L'indirizzo per esteso mangiava un terzo della barra e non diceva niente a
+   chi l'ha scritto: lo sa gia'. Al suo posto una pastiglia tonda con le
+   iniziali — l'indirizzo resta nel suggerimento e nel pannello del telefono,
+   dove lo spazio c'e'. */
+.barra-conto .conto-chi{width:30px;height:30px;flex:none;max-width:none;padding:0;
+  border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  background:var(--profondo);color:#fff;border:0;text-decoration:none;overflow:hidden;
+  font-family:var(--dati);font-size:10.5px;font-weight:500;letter-spacing:.02em;
+  transition:background .14s}
+a.conto-chi:hover,a.conto-chi:focus-visible{background:var(--azzurro)}
+.conto-email{display:none;font-family:var(--dati);font-size:10px;letter-spacing:.03em;
+  color:var(--grigio);text-align:center;word-break:break-all}
 
 @media (max-width:920px){ .barra-nome{display:none} }
 /* Il margine negativo deve valere esattamente quanto il rientro del guscio,
@@ -258,7 +270,8 @@ svg.carta{cursor:default;touch-action:auto}
     background:var(--carta);border:1px solid var(--tratto);border-radius:11px;
     padding:11px;box-shadow:0 14px 34px -14px rgba(8,60,92,.4)}
   .barra-conto.aperto .conto{display:flex}
-  .barra-conto .conto-chi{max-width:none;text-align:center}
+  .barra-conto .conto-chi{align-self:center}
+  .conto-email{display:block}
 }
 
 /* --- passo 1: la scelta del paese --- */
@@ -310,18 +323,37 @@ svg.carta.filtrata .reg-carta.pronta:not(.dentro) path{fill:var(--terra);stroke:
   stroke-width:.7;opacity:.55}
 svg.carta{transition:none}
 
-/* Il coperchio di sotto. Comincia sopra l'avvertenza, non sotto: l'immagine
-   deve finire appena sotto i pulsanti dei paesi, non lasciare una fascia
-   d'acqua fra i pulsanti e il piede. */
-.fondo-pieno{margin:26px calc(50% - 50vw) -56px;padding:22px calc(50vw - 50% + 20px) 56px;
+/* Il coperchio di sotto. Comincia sopra l'avvertenza: l'immagine finisce
+   appena sotto i pulsanti dei paesi.
+
+   Tre accorgimenti, e ognuno chiude un modo diverso di far ricomparire l'acqua
+   in fondo alla pagina:
+
+   1. il guscio diventa una colonna alta almeno quanto lo schermo, e la fascia
+      ha «margin-top:auto». Se la pagina e' piu' corta della finestra — succede
+      su uno schermo basso e largo — la fascia scende comunque fino in fondo,
+      invece di lasciare sotto di se' una striscia d'acqua;
+   2. «.piede-sito», che NON e' in questa fascia perche' lo aggiunge
+      vado-piede.js in coda al guscio, viene portato anche lui da bordo a bordo
+      e attaccato alla fascia senza stacco. Era questo a lasciare l'acqua ai
+      due lati e sotto il blocco dei recapiti;
+   3. il rientro basso del guscio passa a zero: quei 56 pixel erano l'ultima
+      striscia scoperta, sotto tutto il resto. */
+.guscio{display:flex;flex-direction:column;min-height:100vh;padding-bottom:0}
+.fondo-pieno{margin:auto calc(50% - 50vw) 0;padding:24px calc(50vw - 50% + 20px);
   background:linear-gradient(180deg,#f3f9fd 0%,#e9f3f9 100%);
   border-top:1px solid var(--tratto)}
 .fondo-pieno>.avvertenza{margin-top:0}
 .fondo-pieno>.piede{margin-bottom:0}
+.guscio>.piede-sito{margin:0 calc(50% - 50vw);
+  padding-left:calc(50vw - 50% + 20px);padding-right:calc(50vw - 50% + 20px);
+  padding-bottom:34px;border-top:0}
 
 @media (max-width:960px){
   .testa-home{margin:-18px calc(50% - 50vw) 0;padding:18px calc(50vw - 50% + 13px) 14px}
-  .fondo-pieno{margin:20px calc(50% - 50vw) -40px;padding:18px calc(50vw - 50% + 13px) 40px}
+  .fondo-pieno{margin:auto calc(50% - 50vw) 0;padding:20px calc(50vw - 50% + 13px)}
+  .guscio>.piede-sito{margin:0 calc(50% - 50vw);
+    padding-left:calc(50vw - 50% + 13px);padding-right:calc(50vw - 50% + 13px);padding-bottom:26px}
   .telaio{height:min(74vh,640px);min-height:420px}
   .pannello{order:4}
   .sommario{margin:8px 0 0}
@@ -788,6 +820,51 @@ svg.carta{transition:none}
 </div>
 
 <script>
+/* ------------------------------------------------ la pastiglia del conto
+   vado-conto.js riempie #conto ogni volta che l'accesso cambia, e ci mette
+   l'indirizzo per esteso. Qui lo si accorcia alle iniziali. Si guarda con un
+   osservatore invece di agganciarsi a VADO.alCambio perche' l'ordine conta:
+   il mio richiamo si registrerebbe prima del suo, quindi girerebbe quando
+   dentro #conto non c'e' ancora niente. L'osservatore invece scatta DOPO, per
+   definizione: c'e' un cambiamento da osservare solo quando e' gia' avvenuto. */
+(function pastiglia(){
+  const dove = document.getElementById("conto");
+  if (!dove || !window.MutationObserver) return;
+
+  const iniziali = posta => {
+    const pezzi = String(posta || "").split("@")[0]
+      .split(/[._\-+\s]+/).filter(Boolean);
+    const a = (pezzi[0] || "")[0] || "";
+    const b = (pezzi[1] || "")[0] || (pezzi[0] || "")[1] || "";
+    return (a + b).toUpperCase() || "\u25CF";
+  };
+
+  let dentro = false;
+  const sistema = () => {
+    const chi = dove.querySelector(".conto-chi");
+    if (!chi || chi.dataset.pastiglia) return;
+    const posta = (chi.textContent || "").trim();
+    if (!posta || posta.indexOf("@") < 0) return;
+    dentro = true;
+    chi.dataset.pastiglia = "1";
+    chi.textContent = iniziali(posta);
+    chi.title = posta;
+    chi.setAttribute("aria-label", "Il mio profilo · " + posta);
+    /* l'indirizzo non sparisce: torna visibile nel pannello del telefono,
+       dove la pastiglia da sola non basterebbe a riconoscere il conto */
+    if (!dove.querySelector(".conto-email")) {
+      const e = document.createElement("span");
+      e.className = "conto-email"; e.textContent = posta;
+      chi.insertAdjacentElement("afterend", e);
+    }
+    dentro = false;
+  };
+
+  new MutationObserver(() => { if (!dentro) sistema(); })
+    .observe(dove, { childList: true, subtree: true });
+  sistema();
+})();
+
 /* ---------------------------------------------------- la barra che resta
    Due cose sole. La prima: l'ombra sotto la barra si accende quando la barra
    si e' staccata dall'insegna, perche' da ferma — in cima alla pagina, senza
@@ -1122,8 +1199,8 @@ document.querySelectorAll(".reg-carta.pronta").forEach(a=>{
   });
 });
 </script>
-<script src="vado-conto.js?v=202609190624"></script>
-<script src="vado-cookie.js?v=202609190624"></script>
-<script src="vado-piede.js?v=202609190624"></script>
+<script src="vado-conto.js?v=202609190648"></script>
+<script src="vado-cookie.js?v=202609190648"></script>
+<script src="vado-piede.js?v=202609190648"></script>
 </body>
 </html>
