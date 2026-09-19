@@ -2,6 +2,7 @@
 .DS_Store
 Thumbs.db
 *.py
+!strumenti/notizie/*.py
 *.xlsx
 AVANZAMENTO.md
 METODO-*.md

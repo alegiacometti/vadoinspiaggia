@@ -1,0 +1,524 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""Il robot delle notizie di «Vado in spiaggia».
+
+Una volta al giorno legge i feed dei giornali locali elencati in feed.json,
+tiene solo gli articoli che parlano di un comune dove abbiamo una spiaggia, e
+li consegna al database dalla porta stretta `carica_notizie`.
+
+Tre cose da sapere prima di metterci le mani.
+
+1. NON HA LA CHIAVE DEL DATABASE. Gira con la chiave pubblica del sito, quella
+   che sta gia' dentro vado-dati.js e che legge il mondo, piu' un segreto suo
+   (`ROBOT_NOTIZIE`) che apre due sole funzioni: l'elenco dei comuni e il
+   caricamento delle notizie. Se il segreto gli viene rubato, chi lo ruba puo'
+   inserire notizie. Non puo' toccare nient'altro.
+
+2. RISPETTA IL robots.txt. Prima di leggere un feed chiede al sito se puo'.
+   Se il sito dice di no, o se il suo robots.txt non si riesce a leggere, il
+   giornale viene saltato e lo scrive nel resoconto. Questo non si aggira: chi
+   pubblica un robots.txt sta dicendo a chi legge in automatico cosa puo'
+   prendere, e su un sito che vende accessi non e' il caso di fare i furbi con
+   i contenuti altrui.
+
+3. I DOPPIONI SONO LA NORMA, non l'eccezione. Un feed contiene gli ultimi venti
+   articoli, non quelli nuovi dall'ultima volta: a ogni giro la maggior parte
+   di quello che arriva c'e' gia'. Ci sono tre reti, una dietro l'altra:
+   l'indirizzo dell'articolo dentro al giro, l'indirizzo contro quello che c'e'
+   gia' nel database (l'indice unico fa il resto), e la stessa storia
+   raccontata da due giornali con due titoli diversi.
+
+Come si prova senza toccare niente:
+
+    python3 leggi-feed.py --prova            # legge e stampa, non carica
+    python3 leggi-feed.py --cartella finti/  # legge file .xml locali, non la rete
+
+Come gira davvero (lo fa GitHub, vedi .github/workflows/notizie.yml):
+
+    ROBOT_NOTIZIE=... python3 leggi-feed.py
+"""
+
+import argparse
+import datetime as dt
+import email.utils
+import glob
+import json
+import os
+import re
+import sys
+import unicodedata
+import urllib.error
+import urllib.parse
+import urllib.request
+import xml.etree.ElementTree as ET
+from urllib.robotparser import RobotFileParser
+
+QUI = os.path.dirname(os.path.abspath(__file__))
+
+# La chiave pubblicabile e l'indirizzo sono gli stessi che sta usando il sito:
+# non sono un segreto, stanno dentro vado-dati.js che chiunque puo' leggere.
+# Il segreto vero e' uno solo, e arriva dall'ambiente.
+BASE = os.environ.get("SUPABASE_URL", "https://meiurmbdotohixqawprd.supabase.co")
+CHIAVE = os.environ.get("SUPABASE_ANON", "sb_publishable_T6WweLO_kXsLO57kutuAVA_VDMubUkf")
+SEGRETO = os.environ.get("ROBOT_NOTIZIE", "")
+
+CHI_SONO = "vadoinspiaggia-notizie/1.0 (+https://alegiacometti.github.io/vadoinspiaggia/)"
+ATTESA = 25          # secondi prima di rinunciare a un feed
+MAX_PER_COMUNE = 8   # per giro: la scheda ne mostra quattro, oltre e' rumore
+GIORNI_CONFRONTO = 14  # quanto indietro guardare per riconoscere la stessa storia
+
+
+# ------------------------------------------------------------------ la rete
+
+def apri(url, accetta="application/rss+xml, application/xml, text/xml, */*"):
+    """Una GET semplice, con un nome e un limite di pazienza."""
+    richiesta = urllib.request.Request(url, headers={
+        "User-Agent": CHI_SONO, "Accept": accetta})
+    with urllib.request.urlopen(richiesta, timeout=ATTESA) as r:
+        return r.read()
+
+
+def testo_di(byte):
+    for come in ("utf-8", "latin-1"):
+        try:
+            return byte.decode(come)
+        except UnicodeDecodeError:
+            continue
+    return byte.decode("utf-8", "replace")
+
+
+def posso_leggere(url):
+    """Il sito permette a un robot di leggere questo indirizzo?
+
+    Un robots.txt che non si riesce a leggere vale NO, non SI'. La libreria di
+    Python, se la lettura fallisce, si comporta come se fosse permesso tutto:
+    e' esattamente il contrario di quello che serve qui, quindi il file lo
+    leggiamo noi e glielo diamo gia' pronto."""
+    pezzi = urllib.parse.urlsplit(url)
+    dove = "%s://%s/robots.txt" % (pezzi.scheme, pezzi.netloc)
+    try:
+        righe = testo_di(apri(dove, "text/plain")).splitlines()
+    except urllib.error.HTTPError as e:
+        # 404 = nessuna regola = nessun divieto. Tutto il resto e' un no.
+        if e.code in (401, 403, 404, 410):
+            return e.code in (404, 410), "robots.txt risponde %d" % e.code
+        return False, "robots.txt risponde %d" % e.code
+    except Exception as e:
+        return False, "robots.txt non leggibile (%s)" % type(e).__name__
+    regole = RobotFileParser()
+    regole.parse(righe)
+    ok = regole.can_fetch(CHI_SONO, url) and regole.can_fetch("*", url)
+    return ok, "" if ok else "il robots.txt non lo permette"
+
+
+# --------------------------------------------------------------- i feed
+
+ATOM = "{http://www.w3.org/2005/Atom}"
+DC = "{http://purl.org/dc/elements/1.1/}"
+
+
+def prima_data(*candidate):
+    for t in candidate:
+        if not t:
+            continue
+        t = t.strip()
+        try:
+            d = email.utils.parsedate_to_datetime(t)
+            if d:
+                return d.date()
+        except Exception:
+            pass
+        try:
+            return dt.datetime.fromisoformat(t.replace("Z", "+00:00")).date()
+        except Exception:
+            pass
+    return None
+
+
+def articoli(xml):
+    """Gli articoli di un feed, RSS o Atom che sia.
+
+    Nessuna libreria esterna: il formato e' semplice e le due forme si
+    distinguono dal nome del nodo. Un feed rotto non ferma il giro."""
+    fuori = []
+    radice = ET.fromstring(xml.strip())
+
+    for it in radice.iter("item"):                     # RSS
+        titolo = (it.findtext("title") or "").strip()
+        url = (it.findtext("link") or "").strip()
+        data = prima_data(it.findtext("pubDate"), it.findtext(DC + "date"))
+        if titolo and url:
+            fuori.append(dict(titolo=titolo, url=url, pubblicata=data))
+
+    for en in radice.iter(ATOM + "entry"):             # Atom
+        titolo = (en.findtext(ATOM + "title") or "").strip()
+        url = ""
+        for a in en.findall(ATOM + "link"):
+            if a.get("rel", "alternate") == "alternate":
+                url = (a.get("href") or "").strip()
+                break
+        data = prima_data(en.findtext(ATOM + "published"),
+                          en.findtext(ATOM + "updated"))
+        if titolo and url:
+            fuori.append(dict(titolo=titolo, url=url, pubblicata=data))
+
+    return fuori
+
+
+# ------------------------------------------------------- l'abbinamento
+
+def piatto(t):
+    """Senza accenti, senza maiuscole, con un apostrofo solo: cosi' «Sant’Elpidio»
+    e «Sant'Elpidio» diventano la stessa cosa."""
+    t = unicodedata.normalize("NFD", (t or "").lower())
+    t = "".join(c for c in t if unicodedata.category(c) != "Mn")
+    return t.replace("\u2019", "'").replace("\u00a0", " ")
+
+
+# I pezzi di nome che i giornali lasciano cadere. «Cupra Marittima» sul
+# giornale e' «Cupra», «Civitanova Marche» e' «Civitanova».
+# L'ordine conta: le forme lunghe vanno provate per prime, altrimenti «mare»
+# mangerebbe la fine di «Francavilla al Mare» lasciando «francavilla al».
+CODE = re.compile(r"\s+(a mare|al mare|sul mare|di romagna|del tronto|"
+                  r"marittima|marittimo|marina|marche|mare|"
+                  r"picena|piceno|terme|adriatico|adriatica|ionica|ionico)$")
+# un nome accorciato non puo' finire con una parolina: «francavilla al» non e'
+# il nome di niente.
+FINISCE_MALE = re.compile(r"(?:^|\s)(a|al|la|le|lo|il|i|di|del|della|sul|san|"
+                          r"santa|santo|sant'|porto|lido|marina|torre)$")
+
+# Un nome preceduto da queste parole non e' quel comune: «Ancona, auto
+# vandalizzate in via Pesaro» non e' una notizia di Pesaro, e «la Provincia di
+# Ancona» non e' il comune di Ancona.
+PRIMA_NON_VALE = re.compile(
+    r"(via|viale|piazza|piazzale|corso|largo|vicolo|lungomare|"
+    r"provincia di|prefettura di|questura di|procura di|tribunale di|"
+    r"diocesi di|curia di|universita di|universita' di|ospedale di|"
+    r"aeroporto di|stazione di|porto di)\s+$")
+
+
+def nomi_del_comune(comune, sinonimi):
+    """Tutti i modi in cui quel comune puo' comparire in un titolo."""
+    fuori = [comune]
+    corto = CODE.sub("", piatto(comune))
+    if (corto and corto != piatto(comune) and len(corto) >= 5
+            and not FINISCE_MALE.search(corto)):
+        fuori.append(corto)
+    fuori += sinonimi.get(comune, [])
+    return fuori
+
+
+def indice(comuni, sinonimi, mai):
+    """Da «elenco di comuni» a «elenco di nomi da cercare».
+
+    Ogni voce e' (nome appiattito, comune vero). Un nome che sta nella lista
+    «mai» non entra: «Porto» da solo non e' un comune."""
+    vietati = {piatto(m) for m in mai}
+    fuori = []
+    for c in comuni:
+        for n in nomi_del_comune(c, sinonimi):
+            n = piatto(n).strip()
+            if len(n) >= 4 and n not in vietati:
+                fuori.append((n, c))
+    return sorted(set(fuori), key=lambda x: -len(x[0]))
+
+
+def abbina(titolo, voci):
+    """Il comune di cui parla il titolo, o (None, None).
+
+    Vince sempre il nome piu' lungo: cosi' «Porto Recanati» batte «Recanati»
+    (sono due comuni diversi a dodici chilometri l'uno dall'altro) e «Cupra
+    Marittima» batte «Cupra»."""
+    t = piatto(titolo)
+    trovati = []
+    for nome, comune in voci:
+        for m in re.finditer(r"(?<![\w'])" + re.escape(nome) + r"(?![\w'])", t):
+            if PRIMA_NON_VALE.search(t[:m.start()]):
+                continue
+            trovati.append((len(nome), comune, nome))
+            break
+    if not trovati:
+        return None, None
+    trovati.sort(reverse=True)
+    return trovati[0][1], trovati[0][2]
+
+
+# ------------------------------------------------------- l'argomento
+
+def regola(voci):
+    """Da un elenco di parole a un setaccio.
+
+    Le righe che cominciano con «_» sono titoletti per chi legge il file, non
+    parole da cercare. La stella vuol dire «e quel che segue»: balnea* prende
+    balneabile, balneazione, balneare. Senza stella la parola dev'essere
+    intera, cosi' «mare» non si accende dentro «mareggiata» (che infatti e'
+    scritta a parte) ne' dentro «Grottammare»."""
+    pezzi = []
+    for v in voci or []:
+        v = piatto(v).strip()
+        if not v or v.startswith("_"):
+            continue
+        pezzi.append(re.escape(v[:-1]) + r"\w*" if v.endswith("*") else re.escape(v))
+    if not pezzi:
+        return None
+    return re.compile(r"(?<![\w'])(" + "|".join(pezzi) + r")(?![\w'])")
+
+
+def argomento(titolo, nome_comune, tieni, mai):
+    """Questo titolo parla di qualcosa che interessa a chi sta scegliendo dove
+    andare al mare?
+
+    Prima si toglie dal titolo il nome del comune, altrimenti «Francavilla al
+    Mare» passerebbe sempre per via di quel «Mare» che e' solo un pezzo del
+    nome del paese, non l'argomento dell'articolo.
+
+    Poi due setacci, in quest'ordine: il veto vince sempre sul via libera.
+    «Mareggiata, un ferito sul lungomare» parla di mare ed e' cronaca: fuori."""
+    t = piatto(titolo)
+    if nome_comune:
+        t = re.sub(r"(?<![\w'])" + re.escape(piatto(nome_comune)) + r"(?![\w'])", " ", t)
+    if mai:
+        m = mai.search(t)
+        if m:
+            return False, "«%s»" % m.group(0)
+    if tieni:
+        m = tieni.search(t)
+        if not m:
+            return False, "non parla di mare, meteo o eventi"
+        return True, m.group(0)
+    return True, ""
+
+
+# ------------------------------------------------------------ i doppioni
+
+PAROLINE = set("""il lo la i gli le un uno una di a da in con su per tra fra
+del della dello dei degli delle dal dalla al alla allo ai agli alle nel nella
+nello nei negli nelle sul sulla sullo sui sugli sulle e ed o od ma se che chi
+cui non piu' piu si ci vi ne come dove quando anche ancora dopo prima contro
+verso fino ecco tutto tutti tutte questa questo queste questi""".split())
+
+
+def impronta(titolo):
+    """Le parole che contano di un titolo.
+
+    «Cupra, cocaina nel marsupio» e «Cupra Marittima, nel marsupio 12 dosi di
+    cocaina» sono lo stesso arresto raccontato due volte: le parole in comune
+    lo dicono, l'ordine no."""
+    parole = re.findall(r"[a-z0-9']{3,}", piatto(titolo))
+    return frozenset(p for p in parole if p not in PAROLINE)
+
+
+def stessa_storia(a, b):
+    if not a or not b:
+        return False
+    comuni = len(a & b)
+    return comuni >= 3 and comuni >= 0.6 * min(len(a), len(b))
+
+
+# ------------------------------------------------------------ il database
+
+def chiama(percorso, corpo=None, metodo="POST"):
+    url = BASE.rstrip("/") + "/rest/v1/" + percorso
+    dati = json.dumps(corpo).encode("utf-8") if corpo is not None else None
+    r = urllib.request.Request(url, data=dati, method=metodo, headers={
+        "apikey": CHIAVE, "Authorization": "Bearer " + CHIAVE,
+        "Content-Type": "application/json", "Accept": "application/json",
+        "User-Agent": CHI_SONO})
+    try:
+        with urllib.request.urlopen(r, timeout=ATTESA) as risposta:
+            grezzo = risposta.read().decode("utf-8") or "null"
+            return json.loads(grezzo)
+    except urllib.error.HTTPError as e:
+        raise SystemExit("il database ha risposto %d: %s"
+                         % (e.code, testo_di(e.read())[:400]))
+
+
+def comuni_delle_regioni(regioni):
+    righe = chiama("rpc/comuni_notizie",
+                   {"p_segreto": SEGRETO, "p_regioni": sorted(regioni)})
+    per_regione = {}
+    for r in righe or []:
+        per_regione.setdefault(r["regione"], []).append(r["comune"])
+    return per_regione
+
+
+def gia_dentro():
+    """Titoli e indirizzi delle notizie recenti gia' caricate, per non
+    riproporre la stessa storia con un titolo diverso. La tabella si legge in
+    chiaro: non serve nessun segreto per questo."""
+    da = (dt.date.today() - dt.timedelta(days=GIORNI_CONFRONTO)).isoformat()
+    righe = chiama("notizie?select=comune,titolo,url&pubblicata=gte." + da,
+                   metodo="GET") or []
+    return righe
+
+
+# ------------------------------------------------------------------ il giro
+
+def carica_config(percorso):
+    """La configurazione, con le regole prese da feed.json se il file non le ha.
+
+    Serve alla prova: finti/feed-di-prova.json elenca solo i giornali finti e i
+    comuni finti, e le regole vere — sinonimi, argomenti, parole vietate — se
+    le fa prestare da feed.json. Cosi' la prova controlla le regole VERE, non
+    una loro copia invecchiata."""
+    with open(percorso, encoding="utf-8") as f:
+        conf = json.load(f)
+    vero = os.path.join(QUI, "feed.json")
+    if os.path.abspath(percorso) != os.path.abspath(vero) and os.path.exists(vero):
+        with open(vero, encoding="utf-8") as f:
+            base = json.load(f)
+        for chiave in ("sinonimi", "mai_comuni", "argomenti"):
+            conf.setdefault(chiave, base.get(chiave, {}))
+    return conf
+
+
+def prendi_feed(giornale, cartella):
+    """Il testo del feed: dalla rete, o da un file locale quando si prova.
+
+    In prova il file si chiama come il giornale, tutto minuscolo e con i
+    trattini: «Senigallia Notizie» -> senigallia-notizie.xml"""
+    if cartella:
+        nome = re.sub(r"[^a-z0-9]+", "-", piatto(giornale["nome"])).strip("-")
+        dove = os.path.join(cartella, nome + ".xml")
+        if not os.path.exists(dove):
+            return "", "manca il file di prova %s" % os.path.basename(dove)
+        with open(dove, encoding="utf-8") as h:
+            return h.read(), ""
+    ok, perche = posso_leggere(giornale["url"])
+    if not ok:
+        return "", perche
+    try:
+        return testo_di(apri(giornale["url"])), ""
+    except Exception as e:
+        return "", "non risponde (%s)" % type(e).__name__
+
+
+def main():
+    p = argparse.ArgumentParser(description="Legge i feed e carica le notizie.")
+    p.add_argument("--prova", action="store_true",
+                   help="legge e stampa, ma non carica niente nel database")
+    p.add_argument("--cartella", default="",
+                   help="legge file .xml da una cartella invece che dalla rete")
+    p.add_argument("--tutto", action="store_true",
+                   help="non filtrare per argomento: tiene anche cronaca e sport")
+    p.add_argument("--config", default=os.path.join(QUI, "feed.json"))
+    args = p.parse_args()
+
+    conf = carica_config(args.config)
+    sinonimi = conf.get("sinonimi", {})
+    mai_comuni = conf.get("mai_comuni", [])
+    arg = conf.get("argomenti", {})
+    filtra = arg.get("filtro", True) and not args.tutto
+    tieni = regola(arg.get("tieni")) if filtra else None
+    vietate = regola(arg.get("mai")) if filtra else None
+    regioni = sorted({r for g in conf["giornali"] for r in g["regioni"]})
+
+    if not SEGRETO and not args.cartella:
+        raise SystemExit("manca ROBOT_NOTIZIE nell'ambiente: senza segreto il "
+                         "database non apre. Vedi COME-SI-ACCENDONO-LE-NOTIZIE.md")
+
+    # 1. di quali comuni possiamo parlare
+    if args.cartella:
+        per_regione = conf.get("_comuni_di_prova", {})
+    else:
+        per_regione = comuni_delle_regioni(regioni)
+    quanti = sum(len(v) for v in per_regione.values())
+    print("comuni con spiaggia nelle regioni dichiarate: %d" % quanti)
+    for r in sorted(per_regione):
+        print("   %-16s %d" % (r, len(per_regione[r])))
+
+    # 2. leggere i giornali
+    raccolti, saltati, scartati_tema = [], [], []
+    if filtra:
+        print("\nfiltro per argomento: ACCESO (meteo, mare, spiaggia, eventi)")
+    else:
+        print("\nfiltro per argomento: spento — entra tutto, cronaca compresa")
+    for g in conf["giornali"]:
+        xml, perche = prendi_feed(g, args.cartella)
+        if not xml:
+            saltati.append((g["nome"], perche))
+            print("   - %-22s saltato: %s" % (g["nome"], perche))
+            continue
+        try:
+            letti = articoli(xml)
+        except ET.ParseError as e:
+            saltati.append((g["nome"], "feed illeggibile (%s)" % e))
+            print("   - %-22s feed illeggibile" % g["nome"])
+            continue
+        voci = indice(sorted({c for r in g["regioni"]
+                              for c in per_regione.get(r, [])}), sinonimi, mai_comuni)
+        presi = fuori_tema = 0
+        for a in letti:
+            comune, con = abbina(a["titolo"], voci)
+            if not comune:
+                continue
+            ok, perche_no = argomento(a["titolo"], con, tieni, vietate)
+            if not ok:
+                fuori_tema += 1
+                scartati_tema.append((a["titolo"], comune, perche_no))
+                continue
+            a.update(comune=comune, con=con, fonte=g["nome"], perche=perche_no)
+            raccolti.append(a)
+            presi += 1
+        print("   + %-22s %3d articoli, %2d del posto, %2d in tema"
+              % (g["nome"], len(letti), presi + fuori_tema, presi))
+
+    # 3. le tre reti contro i doppioni
+    vecchie = [] if args.cartella else gia_dentro()
+    viste_url = {v["url"] for v in vecchie}
+    impronte = {}
+    for v in vecchie:
+        impronte.setdefault(v["comune"], []).append(impronta(v["titolo"]))
+
+    raccolti.sort(key=lambda a: a["pubblicata"] or dt.date.min, reverse=True)
+    buoni, per_comune = [], {}
+    for a in raccolti:
+        if a["url"] in viste_url:
+            continue
+        imp = impronta(a["titolo"])
+        if any(stessa_storia(imp, altra) for altra in impronte.get(a["comune"], [])):
+            continue
+        if per_comune.get(a["comune"], 0) >= MAX_PER_COMUNE:
+            continue
+        viste_url.add(a["url"])
+        impronte.setdefault(a["comune"], []).append(imp)
+        per_comune[a["comune"]] = per_comune.get(a["comune"], 0) + 1
+        buoni.append(a)
+
+    if scartati_tema:
+        print("\nfuori tema, non caricate (%d):" % len(scartati_tema))
+        for titolo, comune, perche_no in scartati_tema[:12]:
+            print("   - %-58s %s" % (titolo[:58], perche_no))
+        if len(scartati_tema) > 12:
+            print("   - ... e altre %d" % (len(scartati_tema) - 12))
+
+    print("\nin tema: %d — nuove dopo i doppioni: %d" % (len(raccolti), len(buoni)))
+    for c in sorted(per_comune, key=lambda x: -per_comune[x]):
+        print("   %-28s %d" % (c, per_comune[c]))
+        for a in buoni:
+            if a["comune"] == c:
+                segno = "" if piatto(a["con"]) == piatto(c) else " [da «%s»]" % a["con"]
+                tema = "  (%s)" % a["perche"] if a.get("perche") else ""
+                print("      · %s%s%s" % (a["titolo"][:66], segno, tema))
+
+    if not buoni:
+        print("\nniente di nuovo: e' il caso normale quando gira ogni giorno.")
+        return
+
+    righe = [dict(comune=a["comune"], titolo=a["titolo"][:300], fonte=a["fonte"],
+                  url=a["url"],
+                  pubblicata=(a["pubblicata"] or dt.date.today()).isoformat())
+             for a in buoni]
+
+    if args.prova or args.cartella:
+        print("\n--prova: non carico niente. Avrei mandato %d righe:" % len(righe))
+        print(json.dumps(righe[:3], ensure_ascii=False, indent=1))
+        return
+
+    # 4. la consegna
+    quante = chiama("rpc/carica_notizie", {"p_segreto": SEGRETO, "p_righe": righe})
+    print("\ncaricate davvero: %s" % quante)
+
+
+if __name__ == "__main__":
+    main()
