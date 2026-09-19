@@ -1,0 +1,90 @@
+{
+  "_a_cosa_serve": [
+    "Una prova che gira senza rete e senza database: tre feed finti in cui sono",
+    "state messe apposta tutte le trappole viste sui feed veri.",
+    "   python3 leggi-feed.py --cartella finti --config finti/feed-di-prova.json",
+    "Le regole (sinonimi, argomenti, parole vietate) NON stanno qui: le prende da",
+    "feed.json, cosi' la prova controlla le regole vere e non una copia vecchia.",
+    "",
+    "Cosa deve succedere, da controllare a occhio:",
+    "  DENTRO  allerta meteo a Senigallia, mareggiata, bandiera blu a Falconara,",
+    "          mare balneabile a Grottammare, sagra a Numana, passerella sulla",
+    "          spiaggia libera di Porto Recanati, chioschi sul lungomare a",
+    "          San Benedetto, ciclabile sul lungomare a Francavilla al Mare",
+    "  FUORI   cocaina a Cupra (due giornali), la Samb, auto vandalizzate,",
+    "          il bilancio del consiglio comunale, il porto che si allarga,",
+    "          la Rotonda che riapre (non nomina ne' mare ne' spiaggia)",
+    "  FUORI   «Sirolo, mareggiata: un ferito sul lungomare» — parla di mare ma",
+    "          e' cronaca: il veto vince sempre sul via libera",
+    "  FUORI   Recanati (non e' Porto Recanati), la Provincia di Ancona,",
+    "          Jesi e Fabriano (non sono sul mare)",
+    "",
+    "E il caso piu' insidioso: «Francavilla al Mare» ha «Mare» dentro al nome del",
+    "paese. Il nome del comune va tolto dal titolo PRIMA di guardare l'argomento,",
+    "altrimenti quel comune passerebbe sempre qualunque cosa succeda."
+  ],
+  "giornali": [
+    {
+      "nome": "Senigallia Notizie",
+      "url": "https://esempio.invalid/feed",
+      "regioni": [
+        "marche"
+      ]
+    },
+    {
+      "nome": "Riviera Oggi",
+      "url": "https://esempio.invalid/feed",
+      "regioni": [
+        "marche",
+        "abruzzo"
+      ]
+    },
+    {
+      "nome": "Centropagina",
+      "url": "https://esempio.invalid/feed",
+      "regioni": [
+        "marche"
+      ]
+    }
+  ],
+  "_comuni_di_prova": {
+    "marche": [
+      "Gabicce Mare",
+      "Pesaro",
+      "Fano",
+      "Mondolfo",
+      "Senigallia",
+      "Montemarciano",
+      "Falconara Marittima",
+      "Ancona",
+      "Sirolo",
+      "Numana",
+      "Porto Recanati",
+      "Potenza Picena",
+      "Civitanova Marche",
+      "Porto Sant'Elpidio",
+      "Fermo",
+      "Porto San Giorgio",
+      "Pedaso",
+      "Altidona",
+      "Campofilone",
+      "Massignano",
+      "Cupra Marittima",
+      "Grottammare",
+      "San Benedetto del Tronto"
+    ],
+    "abruzzo": [
+      "Alba Adriatica",
+      "Giulianova",
+      "Roseto degli Abruzzi",
+      "Pineto",
+      "Silvi",
+      "Montesilvano",
+      "Pescara",
+      "Francavilla al Mare",
+      "Ortona",
+      "Vasto",
+      "San Salvo"
+    ]
+  }
+}

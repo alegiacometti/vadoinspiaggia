@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+ <title>Centropagina (finto, in formato Atom)</title>
+ <entry><title>Cupra Marittima, nel marsupio 12 dosi di cocaina: un arresto</title>
+  <link rel="alternate" href="https://esempio.invalid/cp-cupra-dosi"/>
+  <published>2026-09-18T11:30:00+02:00</published></entry>
+ <entry><title>Numana, sagra del pesce azzurro nel fine settimana</title>
+  <link rel="alternate" href="https://esempio.invalid/cp-numana-sagra"/>
+  <published>2026-09-18T09:00:00+02:00</published></entry>
+ <entry><title>Porto Recanati, la spiaggia libera avra' una nuova passerella</title>
+  <link rel="alternate" href="https://esempio.invalid/cp-porto-recanati"/>
+  <published>2026-09-18T08:00:00+02:00</published></entry>
+ <entry><title>Fabriano, la fabbrica riapre le assunzioni</title>
+  <link rel="alternate" href="https://esempio.invalid/cp-fabriano"/>
+  <published>2026-09-17T16:00:00+02:00</published></entry>
+ <entry><title>Civitanova, il porto si allarga: via ai lavori</title>
+  <link rel="alternate" href="https://esempio.invalid/cp-civitanova"/>
+  <published>2026-09-17T10:00:00+02:00</published></entry>
+</feed>

@@ -1,0 +1,59 @@
+# Le notizie dei comuni, una volta al giorno.
+#
+# Questo file non contiene nessun segreto: il segreto sta fra i «Secrets» del
+# deposito su GitHub e arriva allo script dall'ambiente. Chi legge questo file
+# (e chiunque puo' leggerlo, il deposito e' pubblico) non impara niente.
+#
+# Se qualcosa si rompe, GitHub manda una mail all'indirizzo dell'account: e'
+# il motivo principale per cui le notizie girano qui e non altrove.
+
+name: Notizie dei comuni
+
+on:
+  schedule:
+    # 05:20 UTC = 07:20 in Italia d'estate, 06:20 d'inverno. Un orario strano
+    # apposta: alle ore tonde GitHub ha la coda e parte in ritardo.
+    - cron: "20 5 * * *"
+  workflow_dispatch:
+    inputs:
+      prova:
+        description: "Solo prova: legge tutti i feed e stampa il resoconto, senza caricare niente"
+        type: boolean
+        default: false
+
+# Il robot non scrive niente nel deposito: non gli serve nessun permesso.
+permissions:
+  contents: read
+
+concurrency:
+  group: notizie
+  cancel-in-progress: false
+
+jobs:
+  leggi:
+    runs-on: ubuntu-latest
+    # ottanta giornali, ciascuno con la sua attesa: venti minuti sono
+    # abbondanti, ma un sito fermo non deve far fallire il giro.
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Controlla l'abbinamento prima di uscire in rete
+        # Se le trappole non passano piu', e' inutile andare a leggere i
+        # giornali: le notizie finirebbero sulle spiagge sbagliate.
+        run: python3 strumenti/notizie/prova-abbinamento.py
+
+      - name: Leggi i feed e carica le notizie
+        env:
+          ROBOT_NOTIZIE: ${{ secrets.ROBOT_NOTIZIE }}
+          SOLO_PROVA: ${{ inputs.prova }}
+        run: |
+          if [ "$SOLO_PROVA" = "true" ]; then
+            python3 strumenti/notizie/leggi-feed.py --prova
+          else
+            python3 strumenti/notizie/leggi-feed.py
+          fi

@@ -111,7 +111,7 @@ def posso_leggere(url):
         return ok, "" if ok else "il robots.txt non lo permette"
     dove = "%s://%s/robots.txt" % (pezzi.scheme, pezzi.netloc)
     try:
-        righe = testo_di(apri(dove, "text/plain")).splitlines()
+        righe = testo_di(apri(dove, "*/*")).splitlines()
     except urllib.error.HTTPError as e:
         # 404 = nessuna regola = nessun divieto. Tutto il resto e' un no.
         if e.code in (404, 410):
@@ -150,6 +150,36 @@ def indirizzi(url, esatto=False):
         if base + q not in fuori:
             fuori.append(base + q)
     return fuori
+
+
+# Se nessuno dei soliti indirizzi funziona, si chiede al sito stesso: ogni
+# pagina che ha un feed lo dichiara nell'intestazione con un <link rel=
+# "alternate" type="application/rss+xml">. E' il modo previsto dallo standard,
+# ed e' come fanno i lettori di feed da vent'anni. Costa una richiesta sola, e
+# solo per i giornali che hanno gia' fallito tutto il resto.
+DICHIARA_FEED = re.compile(
+    r"""<link[^>]+(?:type=["']application/(?:rss|atom)\+xml["'][^>]*href=["']([^"']+)["']"""
+    r"""|href=["']([^"']+)["'][^>]*type=["']application/(?:rss|atom)\+xml["'])""",
+    re.I)
+
+
+def feed_dichiarati(url):
+    """Gli indirizzi di feed che la pagina dichiara da se'."""
+    pezzi = urllib.parse.urlsplit(url)
+    casa = "%s://%s/" % (pezzi.scheme, pezzi.netloc)
+    try:
+        pagina = testo_di(apri(casa, "text/html"))[:400000]
+    except Exception:
+        return []
+    fuori = []
+    for m in DICHIARA_FEED.finditer(pagina):
+        href = (m.group(1) or m.group(2) or "").strip()
+        if not href or href.startswith("javascript:"):
+            continue
+        intero = urllib.parse.urljoin(casa, href.replace("&amp;", "&"))
+        if intero not in fuori:
+            fuori.append(intero)
+    return fuori[:3]
 
 
 ATOM = "{http://www.w3.org/2005/Atom}"
@@ -511,6 +541,19 @@ def prendi_feed(giornale, cartella):
             ultimo = "feed vuoto"
         except ET.ParseError:
             ultimo = "non e' un feed"
+
+    # nessuno dei soliti posti: si chiede alla pagina dove tiene il feed
+    if not giornale.get("esatto"):
+        for url in feed_dichiarati(giornale["url"]):
+            ok, perche = posso_leggere(url)
+            if not ok:
+                return "", "", perche
+            try:
+                xml = testo_di(apri(url))
+                if articoli(xml):
+                    return xml, url, ""
+            except Exception:
+                continue
     return "", "", ultimo
 
 

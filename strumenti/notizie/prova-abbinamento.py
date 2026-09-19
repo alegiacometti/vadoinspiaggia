@@ -133,6 +133,22 @@ FUORI_ITALIA = [
        "Man arrested in Mellieha over drugs haul",           "Mellieħa",          False),
   ("en", ["Mellieħa", "Marsaskala", "Xlendi"],
        "Xlendi: summer festival returns next weekend",       "Xlendi",            True),
+  # le declinazioni: «detenidas» al femminile plurale era passata perche'
+  # avevo scritto le quattro forme a mano e me n'ero dimenticata una. Adesso
+  # i veti delle lingue romanze usano la stella.
+  ("es", ["Cambrils", "Salou"],
+       "Dos detenidas en Cambrils por intentar robar en el mercadillo",
+                                                             "Cambrils",          False),
+  ("es", ["Cambrils", "Salou"],
+       "Tres heridas leves en Salou tras una caída en la playa","Salou",           False),
+  ("pt", ["Portimão", "Lagos"],
+       "Portimão inicia preparação para os Jogos do Mediterrâneo",
+                                                             "Portimão",          False),
+  ("fr", ["Fréjus", "Vias"],
+       "Fréjus : deux blessées dans une collision près de la plage",
+                                                             "Fréjus",            False),
+  ("en", ["Mellieħa", "Xlendi"],
+       "Two rescued after boat capsizes off Mellieha",       "Mellieħa",          False),
 ]
 
 male = 0
