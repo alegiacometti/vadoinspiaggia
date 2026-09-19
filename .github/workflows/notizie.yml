@@ -14,7 +14,12 @@ on:
     # 05:20 UTC = 07:20 in Italia d'estate, 06:20 d'inverno. Un orario strano
     # apposta: alle ore tonde GitHub ha la coda e parte in ritardo.
     - cron: "20 5 * * *"
-  workflow_dispatch:      # e il pulsante «Run workflow» per lanciarlo a mano
+  workflow_dispatch:
+    inputs:
+      prova:
+        description: "Solo prova: legge tutti i feed e stampa il resoconto, senza caricare niente"
+        type: boolean
+        default: false
 
 # Il robot non scrive niente nel deposito: non gli serve nessun permesso.
 permissions:
@@ -27,7 +32,9 @@ concurrency:
 jobs:
   leggi:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # ottanta giornali, ciascuno con la sua attesa: venti minuti sono
+    # abbondanti, ma un sito fermo non deve far fallire il giro.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -43,4 +50,10 @@ jobs:
       - name: Leggi i feed e carica le notizie
         env:
           ROBOT_NOTIZIE: ${{ secrets.ROBOT_NOTIZIE }}
-        run: python3 strumenti/notizie/leggi-feed.py
+          SOLO_PROVA: ${{ inputs.prova }}
+        run: |
+          if [ "$SOLO_PROVA" = "true" ]; then
+            python3 strumenti/notizie/leggi-feed.py --prova
+          else
+            python3 strumenti/notizie/leggi-feed.py
+          fi

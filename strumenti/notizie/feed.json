@@ -4,6 +4,8 @@
     "  appartengono i comuni di cui quel giornale parla: il robot chiede al",
     "  database l'elenco dei comuni di quelle regioni e tiene solo gli articoli",
     "  che nominano uno di quei comuni.",
+    "stato: «verificato» = l'ho letto davvero e restituisce articoli; «da provare»",
+    "  = testata vera, ma l'indirizzo esatto del feed lo conferma il primo giro.",
     "argomenti: il secondo filtro, quello editoriale. Un articolo entra solo se",
     "  parla di meteo, mare, spiaggia o eventi ('tieni'), e non entra comunque",
     "  se contiene una parola di 'mai' (cronaca nera, sport, politica). Il veto",
@@ -28,7 +30,8 @@
       "url": "https://www.senigallianotizie.it/feed",
       "regioni": [
         "marche"
-      ]
+      ],
+      "stato": "verificato"
     },
     {
       "nome": "Riviera Oggi",
@@ -36,14 +39,644 @@
       "regioni": [
         "marche",
         "abruzzo"
-      ]
+      ],
+      "stato": "verificato"
     },
     {
       "nome": "Centropagina",
       "url": "https://www.centropagina.it/feed/",
       "regioni": [
         "marche"
-      ]
+      ],
+      "stato": "verificato"
+    },
+    {
+      "nome": "Riviera24",
+      "url": "https://www.riviera24.it/feed",
+      "regioni": [
+        "liguria"
+      ],
+      "stato": "verificato"
+    },
+    {
+      "nome": "IVG Savona",
+      "url": "https://www.ivg.it/?feed=news-news24",
+      "regioni": [
+        "liguria"
+      ],
+      "stato": "verificato"
+    },
+    {
+      "nome": "Città della Spezia",
+      "url": "https://www.cittadellaspezia.com/feed",
+      "regioni": [
+        "liguria"
+      ],
+      "stato": "verificato"
+    },
+    {
+      "nome": "Genova24",
+      "url": "https://www.genova24.it/feed",
+      "regioni": [
+        "liguria"
+      ],
+      "stato": "verificato"
+    },
+    {
+      "nome": "Levante News",
+      "url": "https://www.levantenews.it/feed",
+      "regioni": [
+        "liguria"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "gonews Livorno Grosseto",
+      "url": "https://www.gonews.it/livorno-grosseto/feed/",
+      "regioni": [
+        "toscana"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "QuiNews Versilia",
+      "url": "https://www.quinewsversilia.it/rss.xml",
+      "regioni": [
+        "toscana"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Il Giunco",
+      "url": "https://www.ilgiunco.net/feed/",
+      "regioni": [
+        "toscana"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "La Gazzetta di Viareggio",
+      "url": "https://www.lagazzettadiviareggio.it/feed/",
+      "regioni": [
+        "toscana"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Elba Press",
+      "url": "https://www.elbapress.it/feed/",
+      "regioni": [
+        "toscana"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Tenews Elba",
+      "url": "https://www.tenews.it/feed/",
+      "regioni": [
+        "toscana"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Il Corriere Etrusco",
+      "url": "https://www.corriereetrusco.it/feed/",
+      "regioni": [
+        "toscana"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Olbia Notizie",
+      "url": "https://www.olbianotizie.it/rss/",
+      "regioni": [
+        "sardegna"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Gallura Oggi",
+      "url": "https://www.galluraoggi.it/feed/",
+      "regioni": [
+        "sardegna"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "CagliariPad",
+      "url": "https://www.cagliaripad.it/feed/",
+      "regioni": [
+        "sardegna"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Alguer.it",
+      "url": "https://www.alguer.it/rss/",
+      "regioni": [
+        "sardegna"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Sardegna Live",
+      "url": "https://www.sardegnalive.net/feed/",
+      "regioni": [
+        "sardegna"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Oristano Noi",
+      "url": "https://www.oristanonoi.it/feed/",
+      "regioni": [
+        "sardegna"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Tp24",
+      "url": "https://www.tp24.it/feed",
+      "regioni": [
+        "sicilia"
+      ],
+      "stato": "verificato"
+    },
+    {
+      "nome": "RagusaNews",
+      "url": "https://www.ragusanews.com/feed/",
+      "regioni": [
+        "sicilia"
+      ],
+      "stato": "verificato"
+    },
+    {
+      "nome": "BlogSicilia",
+      "url": "https://www.blogsicilia.it/feed-2/",
+      "regioni": [
+        "sicilia"
+      ],
+      "stato": "verificato"
+    },
+    {
+      "nome": "StrettoWeb",
+      "url": "https://www.strettoweb.com/feed/",
+      "regioni": [
+        "sicilia",
+        "calabria"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Balarm",
+      "url": "https://www.balarm.it/feed-rss",
+      "regioni": [
+        "sicilia"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "LiveSicilia",
+      "url": "https://livesicilia.it/feed/",
+      "regioni": [
+        "sicilia"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Zoom24",
+      "url": "https://www.zoom24.it/feed",
+      "regioni": [
+        "calabria"
+      ],
+      "stato": "verificato"
+    },
+    {
+      "nome": "Il Quotidiano del Sud",
+      "url": "https://www.quotidianodelsud.it/feed",
+      "regioni": [
+        "calabria",
+        "basilicata"
+      ],
+      "stato": "verificato"
+    },
+    {
+      "nome": "Strill",
+      "url": "https://www.strill.it/feed/",
+      "regioni": [
+        "calabria"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "LaC News24",
+      "url": "https://www.lacnews24.it/rss/",
+      "regioni": [
+        "calabria"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Il Vibonese",
+      "url": "https://www.ilvibonese.it/?feed=rss2",
+      "regioni": [
+        "calabria"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Il Crotonese",
+      "url": "https://www.ilcrotonese.it/feed/",
+      "regioni": [
+        "calabria"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Catanzaro Informa",
+      "url": "https://www.catanzaroinforma.it/feed/",
+      "regioni": [
+        "calabria"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Basilicata24",
+      "url": "https://cdn.basilicata24.it/feed",
+      "regioni": [
+        "basilicata"
+      ],
+      "stato": "verificato"
+    },
+    {
+      "nome": "SassiLive",
+      "url": "https://www.sassilive.it/feed",
+      "regioni": [
+        "basilicata"
+      ],
+      "stato": "verificato"
+    },
+    {
+      "nome": "Stato Quotidiano",
+      "url": "https://www.statoquotidiano.it/feed/",
+      "regioni": [
+        "puglia"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Manfredonia News",
+      "url": "https://www.manfredonianews.it/feed/",
+      "regioni": [
+        "puglia"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Il Fatto del Gargano",
+      "url": "https://www.ilfattodelgargano.it/feed/",
+      "regioni": [
+        "puglia"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Gazzetta h24",
+      "url": "https://www.gazzettah24.it/feed/",
+      "regioni": [
+        "puglia"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Rete Gargano",
+      "url": "https://www.retegargano.it/feed/",
+      "regioni": [
+        "puglia"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Corriere Salentino",
+      "url": "https://www.corrieresalentino.it/feed/",
+      "regioni": [
+        "puglia"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Lecce Sette",
+      "url": "https://www.leccesette.it/feed/",
+      "regioni": [
+        "puglia"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Monopoli Times",
+      "url": "https://www.monopolitimes.com/feed/",
+      "regioni": [
+        "puglia"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Ostuni News",
+      "url": "https://www.ostuninews.it/feed/",
+      "regioni": [
+        "puglia"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Primo Numero",
+      "url": "https://www.primonumero.it/rss",
+      "regioni": [
+        "molise"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "isNews",
+      "url": "https://www.isnews.it/feed/",
+      "regioni": [
+        "molise"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "AbruzzoWeb",
+      "url": "https://www.abruzzoweb.it/feed/",
+      "regioni": [
+        "abruzzo"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "CityRumors Abruzzo",
+      "url": "https://www.cityrumors.it/feed/",
+      "regioni": [
+        "abruzzo"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Rete8",
+      "url": "https://www.rete8.it/feed/",
+      "regioni": [
+        "abruzzo"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Zonalocale Vasto",
+      "url": "https://www.zonalocale.it/feed/",
+      "regioni": [
+        "abruzzo",
+        "molise"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Il Trafiletto",
+      "url": "https://www.iltrafiletto.it/feed/",
+      "regioni": [
+        "abruzzo"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Giulianova News",
+      "url": "https://www.giulianovanews.it/rss",
+      "regioni": [
+        "abruzzo"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Chiamami Città",
+      "url": "https://www.chiamamicitta.it/feed/",
+      "regioni": [
+        "emiliaromagna"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Rimini Notizie",
+      "url": "https://cdn.rimininotizie.net/feed",
+      "regioni": [
+        "emiliaromagna"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Ravenna Notizie",
+      "url": "https://www.ravennanotizie.it/feed/",
+      "regioni": [
+        "emiliaromagna"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "SetteSere QUI",
+      "url": "https://www.settesere.it/it/rss.xml",
+      "regioni": [
+        "emiliaromagna"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Estense.com",
+      "url": "https://www.estense.com/?feed=rss2",
+      "regioni": [
+        "emiliaromagna"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Cesena Notizie",
+      "url": "https://www.cesenanotizie.net/feed/",
+      "regioni": [
+        "emiliaromagna"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Ravenna24ore",
+      "url": "https://www.ravenna24ore.it/feed/",
+      "regioni": [
+        "emiliaromagna"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Venezia Orientale News",
+      "url": "https://www.veneziaorientale.news/feed/",
+      "regioni": [
+        "veneto"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "La Voce di Venezia",
+      "url": "https://www.lavocedivenezia.it/feed/",
+      "regioni": [
+        "veneto"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "La Piazza Web",
+      "url": "https://www.lapiazzaweb.it/feed/",
+      "regioni": [
+        "veneto"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Polesine24",
+      "url": "https://www.polesine24.it/feed/",
+      "regioni": [
+        "veneto"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "RovigoOggi",
+      "url": "https://www.rovigooggi.it/feed/",
+      "regioni": [
+        "veneto"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Il Friuli",
+      "url": "https://www.ilfriuli.it/rss",
+      "regioni": [
+        "friuliveneziagiulia"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Trieste All News",
+      "url": "https://www.triesteallnews.it/feed/",
+      "regioni": [
+        "friuliveneziagiulia"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Trieste Notizie",
+      "url": "https://www.triestenotizie.net/feed/",
+      "regioni": [
+        "friuliveneziagiulia"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Nordest24",
+      "url": "https://www.nordest24.it/feed/",
+      "regioni": [
+        "friuliveneziagiulia",
+        "veneto"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Telefriuli",
+      "url": "https://www.telefriuli.it/feed/",
+      "regioni": [
+        "friuliveneziagiulia"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Il Faro online",
+      "url": "https://www.ilfaroonline.it/feed/",
+      "regioni": [
+        "lazio"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Latina Oggi",
+      "url": "https://www.latinaoggi.eu/feed/",
+      "regioni": [
+        "lazio"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "h24 notizie",
+      "url": "https://www.h24notizie.com/feed/",
+      "regioni": [
+        "lazio"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Il Messaggero Ostia",
+      "url": "https://www.ilmessaggero.it/rss/roma.xml",
+      "regioni": [
+        "lazio"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Civonline",
+      "url": "https://www.civonline.it/feed/",
+      "regioni": [
+        "lazio"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Positano News",
+      "url": "https://www.positanonews.it/feed/",
+      "regioni": [
+        "campania"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Il Vescovado Costa d'Amalfi",
+      "url": "https://www.ilvescovado.it/feed/",
+      "regioni": [
+        "campania"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Il Golfo 24 (Ischia e Procida)",
+      "url": "https://www.ilgolfo24.it/feed/",
+      "regioni": [
+        "campania"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "InfoCilento",
+      "url": "https://www.infocilento.it/feed/",
+      "regioni": [
+        "campania"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Salerno Today alternativa — Le Cronache",
+      "url": "https://www.cronachesalerno.it/feed/",
+      "regioni": [
+        "campania"
+      ],
+      "stato": "da provare"
+    },
+    {
+      "nome": "Metropolis Web",
+      "url": "https://www.metropolisweb.it/feed/",
+      "regioni": [
+        "campania"
+      ],
+      "stato": "da provare"
     }
   ],
   "sinonimi": {
@@ -287,6 +920,7 @@
       "mozione",
       "polemica",
       "polemiche",
+      "dibattito",
       "ricorso",
       "sciopero",
       "bilancio",

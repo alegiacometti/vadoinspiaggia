@@ -63,7 +63,8 @@ CHIAVE = os.environ.get("SUPABASE_ANON", "sb_publishable_T6WweLO_kXsLO57kutuAVA_
 SEGRETO = os.environ.get("ROBOT_NOTIZIE", "")
 
 CHI_SONO = "vadoinspiaggia-notizie/1.0 (+https://alegiacometti.github.io/vadoinspiaggia/)"
-ATTESA = 25          # secondi prima di rinunciare a un feed
+ATTESA = 12          # secondi prima di rinunciare a un feed:
+                     # con ottanta giornali, uno lento non puo' fermare tutti
 MAX_PER_COMUNE = 8   # per giro: la scheda ne mostra quattro, oltre e' rumore
 GIORNI_CONFRONTO = 14  # quanto indietro guardare per riconoscere la stessa storia
 
@@ -87,6 +88,9 @@ def testo_di(byte):
     return byte.decode("utf-8", "replace")
 
 
+ROBOTS_LETTI = {}
+
+
 def posso_leggere(url):
     """Il sito permette a un robot di leggere questo indirizzo?
 
@@ -95,18 +99,31 @@ def posso_leggere(url):
     e' esattamente il contrario di quello che serve qui, quindi il file lo
     leggiamo noi e glielo diamo gia' pronto."""
     pezzi = urllib.parse.urlsplit(url)
+    if pezzi.netloc in ROBOTS_LETTI:
+        regole, perche = ROBOTS_LETTI[pezzi.netloc]
+        if regole is None:
+            return False, perche
+        ok = regole.can_fetch(CHI_SONO, url) and regole.can_fetch("*", url)
+        return ok, "" if ok else "il robots.txt non lo permette"
     dove = "%s://%s/robots.txt" % (pezzi.scheme, pezzi.netloc)
     try:
         righe = testo_di(apri(dove, "text/plain")).splitlines()
     except urllib.error.HTTPError as e:
         # 404 = nessuna regola = nessun divieto. Tutto il resto e' un no.
-        if e.code in (401, 403, 404, 410):
-            return e.code in (404, 410), "robots.txt risponde %d" % e.code
-        return False, "robots.txt risponde %d" % e.code
+        if e.code in (404, 410):
+            vuoto = RobotFileParser(); vuoto.parse([])
+            ROBOTS_LETTI[pezzi.netloc] = (vuoto, "")
+            return True, ""
+        perche = "robots.txt risponde %d" % e.code
+        ROBOTS_LETTI[pezzi.netloc] = (None, perche)
+        return False, perche
     except Exception as e:
-        return False, "robots.txt non leggibile (%s)" % type(e).__name__
+        perche = "robots.txt non leggibile (%s)" % type(e).__name__
+        ROBOTS_LETTI[pezzi.netloc] = (None, perche)
+        return False, perche
     regole = RobotFileParser()
     regole.parse(righe)
+    ROBOTS_LETTI[pezzi.netloc] = (regole, "")
     ok = regole.can_fetch(CHI_SONO, url) and regole.can_fetch("*", url)
     return ok, "" if ok else "il robots.txt non lo permette"
 
@@ -428,7 +445,7 @@ def main():
         print("   %-16s %d" % (r, len(per_regione[r])))
 
     # 2. leggere i giornali
-    raccolti, saltati, scartati_tema = [], [], []
+    raccolti, saltati, scartati_tema, tabella = [], [], [], []
     if filtra:
         print("\nfiltro per argomento: ACCESO (meteo, mare, spiaggia, eventi)")
     else:
@@ -437,13 +454,15 @@ def main():
         xml, perche = prendi_feed(g, args.cartella)
         if not xml:
             saltati.append((g["nome"], perche))
-            print("   - %-22s saltato: %s" % (g["nome"], perche))
+            tabella.append((g["nome"], g["regioni"], 0, 0, 0, perche))
+            print("   - %-26s saltato: %s" % (g["nome"], perche))
             continue
         try:
             letti = articoli(xml)
-        except ET.ParseError as e:
-            saltati.append((g["nome"], "feed illeggibile (%s)" % e))
-            print("   - %-22s feed illeggibile" % g["nome"])
+        except ET.ParseError:
+            saltati.append((g["nome"], "non e' un feed"))
+            tabella.append((g["nome"], g["regioni"], 0, 0, 0, "non e' un feed"))
+            print("   - %-26s non e' un feed" % g["nome"])
             continue
         voci = indice(sorted({c for r in g["regioni"]
                               for c in per_regione.get(r, [])}), sinonimi, mai_comuni)
@@ -460,7 +479,9 @@ def main():
             a.update(comune=comune, con=con, fonte=g["nome"], perche=perche_no)
             raccolti.append(a)
             presi += 1
-        print("   + %-22s %3d articoli, %2d del posto, %2d in tema"
+        tabella.append((g["nome"], g["regioni"], len(letti),
+                        presi + fuori_tema, presi, ""))
+        print("   + %-26s %3d articoli, %2d del posto, %2d in tema"
               % (g["nome"], len(letti), presi + fuori_tema, presi))
 
     # 3. le tre reti contro i doppioni
@@ -500,6 +521,20 @@ def main():
                 segno = "" if piatto(a["con"]) == piatto(c) else " [da «%s»]" % a["con"]
                 tema = "  (%s)" % a["perche"] if a.get("perche") else ""
                 print("      · %s%s%s" % (a["titolo"][:66], segno, tema))
+
+    # La tabella e' il motivo per cui questo giro si guarda a occhio: dice quali
+    # giornali vale la pena tenere e quali sono solo attesa sprecata.
+    print("\n--- i giornali, uno per uno " + "-" * 44)
+    print("%-28s %-14s %5s %5s %5s  %s"
+          % ("giornale", "regione", "art.", "posto", "tema", "problema"))
+    for nome, reg, letti, posto, tema, problema in sorted(
+            tabella, key=lambda r: (-r[4], -r[3], r[0])):
+        print("%-28s %-14s %5d %5d %5d  %s"
+              % (nome[:28], reg[0][:14], letti, posto, tema, problema))
+    muti = [t[0] for t in tabella if t[5]]
+    if muti:
+        print("\nnon hanno dato niente (%d): %s" % (len(muti), ", ".join(muti)))
+        print("togli dal feed.json quelli che sbagliano due giri di fila.")
 
     if not buoni:
         print("\nniente di nuovo: e' il caso normale quando gira ogni giorno.")
