@@ -31,7 +31,7 @@
       "regioni": [
         "marche"
       ],
-      "stato": "verificato"
+      "stato": "reso 1 in tema al primo giro"
     },
     {
       "nome": "Riviera Oggi",
@@ -40,7 +40,7 @@
         "marche",
         "abruzzo"
       ],
-      "stato": "verificato"
+      "stato": "reso 2 in tema al primo giro"
     },
     {
       "nome": "Centropagina",
@@ -48,7 +48,7 @@
       "regioni": [
         "marche"
       ],
-      "stato": "verificato"
+      "stato": "reso 3 in tema al primo giro"
     },
     {
       "nome": "Riviera24",
@@ -56,7 +56,7 @@
       "regioni": [
         "liguria"
       ],
-      "stato": "verificato"
+      "stato": "reso 1 in tema al primo giro"
     },
     {
       "nome": "IVG Savona",
@@ -64,7 +64,7 @@
       "regioni": [
         "liguria"
       ],
-      "stato": "verificato"
+      "stato": "reso 2 in tema al primo giro"
     },
     {
       "nome": "Città della Spezia",
@@ -144,7 +144,7 @@
       "regioni": [
         "toscana"
       ],
-      "stato": "da provare"
+      "stato": "reso 1 in tema al primo giro"
     },
     {
       "nome": "Olbia Notizie",
@@ -152,7 +152,7 @@
       "regioni": [
         "sardegna"
       ],
-      "stato": "da provare"
+      "stato": "reso 204 in tema al primo giro"
     },
     {
       "nome": "Gallura Oggi",
@@ -160,7 +160,7 @@
       "regioni": [
         "sardegna"
       ],
-      "stato": "da provare"
+      "stato": "reso 1 in tema al primo giro"
     },
     {
       "nome": "CagliariPad",
@@ -225,7 +225,7 @@
         "sicilia",
         "calabria"
       ],
-      "stato": "da provare"
+      "stato": "reso 3 in tema al primo giro"
     },
     {
       "nome": "Balarm",
@@ -301,14 +301,6 @@
       "stato": "da provare"
     },
     {
-      "nome": "Basilicata24",
-      "url": "https://cdn.basilicata24.it/feed",
-      "regioni": [
-        "basilicata"
-      ],
-      "stato": "verificato"
-    },
-    {
       "nome": "SassiLive",
       "url": "https://www.sassilive.it/feed",
       "regioni": [
@@ -362,7 +354,7 @@
       "regioni": [
         "puglia"
       ],
-      "stato": "da provare"
+      "stato": "reso 1 in tema al primo giro"
     },
     {
       "nome": "Lecce Sette",
@@ -435,7 +427,7 @@
         "abruzzo",
         "molise"
       ],
-      "stato": "da provare"
+      "stato": "reso 1 in tema al primo giro"
     },
     {
       "nome": "Il Trafiletto",
@@ -451,7 +443,7 @@
       "regioni": [
         "abruzzo"
       ],
-      "stato": "da provare"
+      "stato": "reso 1 in tema al primo giro"
     },
     {
       "nome": "Chiamami Città",
@@ -459,15 +451,7 @@
       "regioni": [
         "emiliaromagna"
       ],
-      "stato": "da provare"
-    },
-    {
-      "nome": "Rimini Notizie",
-      "url": "https://cdn.rimininotizie.net/feed",
-      "regioni": [
-        "emiliaromagna"
-      ],
-      "stato": "da provare"
+      "stato": "reso 2 in tema al primo giro"
     },
     {
       "nome": "Ravenna Notizie",
@@ -475,7 +459,7 @@
       "regioni": [
         "emiliaromagna"
       ],
-      "stato": "da provare"
+      "stato": "reso 1 in tema al primo giro"
     },
     {
       "nome": "SetteSere QUI",
@@ -502,20 +486,12 @@
       "stato": "da provare"
     },
     {
-      "nome": "Ravenna24ore",
-      "url": "https://www.ravenna24ore.it/feed/",
-      "regioni": [
-        "emiliaromagna"
-      ],
-      "stato": "da provare"
-    },
-    {
       "nome": "Venezia Orientale News",
       "url": "https://www.veneziaorientale.news/feed/",
       "regioni": [
         "veneto"
       ],
-      "stato": "da provare"
+      "stato": "reso 1 in tema al primo giro"
     },
     {
       "nome": "La Voce di Venezia",
@@ -542,30 +518,6 @@
       "stato": "da provare"
     },
     {
-      "nome": "RovigoOggi",
-      "url": "https://www.rovigooggi.it/feed/",
-      "regioni": [
-        "veneto"
-      ],
-      "stato": "da provare"
-    },
-    {
-      "nome": "Il Friuli",
-      "url": "https://www.ilfriuli.it/rss",
-      "regioni": [
-        "friuliveneziagiulia"
-      ],
-      "stato": "da provare"
-    },
-    {
-      "nome": "Trieste All News",
-      "url": "https://www.triesteallnews.it/feed/",
-      "regioni": [
-        "friuliveneziagiulia"
-      ],
-      "stato": "da provare"
-    },
-    {
       "nome": "Trieste Notizie",
       "url": "https://www.triestenotizie.net/feed/",
       "regioni": [
@@ -580,15 +532,7 @@
         "friuliveneziagiulia",
         "veneto"
       ],
-      "stato": "da provare"
-    },
-    {
-      "nome": "Telefriuli",
-      "url": "https://www.telefriuli.it/feed/",
-      "regioni": [
-        "friuliveneziagiulia"
-      ],
-      "stato": "da provare"
+      "stato": "reso 1 in tema al primo giro"
     },
     {
       "nome": "Il Faro online",
@@ -596,7 +540,7 @@
       "regioni": [
         "lazio"
       ],
-      "stato": "da provare"
+      "stato": "reso 3 in tema al primo giro"
     },
     {
       "nome": "Latina Oggi",
@@ -620,7 +564,7 @@
       "regioni": [
         "lazio"
       ],
-      "stato": "da provare"
+      "stato": "reso 2 in tema al primo giro"
     },
     {
       "nome": "Civonline",
@@ -652,7 +596,7 @@
       "regioni": [
         "campania"
       ],
-      "stato": "da provare"
+      "stato": "reso 2 in tema al primo giro"
     },
     {
       "nome": "InfoCilento",
@@ -663,7 +607,7 @@
       "stato": "da provare"
     },
     {
-      "nome": "Salerno Today alternativa — Le Cronache",
+      "nome": "Le Cronache di Salerno",
       "url": "https://www.cronachesalerno.it/feed/",
       "regioni": [
         "campania"
@@ -676,7 +620,7 @@
       "regioni": [
         "campania"
       ],
-      "stato": "da provare"
+      "stato": "reso 1 in tema al primo giro"
     }
   ],
   "sinonimi": {
@@ -717,8 +661,6 @@
       "raffich*",
       "tromba d'aria",
       "ondata di calore",
-      "caldo",
-      "afa",
       "bollino",
       "protezione civile",
       "pioggia",
@@ -738,8 +680,10 @@
       "marino",
       "marini",
       "balnea*",
-      "acqua",
-      "acque",
+      "potabile",
+      "non potabile",
+      "acqua di mare",
+      "qualita dell'acqua",
       "onde",
       "onda",
       "corrente",
@@ -847,6 +791,8 @@
       "omicidi*",
       "sparator*",
       "truff*",
+      "evasione",
+      "evasore",
       "processo",
       "condannat*",
       "indagat*",
@@ -882,6 +828,11 @@
       "tragedia",
       "dramma",
       "lutto",
+      "addio",
+      "scompars*",
+      "salvat*",
+      "naufrag*",
+      "necrologi*",
       "suicid*",
       "incendio",
       "rogo",

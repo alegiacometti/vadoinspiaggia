@@ -67,6 +67,10 @@ ATTESA = 12          # secondi prima di rinunciare a un feed:
                      # con ottanta giornali, uno lento non puo' fermare tutti
 MAX_PER_COMUNE = 8   # per giro: la scheda ne mostra quattro, oltre e' rumore
 GIORNI_CONFRONTO = 14  # quanto indietro guardare per riconoscere la stessa storia
+MAX_ARTICOLI = 120   # quanti articoli guardare per giornale: un feed che ne
+                     # sputa tremila sta dando l'archivio, non le novita'
+GIORNI_FRESCHI = 30  # un articolo piu' vecchio di cosi' non entra: una spiaggia
+                     # con notizie di primavera racconta una bugia
 
 
 # ------------------------------------------------------------------ la rete
@@ -129,6 +133,22 @@ def posso_leggere(url):
 
 
 # --------------------------------------------------------------- i feed
+
+# Se l'indirizzo scritto in feed.json non funziona, si provano i soliti posti
+# dove i siti tengono il feed. Meta' degli errori del primo giro erano questo:
+# testata viva, indirizzo sbagliato di una barra.
+PERCORSI = ["/feed", "/feed/", "/rss", "/rss.xml", "/?feed=rss2", "/atom.xml"]
+
+
+def indirizzi(url):
+    pezzi = urllib.parse.urlsplit(url)
+    base = "%s://%s" % (pezzi.scheme, pezzi.netloc)
+    fuori = [url]
+    for q in PERCORSI:
+        if base + q not in fuori:
+            fuori.append(base + q)
+    return fuori
+
 
 ATOM = "{http://www.w3.org/2005/Atom}"
 DC = "{http://purl.org/dc/elements/1.1/}"
@@ -390,24 +410,40 @@ def carica_config(percorso):
 
 
 def prendi_feed(giornale, cartella):
-    """Il testo del feed: dalla rete, o da un file locale quando si prova.
+    """Il testo del feed, e l'indirizzo che ha funzionato davvero.
 
-    In prova il file si chiama come il giornale, tutto minuscolo e con i
-    trattini: «Senigallia Notizie» -> senigallia-notizie.xml"""
+    In prova legge un file locale che si chiama come il giornale, tutto
+    minuscolo e con i trattini: «Senigallia Notizie» -> senigallia-notizie.xml
+
+    Dalla rete prova l'indirizzo scritto in feed.json e, se non va, i soliti
+    posti dove i siti tengono il feed. Si ferma al primo che restituisce
+    davvero degli articoli: un indirizzo che risponde ma non e' un feed non
+    conta come risposta."""
     if cartella:
         nome = re.sub(r"[^a-z0-9]+", "-", piatto(giornale["nome"])).strip("-")
         dove = os.path.join(cartella, nome + ".xml")
         if not os.path.exists(dove):
-            return "", "manca il file di prova %s" % os.path.basename(dove)
+            return "", "", "manca il file di prova %s" % os.path.basename(dove)
         with open(dove, encoding="utf-8") as h:
-            return h.read(), ""
-    ok, perche = posso_leggere(giornale["url"])
-    if not ok:
-        return "", perche
-    try:
-        return testo_di(apri(giornale["url"])), ""
-    except Exception as e:
-        return "", "non risponde (%s)" % type(e).__name__
+            return h.read(), dove, ""
+
+    ultimo = "non risponde"
+    for url in indirizzi(giornale["url"]):
+        ok, perche = posso_leggere(url)
+        if not ok:
+            return "", "", perche          # il robots.txt vale per tutto il sito
+        try:
+            xml = testo_di(apri(url))
+        except Exception as e:
+            ultimo = "non risponde (%s)" % type(e).__name__
+            continue
+        try:
+            if articoli(xml):
+                return xml, url, ""
+            ultimo = "feed vuoto"
+        except ET.ParseError:
+            ultimo = "non e' un feed"
+    return "", "", ultimo
 
 
 def main():
@@ -450,8 +486,10 @@ def main():
         print("\nfiltro per argomento: ACCESO (meteo, mare, spiaggia, eventi)")
     else:
         print("\nfiltro per argomento: spento — entra tutto, cronaca compresa")
+    vecchie_via = 0
+    limite = dt.date.today() - dt.timedelta(days=GIORNI_FRESCHI)
     for g in conf["giornali"]:
-        xml, perche = prendi_feed(g, args.cartella)
+        xml, usato, perche = prendi_feed(g, args.cartella)
         if not xml:
             saltati.append((g["nome"], perche))
             tabella.append((g["nome"], g["regioni"], 0, 0, 0, perche))
@@ -464,6 +502,16 @@ def main():
             tabella.append((g["nome"], g["regioni"], 0, 0, 0, "non e' un feed"))
             print("   - %-26s non e' un feed" % g["nome"])
             continue
+        # Un feed che restituisce tremila articoli sta dando l'archivio, non le
+        # novita': si guardano i primi, che sono i piu' recenti, e si buttano
+        # quelli vecchi. Senza questo, a ogni giro si rileggono anni di roba e
+        # nelle schede finiscono notizie di primavera.
+        letti = letti[:MAX_ARTICOLI]
+        prima = len(letti)
+        letti = [a for a in letti
+                 if a["pubblicata"] is None or a["pubblicata"] >= limite]
+        vecchie_via += prima - len(letti)
+
         voci = indice(sorted({c for r in g["regioni"]
                               for c in per_regione.get(r, [])}), sinonimi, mai_comuni)
         presi = fuori_tema = 0
@@ -481,8 +529,9 @@ def main():
             presi += 1
         tabella.append((g["nome"], g["regioni"], len(letti),
                         presi + fuori_tema, presi, ""))
-        print("   + %-26s %3d articoli, %2d del posto, %2d in tema"
-              % (g["nome"], len(letti), presi + fuori_tema, presi))
+        diverso = "" if usato == g["url"] else "   -> %s" % usato
+        print("   + %-26s %3d recenti, %2d del posto, %2d in tema%s"
+              % (g["nome"], len(letti), presi + fuori_tema, presi, diverso))
 
     # 3. le tre reti contro i doppioni
     vecchie = [] if args.cartella else gia_dentro()
@@ -506,6 +555,10 @@ def main():
         per_comune[a["comune"]] = per_comune.get(a["comune"], 0) + 1
         buoni.append(a)
 
+    if vecchie_via:
+        print("\narticoli piu' vecchi di %d giorni, lasciati stare: %d"
+              % (GIORNI_FRESCHI, vecchie_via))
+
     if scartati_tema:
         print("\nfuori tema, non caricate (%d):" % len(scartati_tema))
         for titolo, comune, perche_no in scartati_tema[:12]:
@@ -526,7 +579,7 @@ def main():
     # giornali vale la pena tenere e quali sono solo attesa sprecata.
     print("\n--- i giornali, uno per uno " + "-" * 44)
     print("%-28s %-14s %5s %5s %5s  %s"
-          % ("giornale", "regione", "art.", "posto", "tema", "problema"))
+          % ("giornale", "regione", "rec.", "posto", "tema", "problema"))
     for nome, reg, letti, posto, tema, problema in sorted(
             tabella, key=lambda r: (-r[4], -r[3], r[0])):
         print("%-28s %-14s %5d %5d %5d  %s"

@@ -75,6 +75,24 @@ ARGOMENTI = [
     # niente di attinente: fuori
     ("la Rotonda riapre sabato dopo i lavori",                "Senigallia",       False),
     ("il porto si allarga: via ai lavori",                    "Civitanova",       False),
+    # i falsi positivi veri del primo giro su tutta Italia, 19 settembre:
+    # erano entrati, adesso devono restare fuori
+    ("Olbia, addio a Leonardo Deiana: se ne va il nonno dei due fratelli",
+                                                              "Olbia",            False),
+    ("Maxi-evasione da 30 milioni di euro: coppia nei guai",   "Olbia",            False),
+    ("Pescatore cade in mare: salvato dalla Guardia costiera", "San Teodoro",      False),
+    ("emergenza in mare: salvati due bagnanti",                "Santa Teresa Gallura", False),
+    ("Piscina, il CSI: bloccata l'assistenza in acqua",        "Ravenna",          False),
+    # questa l'avevo scambiata per un falso positivo: «AFA» qui e' la sigla di
+    # una ginnastica, non l'afa del meteo. Ma il titolo dice «al mare» e si
+    # parla di un'attivita' in riva: passa, e va bene cosi'. La parola «afa»
+    # resta comunque fuori dai via libera, perche' quella sigla e' una mina.
+    ("GINNASTICA AFA AL MARE, TRA BENESSERE E SOCIALITA'",     "Pisa",             True),
+    ("SOS Caldo, l'impegno di UNIVOC e Regalati un Sorriso",   "Catanzaro",        False),
+    # ma questi due devono continuare a passare
+    ("acqua non potabile a Marina di Palo: divieto in alcune zone", "Ladispoli",   True),
+    ("stabilimento balneare abusivo, sgomberato dalla Guardia costiera",
+                                                    "Santa Teresa Gallura",        True),
     # la trappola: il nome del paese contiene la parola «Mare»
     ("Francavilla al Mare, chiude lo sportello anagrafe",     "Francavilla al Mare", False),
     ("Francavilla al Mare, nuova ciclabile sul lungomare",    "Francavilla al Mare", True),
