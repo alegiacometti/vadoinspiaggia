@@ -23,7 +23,14 @@
   --ombra:0 1px 2px rgba(12,91,135,.06), 0 8px 24px -12px rgba(12,91,135,.22);
 }
 *{box-sizing:border-box}
-html,body{margin:0;padding:0}
+/* «clip» e non «hidden»: hidden fa di body un contenitore di scorrimento, e
+   dentro un contenitore di scorrimento «position:sticky» non si aggancia piu'
+   in cima allo schermo — la barra della home scorreva via su ogni telefono.
+   Clip taglia allo stesso modo senza creare lo scorrimento, e serve a tutte
+   le larghezze da quando testata, barra e piede arrivano ai bordi dello
+   schermo: quei margini negativi sconfinano di qualche pixel oltre la
+   larghezza utile, ed e' quello sconfinamento che va tagliato. */
+html,body{margin:0;padding:0;overflow-x:clip}
 body{
   background:
     radial-gradient(1200px 600px at 12% -5%, #eaf5fb 0%, transparent 60%),
@@ -424,13 +431,6 @@ svg.grafico{display:block;width:100%;min-width:520px;height:auto}
 .piede:hover a,.piede:focus-within a{color:var(--azzurro)}
 
 @media (max-width:960px){
-  /* «clip» e non «hidden»: hidden fa di body un contenitore di scorrimento,
-     e dentro un contenitore di scorrimento «position:sticky» non si aggancia
-     piu' in cima allo schermo. La barra della home restava incollata al suo
-     posto nel documento e scorreva via come tutto il resto — proprio sotto i
-     960 pixel, cioe' su ogni telefono. Clip taglia allo stesso modo senza
-     creare lo scorrimento. */
-  html,body{overflow-x:clip}
   .guscio{padding:18px 13px 40px}
   .impaginato{grid-template-columns:1fr;gap:16px}
   /* la colonna sparisce come contenitore: carta, scheda ed elenco diventano riordinabili */
