@@ -7,11 +7,11 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#083c5c">
 <title>Gestione · Vado in spiaggia</title>
-<link rel="stylesheet" href="carte-spiagge.css?v=202609182115">
+<link rel="stylesheet" href="carte-spiagge.css?v=202609182132">
 <link rel="stylesheet" href="caratteri/caratteri.css?v=202609130413">
-<script src="configurazione.js?v=202609182115"></script>
-<script src="vado-dati.js?v=202609182115"></script>
-<script src="vado-archivio.js?v=202609182115"></script>
+<script src="configurazione.js?v=202609182132"></script>
+<script src="vado-dati.js?v=202609182132"></script>
+<script src="vado-archivio.js?v=202609182132"></script>
 <style>
 /* Questa pagina NON e' protetta dal fatto di essere nascosta: chiunque puo'
    aprirla, e va benissimo. A proteggere sono le regole del database — senza
@@ -1057,7 +1057,6 @@ function bloccoArchivio(){
   if (!archivioPronto())
     return '<div class="gest-vuoto">La lista delle immagini d’archivio non è stata caricata.</div>';
   const restano = daFare();
-  const dubbie  = restano.filter(r => !r.sicuro).length;
   const viste   = ARCHIVIO_FOTO.filter(r =>
     ARCH_VEDI_SCARTATE ? SCARTATE.has(r.sid)
                        : (!giaDentro(r.sid) && !SCARTATE.has(r.sid)));
@@ -1068,12 +1067,13 @@ function bloccoArchivio(){
 
     '<p class="gest-arch-nota">Immagini da <b>Pexels</b>: uso commerciale libero, ' +
       'attribuzione non obbligatoria — l’autore lo scriviamo lo stesso, sotto la foto. ' +
+      'Ci sono solo foto <b>certe</b>: il nome della spiaggia compare nel titolo ' +
+      'dell’immagine o nel suo indirizzo, non soltanto nella descrizione. ' +
       'Passa sopra a una e scegli: <b>tieni</b> la pubblica subito nella scheda, ' +
-      '<b>scarta</b> la toglie da qui per sempre.' +
-      (dubbie ? ' <b class="gest-arch-att">' + dubbie +
-        (dubbie === 1 ? ' ha' : ' hanno') + ' il punto interrogativo</b>: il nome della ' +
-        'spiaggia non compare nel titolo della foto, solo nella descrizione. Guardale bene.' : '') +
-    '</p>' +
+      '<b>scarta</b> la toglie da qui per sempre.</p>' +
+    '<p class="gest-arch-nota fioca">Questo elenco è una <b>lista fissa</b>: non si ' +
+      'aggiorna da solo e non arriva niente di nuovo da fuori. Si allunga quando ne ' +
+      'cerchiamo altre, e da lì in poi resta lì finché non le hai decise tutte.</p>' +
 
     '<div class="gest-arch-mosse">' + mosseArchivio() + '</div>' +
 
@@ -1137,8 +1137,6 @@ function tessera(r){
   return '<figure class="prov' + (st.stato ? ' ' + st.stato : '') + '" data-arch-t="' +
       esc(r.sid) + '">' +
     '<img src="' + esc(r.url) + '" alt="' + esc(r.nome) + '" loading="lazy" decoding="async">' +
-    (r.sicuro ? '' : '<span class="prov-dubbio" title="Il nome della spiaggia non compare nel ' +
-      'titolo della foto, solo nella descrizione: controllala bene">?</span>') +
     '<figcaption><b>' + esc(r.nome) + '</b><span>' +
       esc(r.autore || 'autore non indicato') + '</span></figcaption>' +
     '<div class="prov-mosse">' +
@@ -1186,6 +1184,17 @@ function ritocca(sid){
   t.querySelectorAll('.prov-mosse button').forEach(b => b.disabled = st.stato === 'corso');
 }
 
+function togliTessera(sid){
+  const t = corpo.querySelector('[data-arch-t="' + CSS.escape(sid) + '"]');
+  if (!t) return;
+  t.style.opacity = "0"; t.style.transform = "scale(.96)";
+  setTimeout(() => {
+    t.remove();
+    const griglia = corpo.querySelector(".gest-prov");
+    if (griglia && !griglia.children.length) disegna();
+  }, 200);
+}
+
 function credito(r){
   return { fonte: r.fonte, autore: r.autore, licenza: r.licenza, pagina: r.pagina };
 }
@@ -1216,7 +1225,13 @@ async function tieni(sid){
     const file = await prelevaArchivio(r);
     await VADO.pubblicaArchivio(sid, file, credito(r));
     ARCH[sid] = { stato: "fatta", detto: "è nella scheda" };
-    ritoccaMosse();
+    ritocca(sid); ritoccaMosse();
+    /* un attimo per leggere «è nella scheda», poi via: la griglia deve
+       mostrare quello che resta da decidere, non quello che hai gia' deciso.
+       E' anche la risposta alla domanda «quando si aggiorna»: si aggiorna
+       qui, adesso, a ogni scelta. */
+    setTimeout(() => togliTessera(sid), 900);
+    return;
   } catch (e) {
     ARCH[sid] = e && e.amano
       ? { stato: "amano", detto: e.message }
@@ -1271,6 +1286,9 @@ async function archivioAMano(sid, file){
   try {
     await VADO.pubblicaArchivio(sid, file, credito(r));
     ARCH[sid] = { stato: "fatta", detto: "è nella scheda" };
+    ritocca(sid); ritoccaMosse();
+    setTimeout(() => togliTessera(sid), 900);
+    return;
   } catch (e) {
     ARCH[sid] = { stato: "male", detto: "non ha funzionato: " + ((e && e.message) || e) };
   }
@@ -1825,8 +1843,8 @@ window.addEventListener("hashchange", () => { if (PROFILI.length) disegna(); });
 
 VADO.alCambio(s => { IO = s; carica(); });
 </script>
-<script src="vado-conto.js?v=202609182115"></script>
-<script src="vado-cookie.js?v=202609182115"></script>
-<script src="vado-piede.js?v=202609182115"></script>
+<script src="vado-conto.js?v=202609182132"></script>
+<script src="vado-cookie.js?v=202609182132"></script>
+<script src="vado-piede.js?v=202609182132"></script>
 </body>
 </html>
