@@ -163,6 +163,7 @@ window.VADOFOTO = (function () {
        tranello morde — si controlla con typeof, mai con window. */
     const entrato = typeof VADO !== "undefined" && !!VADO.chiSono();
     if (!scatti.length) {
+      dove.className = entrato ? "imm-sez imm-sola" : "";
       dove.innerHTML = entrato
         ? '<p class="imm-invito">Hai una foto di questa spiaggia? ' +
           '<button type="button" class="imm-manda" data-imm-apri>Mandala</button></p>'
@@ -172,6 +173,9 @@ window.VADOFOTO = (function () {
     }
 
     SCATTI = scatti;
+    /* La sezione si veste da sola: in cima alla scheda deve leggersi come un
+       blocco, non come un pezzo di testo qualunque. */
+    dove.className = "imm-sez";
     dove.innerHTML =
       '<p class="titoletto">Le immagini ' +
         (scatti.every(f => f.archivio) ? '<em>della spiaggia</em>'

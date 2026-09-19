@@ -7,11 +7,11 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#083c5c">
 <title>Gestione · Vado in spiaggia</title>
-<link rel="stylesheet" href="carte-spiagge.css?v=202609182132">
+<link rel="stylesheet" href="carte-spiagge.css?v=202609190544">
 <link rel="stylesheet" href="caratteri/caratteri.css?v=202609130413">
-<script src="configurazione.js?v=202609182132"></script>
-<script src="vado-dati.js?v=202609182132"></script>
-<script src="vado-archivio.js?v=202609182132"></script>
+<script src="configurazione.js?v=202609190544"></script>
+<script src="vado-dati.js?v=202609190544"></script>
+<script src="vado-archivio.js?v=202609190544"></script>
 <style>
 /* Questa pagina NON e' protetta dal fatto di essere nascosta: chiunque puo'
    aprirla, e va benissimo. A proteggere sono le regole del database — senza
@@ -1093,6 +1093,8 @@ function mosseArchivio(){
     : '<button type="button" class="conto-vai" data-arch-tutte' +
         (restano.length && !ARCH_CORSO ? '' : ' disabled') + '>' +
         (ARCH_CORSO ? 'un momento…' : 'Tieni tutte (' + restano.length + ')') + '</button>') +
+    (!ARCH_VEDI_SCARTATE && restano.length
+      ? '<button type="button" class="gest-piu via" data-arch-niente>Scarta tutte</button>' : '') +
     (!ARCH_VEDI_SCARTATE && SCARTATE.size
       ? '<button type="button" class="gest-piu" data-arch-scartate>' +
           SCARTATE.size + (SCARTATE.size === 1 ? ' scartata' : ' scartate') +
@@ -1123,6 +1125,8 @@ function legaArchivio(dove){
     b.onclick = () => scartaUna(b.dataset.archNo));
   dove.querySelectorAll("[data-arch-rimetti]").forEach(b =>
     b.onclick = () => rimettiUna(b.dataset.archRimetti));
+  dove.querySelectorAll("[data-arch-niente]").forEach(b =>
+    b.onclick = () => scartaTutte(b));
   dove.querySelectorAll("[data-arch-scartate]").forEach(b =>
     b.onclick = () => { ARCH_VEDI_SCARTATE = true; disegna(); });
   dove.querySelectorAll("[data-arch-torna]").forEach(b =>
@@ -1253,6 +1257,27 @@ async function scartaUna(sid){
     ARCH[sid] = { stato: "male", detto: "non ha funzionato: " + ((e && e.message) || e) };
     ritocca(sid);
   }
+}
+
+/* Scartarle tutte in un colpo. Si chiede conferma — non perche' sia
+   irreversibile (si rimettono dal pulsante qui accanto) ma perche' e' l'unico
+   gesto di questa pagina che decide per trenta foto insieme, e un dito che
+   scivola sul telefono non deve poter fare trenta cose. */
+async function scartaTutte(bottone){
+  const restano = daFare();
+  if (!restano.length) return;
+  if (!confirm("Scarto tutte e " + restano.length + " le foto rimaste?\n\n" +
+               "Spariscono dalla griglia, ma non si perdono: le ritrovi in " +
+               "«" + restano.length + " scartate · rivedile» e da lì si rimettono."))
+    return;
+  bottone.disabled = true; bottone.textContent = "un momento…";
+  try {
+    await VADO.scartaTante(restano.map(r => r.sid));
+    restano.forEach(r => { SCARTATE.add(r.sid); delete ARCH[r.sid]; });
+  } catch (e) {
+    alert("Non ha funzionato: " + ((e && e.message) || e));
+  }
+  disegna();
 }
 
 async function rimettiUna(sid){
@@ -1843,8 +1868,8 @@ window.addEventListener("hashchange", () => { if (PROFILI.length) disegna(); });
 
 VADO.alCambio(s => { IO = s; carica(); });
 </script>
-<script src="vado-conto.js?v=202609182132"></script>
-<script src="vado-cookie.js?v=202609182132"></script>
-<script src="vado-piede.js?v=202609182132"></script>
+<script src="vado-conto.js?v=202609190544"></script>
+<script src="vado-cookie.js?v=202609190544"></script>
+<script src="vado-piede.js?v=202609190544"></script>
 </body>
 </html>

@@ -13,10 +13,10 @@
 <meta property="og:title" content="Vado in spiaggia">
 <meta property="og:description" content="5534 spiagge in 11 paesi d'Europa, dall'Atlantico all'Egeo: carte navigabili, meteo e stato del mare, accessi, servizi e pareri di chi c'è stato.">
 <title>Vado in spiaggia · carte, meteo e mare in tempo reale</title>
-<link rel="stylesheet" href="carte-spiagge.css?v=202609182132">
+<link rel="stylesheet" href="carte-spiagge.css?v=202609190544">
 <link rel="stylesheet" href="caratteri/caratteri.css?v=202609130413">
-<script src="configurazione.js?v=202609182132"></script>
-<script src="vado-dati.js?v=202609182132"></script>
+<script src="configurazione.js?v=202609190544"></script>
+<script src="vado-dati.js?v=202609190544"></script>
 <style>/* misure di questa pagina — vedi carte-spiagge.css */
 :root{--colonna-carta:820px;--telaio-h:min(41vh,380px)}
 
@@ -98,9 +98,101 @@ svg.carta{cursor:default;touch-action:auto}
 .reg-riga{font-size:13px;line-height:1.5;color:#20536e}
 
 
-.sommario{font-family:var(--dati);font-size:11.5px;line-height:1.9;color:var(--grigio);margin:0 0 3px auto;
-  text-align:right;letter-spacing:.03em}
+/* ===================== L'INSEGNA E LA BARRA ============================
+   Due pezzi con due compiti diversi. L'insegna presenta il sito e poi se ne
+   va; la barra e' l'attrezzo e resta. Tenerli separati vuol dire che nessuno
+   dei due deve fare il mestiere dell'altro — e in particolare che la barra
+   puo' essere bassa davvero, perche' non deve contenere nessun titolo. */
+.insegna{padding:0 0 16px;margin:0}
+.insegna-testo{max-width:760px}
+.insegna h1{margin:0}
+.insegna-sotto{font-family:var(--display);font-variation-settings:"SOFT" 40,"WONK" 1,"opsz" 96;
+  font-style:italic;font-weight:400;font-size:clamp(16px,2.7vw,23px);line-height:1.25;
+  color:var(--azzurro);margin:9px 0 0}
+.sommario{font-family:var(--dati);font-size:11.5px;line-height:1.9;color:var(--grigio);
+  margin:8px 0 0;letter-spacing:.03em}
 .sommario b{color:var(--blu);font-weight:500}
+
+/* La barra. «sticky» e non «fixed»: fissa avrebbe richiesto di compensare a
+   mano l'altezza sul resto della pagina, e quella compensazione va sempre
+   fuori sincrono con qualcosa. Sticky si porta dietro il suo spazio da sola. */
+.barra-alta{position:sticky;top:0;z-index:60;
+  /* esce dal margine del guscio per arrivare ai bordi dello schermo */
+  margin:0 -20px 18px;padding:7px 20px;
+  background:rgba(255,255,255,.93);backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--tratto);
+  transition:box-shadow .18s}
+/* l'ombra compare solo quando la barra si e' staccata dall'insegna: da ferma,
+   in cima alla pagina, un'ombra sotto una riga che non copre niente e' rumore */
+.barra-alta.staccata{box-shadow:0 6px 18px -10px rgba(8,60,92,.35)}
+.barra-dentro{display:flex;align-items:center;gap:10px;max-width:1440px;margin:0 auto}
+.barra-marchio{flex:none;display:block;line-height:0}
+.barra-marchio .marchio{width:27px;height:27px;border-radius:7px;display:block}
+.barra-nome{font-family:var(--display);font-variation-settings:"SOFT" 30,"WONK" 1,"opsz" 96;
+  font-weight:600;font-size:15px;color:var(--profondo);letter-spacing:-.01em;white-space:nowrap}
+
+/* IL GRUPPO: il campo e il pulsante dentro una cornice sola. Angoli piccoli,
+   nessuno spazio fra i due, un filo a dividerli.
+
+   Si chiama «barra-gruppo» e non «gruppo» perche' «.gruppo» ESISTE GIA' nel
+   foglio condiviso — e' il gruppo dei filtri delle pagine regionali, ed e' in
+   colonna. Chiamandolo cosi' il campo e il pulsante si incolonnavano invece di
+   affiancarsi, e la barra diventava alta il doppio. Nessun errore, nessun
+   avviso: solo due regole che si sommano.
+   E' la quinta volta che una collisione di nomi morde questo progetto (vetrina,
+   marchio, piede, gest-foto, e adesso gruppo). Prima di battezzare una classe
+   nuova conviene cercarla in carte-spiagge.css. */
+.barra-cerca{position:relative;flex:1 1 auto;min-width:0}
+.barra-gruppo{display:flex;align-items:stretch;border:1px solid var(--tratto);border-radius:9px;
+  background:var(--carta);box-shadow:0 1px 2px rgba(12,91,135,.05);overflow:hidden}
+.barra-gruppo:focus-within{border-color:var(--basso);box-shadow:0 0 0 2px rgba(23,134,189,.15)}
+.barra-gruppo input{flex:1 1 auto;min-width:0;border:0;outline:0;background:transparent;
+  font:inherit;font-size:14px;padding:8px 12px;color:var(--inchiostro)}
+.barra-gruppo input::placeholder{color:#93b4c6}
+.barra-gruppo input::-webkit-search-cancel-button{cursor:pointer}
+.barra-gruppo-div{width:1px;background:var(--tratto);flex:none}
+.barra-vicino{display:inline-flex;align-items:center;gap:6px;text-decoration:none;
+  background:var(--nebbia);color:var(--blu);padding:0 13px;white-space:nowrap;
+  font-family:var(--dati);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;
+  transition:background .14s}
+.barra-vicino:hover,.barra-vicino:focus-visible{background:var(--schiuma);color:var(--profondo)}
+.barra-vicino span{font-size:12px;line-height:1}
+
+/* IL CONTO. Su schermo largo sta in riga; sotto i 620 si chiude dietro un
+   tasto solo e si apre come un pannellino appeso alla barra. */
+.barra-conto{position:relative;flex:none;display:flex;align-items:center}
+.conto-scrigno{display:none;width:30px;height:30px;border-radius:8px;cursor:pointer;
+  border:1px solid var(--tratto);background:var(--nebbia);color:var(--blu);
+  font-size:9px;letter-spacing:1px;line-height:1;padding:0}
+.conto-scrigno:hover{border-color:var(--basso)}
+/* mai su due righe: la barra ha un'altezza sola, e una riga in piu' qui
+   dentro la raddoppierebbe */
+.barra-conto .conto{gap:8px;flex-wrap:nowrap}
+@media (max-width:1200px){ .barra-conto .conto-chi{max-width:13ch} }
+
+@media (max-width:920px){ .barra-nome{display:none} }
+/* Il margine negativo deve valere esattamente quanto il rientro del guscio,
+   che sotto i 960 pixel passa da 20 a 13: con -20 fissi la barra sporgeva di
+   quattordici pixel oltre lo schermo del telefono. Non si vedeva perche' il
+   troppo viene tagliato, ma la riga dentro era spostata. */
+@media (max-width:960px){
+  .barra-alta{margin:0 -13px 15px;padding:6px 13px}
+}
+@media (max-width:620px){
+  .barra-alta{padding:5px 13px;margin:0 -13px 13px}
+  .barra-gruppo input{font-size:16px;padding:6px 10px}   /* 16px: sotto, iOS zooma da solo */
+  .barra-vicino{padding:0 11px}
+  .barra-vicino b{display:none}
+  .barra-vicino span{font-size:14px}
+  .conto-scrigno{display:block}
+  /* il pannellino: sta sotto la barra, non dentro */
+  .barra-conto .conto{position:absolute;top:calc(100% + 9px);right:0;z-index:5;
+    display:none;flex-direction:column;align-items:stretch;gap:7px;min-width:190px;
+    background:var(--carta);border:1px solid var(--tratto);border-radius:11px;
+    padding:11px;box-shadow:0 14px 34px -14px rgba(8,60,92,.4)}
+  .barra-conto.aperto .conto{display:flex}
+  .barra-conto .conto-chi{max-width:none;text-align:center}
+}
 
 /* --- passo 1: la scelta del paese --- */
 [hidden]{display:none!important}
@@ -122,13 +214,7 @@ svg.carta{cursor:default;touch-action:auto}
 
 /* --- passo 2: la barra di ritorno --- */
 /* ---------- la ricerca globale ---------- */
-.cerca-riga{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;margin:0 0 18px}
-.cerca-cont{position:relative;flex:1 1 320px;min-width:0}
-.cerca-cont input{width:100%;font:inherit;font-size:14.5px;padding:11px 16px;border-radius:999px;
-  border:1px solid var(--tratto);background:var(--carta);color:var(--inchiostro);
-  box-shadow:var(--ombra)}
-.cerca-cont input:focus{outline:2px solid var(--ambra);outline-offset:1px}
-.cerca-esiti{position:absolute;z-index:30;left:0;right:0;top:calc(100% + 6px);max-height:58vh;
+.cerca-esiti{position:absolute;z-index:30;left:0;right:0;top:calc(100% + 6px);max-height:70vh;
   overflow:auto;background:var(--carta);border:1px solid var(--tratto);border-radius:12px;
   box-shadow:0 12px 34px rgba(8,60,92,.14)}
 .cerca-esiti a,.cerca-esiti .vuoto{display:flex;align-items:baseline;gap:9px;padding:10px 15px;
@@ -140,11 +226,6 @@ svg.carta{cursor:default;touch-action:auto}
   text-transform:uppercase;color:var(--ambra);border:1px solid var(--ambra);border-radius:999px;
   padding:2px 8px;white-space:nowrap}
 .cerca-esiti .vuoto{color:var(--grigio);font-size:13px}
-.cerca-qui{display:inline-flex;align-items:center;gap:8px;text-decoration:none;white-space:nowrap;
-  font-family:var(--dati);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
-  background:var(--profondo);color:#fff;border-radius:999px;padding:12px 20px;transition:.16s}
-.cerca-qui::before{content:"◉";font-size:12px}
-.cerca-qui:hover{background:var(--azzurro)}
 .barra-stato{display:flex;align-items:center;gap:13px;margin:0 0 11px}
 button.ritorno{cursor:pointer;margin:0}   /* il resto viene da .ritorno, uguale alle pagine regionali */
 .barra-eti{display:inline-flex;align-items:center;gap:8px;font-family:var(--dati);font-size:11px;
@@ -165,7 +246,7 @@ svg.carta{transition:none}
 @media (max-width:960px){
   .telaio{height:min(74vh,640px);min-height:420px}
   .pannello{order:4}
-  .sommario{text-align:left;margin:0}
+  .sommario{margin:8px 0 0}
 }
 /* ---- la carta sopra, i pulsanti sotto in due colonne -------------------
    La carta d'insieme e' larga il doppio di quanto e' alta: in una colonna
@@ -184,8 +265,8 @@ svg.carta{transition:none}
 .pannello{position:static}
 .stati,.regioni{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
   gap:12px 16px;align-items:start}
-.testata .barra-stato{margin:0 0 9px}
-.testata .ritorno{margin:0}
+.insegna .barra-stato{margin:0 0 9px}
+.insegna .ritorno{margin:0}
 @media (max-width:860px){
   /* margin-inline:auto su un elemento di griglia lo fa restringere al
      contenuto invece di occupare la colonna: sul telefono la carta si
@@ -208,8 +289,11 @@ svg.carta{transition:none}
 <body>
 <div class="guscio">
 
-  <header class="testata">
-    <div>
+  <!-- L'INSEGNA: titolo, sottotitolo e cifre. Scorre via come qualunque altro
+       contenuto — e' una presentazione, e una presentazione si legge una volta
+       sola. Quel che deve restare a portata sta nella barra qui sotto. -->
+  <header class="insegna">
+    <div class="insegna-testo">
       <!-- Il ritorno al passo precedente sta in testa, dov'e' sulle pagine
            regionali: se cambia posto a seconda del passo, chi naviga lo perde. -->
       <div class="barra-stato" id="barraStato" hidden>
@@ -217,25 +301,46 @@ svg.carta{transition:none}
         <span class="barra-eti" id="barraEti"></span>
       </div>
       <h1 id="titolo">Vado <em>in spiaggia</em></h1>
+      <p class="insegna-sotto">Trova la spiaggia perfetta per te</p>
+      <p class="sommario" id="sommario">
+        <b>5534</b> spiagge in <b>59</b> regioni
+      </p>
     </div>
-    <p class="sommario" id="sommario">
-      <b>5534</b> spiagge in <b>59</b> regioni
-    </p>
-      <div class="conto" id="conto"></div>
   </header>
 
-  <!-- La ricerca e il «qui vicino» stanno sopra la carta perche' sono le due
-       domande che uno si fa arrivando: «c'e' quella spiaggia?» e «cosa ho
-       intorno?». La carta risponde a una terza domanda — «cosa c'e' in quella
-       regione» — che viene dopo. -->
-  <div class="cerca-riga">
-    <div class="cerca-cont">
-      <input id="cercaTutto" type="search" autocomplete="off" spellcheck="false"
-             placeholder="Cerca una spiaggia o un comune, in tutti i paesi…"
-             aria-label="Cerca una spiaggia o un comune">
-      <div class="cerca-esiti" id="cercaEsiti" hidden></div>
+  <!-- LA BARRA. Da qui in giu' non si muove piu'. Dentro ci sono le due
+       domande che uno si fa arrivando — «c'e' quella spiaggia?» e «cosa ho
+       intorno?» — e stanno nella STESSA cornice, senza spazio in mezzo:
+       erano due pastiglie staccate, e due pastiglie staccate si leggono come
+       due attrezzi diversi quando invece sono due modi di cercare.
+
+       Il conto sta qui perche' e' l'unica altra cosa che serve a qualunque
+       altezza della pagina; sotto i 620 pixel si ritira dietro un solo tasto,
+       perche' quattro collegamenti in fila su un telefono mangerebbero tutta
+       la barra. -->
+  <div class="barra-alta" id="barraAlta">
+    <div class="barra-dentro">
+      <a class="barra-marchio" href="index.html" aria-label="Vado in spiaggia"><svg class="marchio" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#083c5c"/><circle cx="44" cy="20" r="8" fill="#e8b04b"/><path d="M8 40c5 0 5-5 10-5s5 5 10 5 5-5 10-5 5 5 10 5 5-5 8-5" fill="none" stroke="#9ed4ea" stroke-width="6" stroke-linecap="round"/><path d="M8 51c5 0 5-5 10-5s5 5 10 5 5-5 10-5 5 5 10 5 5-5 8-5" fill="none" stroke="#1786bd" stroke-width="6" stroke-linecap="round"/></svg></a>
+      <span class="barra-nome">Vado in spiaggia</span>
+
+      <div class="barra-cerca">
+        <div class="barra-gruppo">
+          <input id="cercaTutto" type="search" autocomplete="off" spellcheck="false"
+                 placeholder="Cerca una spiaggia o un comune…"
+                 aria-label="Cerca una spiaggia o un comune, in tutti i paesi">
+          <span class="barra-gruppo-div" aria-hidden="true"></span>
+          <a class="barra-vicino" href="vicino.html" title="Le spiagge intorno a me">
+            <span aria-hidden="true">&#9673;</span><b>Vicino a me</b></a>
+        </div>
+        <div class="cerca-esiti" id="cercaEsiti" hidden></div>
+      </div>
+
+      <div class="barra-conto">
+        <button type="button" class="conto-scrigno" id="contoScrigno"
+                aria-expanded="false" aria-label="Il tuo account">&#9679;&#9679;&#9679;</button>
+        <div class="conto" id="conto"></div>
+      </div>
     </div>
-    <a class="cerca-qui" href="vicino.html">Spiagge intorno a me</a>
   </div>
 
   <div class="impaginato">
@@ -598,6 +703,38 @@ svg.carta{transition:none}
 </div>
 
 <script>
+/* ---------------------------------------------------- la barra che resta
+   Due cose sole. La prima: l'ombra sotto la barra si accende quando la barra
+   si e' staccata dall'insegna, perche' da ferma — in cima alla pagina, senza
+   niente sotto da coprire — sarebbe rumore.
+
+   La seconda: su schermo stretto il conto sta dietro un tasto. Il pannellino
+   si chiude premendo altrove o con Esc, come qualunque altra cosa che si apre
+   sopra la pagina; se restasse aperto scorrendo, coprirebbe proprio la parte
+   di schermo che su un telefono e' gia' poca. */
+(function barra(){
+  const barra = document.getElementById("barraAlta");
+  const scrigno = document.getElementById("contoScrigno");
+  const conto = scrigno && scrigno.parentElement;
+  if (barra) {
+    const guarda = () => barra.classList.toggle("staccata", barra.getBoundingClientRect().top <= 0);
+    addEventListener("scroll", guarda, { passive: true });
+    addEventListener("resize", guarda);
+    guarda();
+  }
+  if (!scrigno || !conto) return;
+  const chiudi = () => { conto.classList.remove("aperto"); scrigno.setAttribute("aria-expanded","false"); };
+  scrigno.addEventListener("click", e => {
+    e.stopPropagation();
+    const apri = !conto.classList.contains("aperto");
+    conto.classList.toggle("aperto", apri);
+    scrigno.setAttribute("aria-expanded", String(apri));
+  });
+  document.addEventListener("click", e => { if (!conto.contains(e.target)) chiudi(); });
+  addEventListener("keydown", e => { if (e.key === "Escape") chiudi(); });
+  addEventListener("scroll", chiudi, { passive: true });
+})();
+
 /* ------------------------------------------------------ la ricerca globale
    Cerca fra tutti i nomi, non solo fra quelli che si possono vedere: il
    catalogo dei nomi e' pubblico apposta. Una spiaggia di una regione chiusa
@@ -887,8 +1024,8 @@ document.querySelectorAll(".reg-carta.pronta").forEach(a=>{
   });
 });
 </script>
-<script src="vado-conto.js?v=202609182132"></script>
-<script src="vado-cookie.js?v=202609182132"></script>
-<script src="vado-piede.js?v=202609182132"></script>
+<script src="vado-conto.js?v=202609190544"></script>
+<script src="vado-cookie.js?v=202609190544"></script>
+<script src="vado-piede.js?v=202609190544"></script>
 </body>
 </html>

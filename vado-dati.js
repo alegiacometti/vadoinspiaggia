@@ -866,6 +866,12 @@ const VADO = (() => {
   const scarta   = sid => chiedi("archivio_scartate",
     { metodo: "POST", corpo: { sid: sid },
       intestazioni: { "Prefer": "return=minimal,resolution=merge-duplicates" } });
+  /* Tante in una richiesta sola: PostgREST accetta un elenco di righe. Trenta
+     scarti sono trenta viaggi di rete se si fa una riga per volta, e trenta
+     occasioni perche' uno vada storto a meta'. */
+  const scartaTante = sids => chiedi("archivio_scartate",
+    { metodo: "POST", corpo: sids.map(x => ({ sid: x })),
+      intestazioni: { "Prefer": "return=minimal,resolution=merge-duplicates" } });
   const rimetti  = sid => chiedi("archivio_scartate?sid=eq." + encodeURIComponent(sid),
     { metodo: "DELETE", intestazioni: { "Prefer": "return=minimal" } });
 
@@ -956,7 +962,7 @@ const VADO = (() => {
            consensoMio, accettaPrivacy, entraConGoogle, statoRegioni,
            registro, segnaLavoro, correggiSpiaggia,
            movimenti, backupCsv, backupNumeri, riepiloghi,
-           pubblicaArchivio, scartate, scarta, rimetti,
+           pubblicaArchivio, scartate, scarta, scartaTante, rimetti,
            mandaFoto, fotoSpiaggia, mieFoto, fotoDaModerare,
            approvaFotoLibera, rifiutaFotoLibera, notizieComune,
            caricaFoto, firmaFoto, approvaFoto, rifiutaFoto, buttaFoto,

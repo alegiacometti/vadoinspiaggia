@@ -12,15 +12,15 @@
 <meta property="og:title" content="Le spiagge della Puglia">
 <meta property="og:description" content="Le spiagge della Puglia: 158 spiagge in 15 zone costiere, con carta navigabile, meteo, stato del mare, accessi, servizi e parcheggi.">
 <title>Vado in spiaggia · le spiagge della Puglia · carta, meteo e mare</title>
-<link rel="stylesheet" href="carte-spiagge.css?v=202609182132">
+<link rel="stylesheet" href="carte-spiagge.css?v=202609190544">
 <link rel="stylesheet" href="caratteri/caratteri.css?v=202609130413">
-<script src="configurazione.js?v=202609182132"></script>
-<script src="vado-dati.js?v=202609182132"></script>
-<script src="vado-recensioni.js?v=202609182132"></script>
-<script src="vado-foto.js?v=202609182132"></script>
-<script src="vado-extra.js?v=202609182132"></script>
-<script src="vado-segnala.js?v=202609182132"></script>
-<script src="vado-vento.js?v=202609182132"></script>
+<script src="configurazione.js?v=202609190544"></script>
+<script src="vado-dati.js?v=202609190544"></script>
+<script src="vado-recensioni.js?v=202609190544"></script>
+<script src="vado-foto.js?v=202609190544"></script>
+<script src="vado-extra.js?v=202609190544"></script>
+<script src="vado-segnala.js?v=202609190544"></script>
+<script src="vado-vento.js?v=202609190544"></script>
 <style>/* misure di questa regione — vedi carte-spiagge.css */
 :root{--colonna-carta:660px;--telaio-h:min(64vh,700px)}</style>
 </head>
@@ -1147,7 +1147,13 @@ function pino(x,base,h){return'<line x1="'+x+'" y1="'+base+'" x2="'+x+'" y2="'+(
   '<ellipse cx="'+x+'" cy="'+(base-h*.72)+'" rx="'+(h*.36).toFixed(0)+'" ry="'+(h*.19).toFixed(0)+'" fill="#43663f"/>'+
   '<ellipse cx="'+(x-h*.12).toFixed(0)+'" cy="'+(base-h*.82)+'" rx="'+(h*.24).toFixed(0)+'" ry="'+(h*.14).toFixed(0)+'" fill="#547a48"/>';}
 function veduta(b){
-  const [sab,acq,sfo,ext]=b.sc,W=560,H=315,oriz=126,riva=214;
+  /* Il disegno di ripiego, quando nemmeno le tessere satellitari arrivano.
+     «sc» sono i quattro colori della spiaggia; oggi ce l'hanno tutte e 5534,
+     ma una spiaggia aggiunta domani senza colori farebbe morire qui l'intera
+     scheda — non solo l'immagine. Meglio quattro colori qualunque che una
+     scheda bianca. */
+  const [sab,acq,sfo,ext]=b.sc||["#efe3c4","#2f8fb8","#cfe0bf","#9ec089"],
+    W=560,H=315,oriz=126,riva=214;
   const r=rng(b.n.length*7919+b.n.charCodeAt(0)*131+b.n.charCodeAt(b.n.length-1)*17);
   let o='<defs><linearGradient id="ci" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#bfe0f0"/><stop offset="70%" stop-color="#dff0f7"/><stop offset="100%" stop-color="#f2f8e9"/></linearGradient>'+
    '<linearGradient id="mr" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+scuro(acq,-38)+'"/><stop offset="55%" stop-color="'+acq+'"/><stop offset="100%" stop-color="'+scuro(acq,50)+'"/></linearGradient>'+
@@ -1205,6 +1211,11 @@ function corpo(b){
       st=(v==null)?'<span class="st">n/c</span>':((v>0&&v<1)?'<span class="st">stag.</span>':"");
     return '<span class="sv '+cls+'"><svg viewBox="0 0 20 20">'+ICONE[k]+'</svg><span class="lab">'+et+'</span>'+st+'</span>';}).join("");
   return '<div class="corpo">'+
+   /* Le immagini stanno QUI, subito sotto i pulsanti della vista aerea e
+      sopra il nome: e' il posto dove l'occhio va per primo, e una foto vera
+      della spiaggia dice in un colpo quello che le righe di dati dicono in
+      venti secondi. In fondo alla scheda non la vedeva quasi nessuno. */
+   '<div id="slotImmagini"></div>'+
    '<div class="riga-titolo"><div><h2>'+b.n+'</h2>'+stellaHtml(STELLE.spiagge.has(b.sid), "spiaggia", b.sid, "Salva fra i preferiti")+
      mandaHtml(b)+
      '<div class="sotto">'+b.com+' · '+gradi(b.lat,b.lat<0?"S":"N")+' '+gradi(b.lon,b.lon<0?"W":"E")+'</div></div>'+
@@ -1228,7 +1239,6 @@ function corpo(b){
    '<p class="titoletto">Servizi in spiaggia</p><div class="servizi">'+chips+'</div>'+
    '<p class="titoletto">Da sapere</p><p class="nota">'+(b.nota||'Descrizione non ancora disponibile.')+'</p>'+
    '<div class="tag">'+b.id.map(t=>'<span'+(t==="Bandiera Blu"?' class="bb"':'')+'>'+t+'</span>').join("")+'</div>'+
-   '<div id="slotImmagini"></div>'+
    '<div id="slotNotizie"></div>'+
    '<div id="slotIntorno"></div>'+
    '<div id="slotPareri"></div>'+'</div>';
@@ -1535,6 +1545,29 @@ const SRV_F=[["bb","Bandiera Blu"],["ristorante","Ristorante"],["bar","Bar"],["l
   ["sorveglianza","Sorveglianza"],["cani","Cani ammessi"],["ombra","Ombra naturale"],["sport","Sport acquatici"]];
 const contS=document.getElementById("filtriServizi");
 contS.innerHTML=SRV_F.map(([k,et])=>'<button class="f" data-s="'+k+'" aria-pressed="false">'+et+'</button>').join("");
+/* Un filtro che non puo' mai trovare niente non e' un filtro: e' una promessa
+   che la regione non puo' mantenere. In Molise nessuna spiaggia ha lo sport
+   acquatico segnato; premere «Sport acquatici» li' non da' zero risultati per
+   caso, li da' sempre — e chi lo preme pensa che il sito si sia rotto.
+   Quindi si spegne: grigio, trasparente, non cliccabile, e il perche' scritto
+   nel titolo per chi ci passa sopra. Non si nasconde: sapere che la voce
+   esiste ma qui non e' compilata e' un'informazione, non un difetto. */
+function spegniFiltriVuoti(){
+  const accVivi = new Set(SPIAGGE.map(b => b.acc));
+  contA.querySelectorAll("button[data-a]").forEach(b => {
+    const vuoto = !accVivi.has(b.dataset.a);
+    b.disabled = vuoto;
+    b.classList.toggle("spenta", vuoto);
+    if (vuoto) b.title = "Nessuna spiaggia di questa regione ha questo tipo di accesso";
+  });
+  contS.querySelectorAll("button[data-s]").forEach(b => {
+    const k = b.dataset.s;
+    const vuoto = !SPIAGGE.some(x => x.sv && x.sv[k] > 0);
+    b.disabled = vuoto;
+    b.classList.toggle("spenta", vuoto);
+    if (vuoto) b.title = "Nessuna spiaggia di questa regione ha questa informazione";
+  });
+}
 function applicaFiltri(){
   ESCLUSE=new Set();
   SPIAGGE.forEach((b,i)=>{
@@ -1774,6 +1807,7 @@ async function avvia(){
   ZONE = d.zone; SPIAGGE = d.spiagge;
   STELLE = await VADO.stelleAccese();   /* una richiesta sola, prima di disegnare */
   await VADORECE.caricaMedie(SPIAGGE.map(x=>x.sid));   /* idem per i voti medi */
+  spegniFiltriVuoti();     /* i filtri che qui non possono trovare niente */
   disegnaSegni();          /* i segni sulla carta, e MARKER/ETIM/BANDE */
   legende();               /* le due legende, che contano le spiagge */
   disegnaZone();           /* i pulsanti delle zone */
@@ -2178,8 +2212,8 @@ avvia();
 VADO.alCambio((function(){ let primo=true;
   return ()=>{ if(primo){ primo=false; return; } location.reload(); }; })());
 </script>
-<script src="vado-conto.js?v=202609182132"></script>
-<script src="vado-cookie.js?v=202609182132"></script>
-<script src="vado-piede.js?v=202609182132"></script>
+<script src="vado-conto.js?v=202609190544"></script>
+<script src="vado-cookie.js?v=202609190544"></script>
+<script src="vado-piede.js?v=202609190544"></script>
 </body>
 </html>

@@ -72,7 +72,13 @@ h1 em{font-style:normal;font-variation-settings:inherit;color:inherit}
 button.f{font-family:var(--testo);font-size:12.5px;font-weight:500;background:var(--carta);color:var(--blu);
   border:1px solid var(--tratto);border-radius:999px;padding:5px 12px;cursor:pointer;transition:.16s;
   display:inline-flex;align-items:center;gap:7px}
-button.f:hover{border-color:var(--basso);box-shadow:var(--ombra)}
+button.f:hover:not(.spenta){border-color:var(--basso);box-shadow:var(--ombra)}
+/* Il filtro che in questa regione non puo' trovare niente. Non si nasconde:
+   sapere che la voce esiste ma qui non e' compilata e' un'informazione. Ma non
+   deve nemmeno sembrare premibile, perche' premerlo darebbe sempre zero. */
+button.f.spenta{opacity:.42;color:var(--grigio);background:var(--nebbia);
+  border-color:var(--tratto);border-style:dashed;cursor:not-allowed;box-shadow:none}
+button.f.spenta .pt{filter:grayscale(1);opacity:.6}
 button.f[aria-pressed="true"]{color:#fff;background:var(--azzurro);border-color:var(--azzurro)}
 button.f .pt{width:8px;height:8px;border-radius:50%;flex:none}
 button.f:focus-visible,.marker:focus-visible,input:focus-visible,li:focus-visible{outline:2px solid var(--ambra);outline-offset:2px}
@@ -418,7 +424,13 @@ svg.grafico{display:block;width:100%;min-width:520px;height:auto}
 .piede:hover a,.piede:focus-within a{color:var(--azzurro)}
 
 @media (max-width:960px){
-  html,body{overflow-x:hidden}
+  /* «clip» e non «hidden»: hidden fa di body un contenitore di scorrimento,
+     e dentro un contenitore di scorrimento «position:sticky» non si aggancia
+     piu' in cima allo schermo. La barra della home restava incollata al suo
+     posto nel documento e scorreva via come tutto il resto — proprio sotto i
+     960 pixel, cioe' su ogni telefono. Clip taglia allo stesso modo senza
+     creare lo scorrimento. */
+  html,body{overflow-x:clip}
   .guscio{padding:18px 13px 40px}
   .impaginato{grid-template-columns:1fr;gap:16px}
   /* la colonna sparisce come contenitore: carta, scheda ed elenco diventano riordinabili */
@@ -1066,6 +1078,16 @@ a.pref-nome:focus-visible::after{outline:2px solid var(--azzurro);outline-offset
    senza aspect-ratio la pagina salterebbe a ogni immagine che atterra. */
 /* La striscia scorre di lato e si aggancia alle immagini: con tre foto su un
    telefono, una griglia che va a capo occuperebbe mezza scheda. */
+/* La sezione immagini sta in cima alla scheda, appena sotto i pulsanti della
+   vista aerea. Essendo la prima cosa, si stacca da sola dal resto con un filo
+   di sfondo e un bordo: senza, sembrava che le foto appartenessero alla vista
+   aerea qui sopra invece che alla spiaggia qui sotto. */
+.imm-sez{background:var(--nebbia);border:1px solid var(--tratto);border-radius:11px;
+  padding:11px 12px 12px;margin:0 0 15px}
+.imm-sez .titoletto{margin-top:0}
+.imm-sez .imm-striscia .imm-scatto{flex-basis:200px}
+.imm-sez .imm-scatto{background:var(--carta);box-shadow:var(--ombra)}
+.imm-sez .imm-scatto img{aspect-ratio:3/2}
 .imm-riga{position:relative;margin:0 0 6px}
 .imm-striscia{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;
   scrollbar-width:thin;padding-bottom:2px;align-items:flex-start}
@@ -1266,3 +1288,6 @@ a.pref-nome:focus-visible::after{outline:2px solid var(--azzurro);outline-offset
 .prov.male .prov-stato,.prov.amano .prov-stato{color:#8a3a28;background:#fdf6f3}
 
 .imm-arch{font-family:var(--dati);font-size:9.5px;letter-spacing:.05em;color:var(--grigio)}
+/* solo l'invito a mandare la prima foto: niente riquadro pieno, sarebbe un
+   blocco grande per una riga di testo */
+.imm-sez.imm-sola{background:transparent;border-style:dashed;padding:9px 12px}
