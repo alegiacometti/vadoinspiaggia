@@ -96,7 +96,7 @@
     },
     {
       "nome": "gonews Livorno Grosseto",
-      "url": "https://www.gonews.it/livorno-grosseto/feed/",
+      "url": "https://www.gonews.it/feed",
       "regioni": [
         "toscana"
       ],
@@ -160,7 +160,7 @@
     },
     {
       "nome": "BlogSicilia",
-      "url": "https://www.blogsicilia.it/feed-2/",
+      "url": "https://www.blogsicilia.it/feed",
       "regioni": [
         "sicilia"
       ],
@@ -177,7 +177,7 @@
     },
     {
       "nome": "Balarm",
-      "url": "https://www.balarm.it/feed-rss",
+      "url": "https://www.balarm.it/rss",
       "regioni": [
         "sicilia"
       ],
@@ -347,7 +347,7 @@
     },
     {
       "nome": "Il Trafiletto",
-      "url": "https://www.iltrafiletto.it/feed/",
+      "url": "https://www.iltrafiletto.it/rss.xml",
       "regioni": [
         "abruzzo"
       ],
@@ -432,7 +432,7 @@
       "regioni": [
         "lazio"
       ],
-      "stato": "reso 3 in tema il 19/9"
+      "stato": "reso 2 in tema il 19/9"
     },
     {
       "nome": "h24 notizie",
@@ -483,15 +483,6 @@
       "stato": "reso 1 in tema il 19/9"
     },
     {
-      "nome": "Actu Provence-Alpes-Côte d'Azur",
-      "url": "https://actu.fr/provence-alpes-cote-d-azur/rss",
-      "regioni": [
-        "provenza"
-      ],
-      "lingua": "fr",
-      "stato": "da provare: primo giro fuori dall'Italia"
-    },
-    {
       "nome": "Made in Marseille",
       "url": "https://madeinmarseille.net/feed/",
       "regioni": [
@@ -511,12 +502,12 @@
     },
     {
       "nome": "Var-Matin",
-      "url": "https://www.varmatin.com/rss",
+      "url": "https://www.nicematin.com/var/rss",
       "regioni": [
         "provenza"
       ],
       "lingua": "fr",
-      "stato": "da provare: primo giro fuori dall'Italia"
+      "stato": "reso 3 in tema il 19/9"
     },
     {
       "nome": "Nice-Matin",
@@ -532,15 +523,6 @@
       "url": "https://france3-regions.francetvinfo.fr/provence-alpes-cote-d-azur/rss",
       "regioni": [
         "provenza"
-      ],
-      "lingua": "fr",
-      "stato": "da provare: primo giro fuori dall'Italia"
-    },
-    {
-      "nome": "Actu Occitanie",
-      "url": "https://actu.fr/occitanie/rss",
-      "regioni": [
-        "occitania"
       ],
       "lingua": "fr",
       "stato": "da provare: primo giro fuori dall'Italia"
@@ -565,7 +547,7 @@
     },
     {
       "nome": "Hérault Tribune",
-      "url": "https://www.herault-tribune.com/feed/",
+      "url": "https://www.herault-tribune.com/rss.xml",
       "regioni": [
         "occitania"
       ],
@@ -583,30 +565,12 @@
     },
     {
       "nome": "Corse Net Infos",
-      "url": "https://www.corsenetinfos.corsica/feed",
+      "url": "https://www.corsenetinfos.corsica/xml/syndication.rss",
       "regioni": [
         "corsica"
       ],
       "lingua": "fr",
-      "stato": "da provare: primo giro fuori dall'Italia"
-    },
-    {
-      "nome": "Corse-Matin",
-      "url": "https://www.corsematin.com/rss",
-      "regioni": [
-        "corsica"
-      ],
-      "lingua": "fr",
-      "stato": "da provare: primo giro fuori dall'Italia"
-    },
-    {
-      "nome": "Alta Frequenza",
-      "url": "https://www.alta-frequenza.corsica/feed",
-      "regioni": [
-        "corsica"
-      ],
-      "lingua": "fr",
-      "stato": "da provare: primo giro fuori dall'Italia"
+      "stato": "reso 2 in tema il 19/9"
     },
     {
       "nome": "France 3 Corse",
@@ -619,7 +583,7 @@
     },
     {
       "nome": "Diario Sur (Málaga)",
-      "url": "https://www.diariosur.es/rss",
+      "url": "https://www.diariosur.es/rss/2.0/?section=",
       "regioni": [
         "andalusia"
       ],
@@ -633,7 +597,7 @@
         "andalusia"
       ],
       "lingua": "es",
-      "stato": "da provare: primo giro fuori dall'Italia"
+      "stato": "reso 2 in tema il 19/9"
     },
     {
       "nome": "Diario de Cádiz",
@@ -642,7 +606,7 @@
         "andalusia"
       ],
       "lingua": "es",
-      "stato": "da provare: primo giro fuori dall'Italia"
+      "stato": "reso 8 in tema il 19/9"
     },
     {
       "nome": "Europa Sur",
@@ -660,11 +624,11 @@
         "andalusia"
       ],
       "lingua": "es",
-      "stato": "da provare: primo giro fuori dall'Italia"
+      "stato": "reso 5 in tema il 19/9"
     },
     {
       "nome": "Ideal Almería",
-      "url": "https://www.ideal.es/rss",
+      "url": "https://www.ideal.es/rss/2.0/?section=",
       "regioni": [
         "andalusia"
       ],
@@ -673,25 +637,7 @@
     },
     {
       "nome": "Última Hora",
-      "url": "https://www.ultimahora.es/rss",
-      "regioni": [
-        "baleari"
-      ],
-      "lingua": "es",
-      "stato": "da provare: primo giro fuori dall'Italia"
-    },
-    {
-      "nome": "Diario de Mallorca",
-      "url": "https://www.diariodemallorca.es/rss",
-      "regioni": [
-        "baleari"
-      ],
-      "lingua": "es",
-      "stato": "da provare: primo giro fuori dall'Italia"
-    },
-    {
-      "nome": "Diario de Ibiza",
-      "url": "https://www.diariodeibiza.es/rss",
+      "url": "https://www.ultimahora.es/feed.rss",
       "regioni": [
         "baleari"
       ],
@@ -700,7 +646,7 @@
     },
     {
       "nome": "Menorca.info",
-      "url": "https://www.menorca.info/rss",
+      "url": "https://www.menorca.info/feed.rss",
       "regioni": [
         "baleari"
       ],
@@ -709,25 +655,7 @@
     },
     {
       "nome": "Canarias7",
-      "url": "https://www.canarias7.es/rss",
-      "regioni": [
-        "canarie"
-      ],
-      "lingua": "es",
-      "stato": "da provare: primo giro fuori dall'Italia"
-    },
-    {
-      "nome": "La Provincia (Las Palmas)",
-      "url": "https://www.laprovincia.es/rss",
-      "regioni": [
-        "canarie"
-      ],
-      "lingua": "es",
-      "stato": "da provare: primo giro fuori dall'Italia"
-    },
-    {
-      "nome": "El Día (Tenerife)",
-      "url": "https://www.eldia.es/rss",
+      "url": "https://www.canarias7.es/rss/2.0/?section=",
       "regioni": [
         "canarie"
       ],
@@ -744,22 +672,13 @@
       "stato": "da provare: primo giro fuori dall'Italia"
     },
     {
-      "nome": "Diari de Girona",
-      "url": "https://www.diaridegirona.cat/rss",
-      "regioni": [
-        "catalogna"
-      ],
-      "lingua": "escat",
-      "stato": "da provare: primo giro fuori dall'Italia"
-    },
-    {
       "nome": "Diari de Tarragona",
       "url": "https://www.diaridetarragona.com/rss",
       "regioni": [
         "catalogna"
       ],
       "lingua": "escat",
-      "stato": "da provare: primo giro fuori dall'Italia"
+      "stato": "reso 3 in tema il 19/9"
     },
     {
       "nome": "NacióDigital",
@@ -771,71 +690,17 @@
       "stato": "da provare: primo giro fuori dall'Italia"
     },
     {
-      "nome": "El Punt Avui",
-      "url": "https://www.elpuntavui.cat/rss",
-      "regioni": [
-        "catalogna"
-      ],
-      "lingua": "escat",
-      "stato": "da provare: primo giro fuori dall'Italia"
-    },
-    {
-      "nome": "La Opinión de Murcia",
-      "url": "https://www.laopiniondemurcia.es/rss",
-      "regioni": [
-        "murcia"
-      ],
-      "lingua": "es",
-      "stato": "da provare: primo giro fuori dall'Italia"
-    },
-    {
       "nome": "La Verdad",
-      "url": "https://www.laverdad.es/rss",
+      "url": "https://www.laverdad.es/rss/2.0/?section=",
       "regioni": [
         "murcia"
       ],
       "lingua": "es",
-      "stato": "da provare: primo giro fuori dall'Italia"
-    },
-    {
-      "nome": "Murcia.com",
-      "url": "https://www.murcia.com/rss",
-      "regioni": [
-        "murcia"
-      ],
-      "lingua": "es",
-      "stato": "da provare: primo giro fuori dall'Italia"
-    },
-    {
-      "nome": "Levante-EMV",
-      "url": "https://www.levante-emv.com/rss",
-      "regioni": [
-        "valenciana"
-      ],
-      "lingua": "escat",
       "stato": "da provare: primo giro fuori dall'Italia"
     },
     {
       "nome": "Las Provincias",
-      "url": "https://www.lasprovincias.es/rss",
-      "regioni": [
-        "valenciana"
-      ],
-      "lingua": "escat",
-      "stato": "da provare: primo giro fuori dall'Italia"
-    },
-    {
-      "nome": "Información (Alicante)",
-      "url": "https://www.informacion.es/rss",
-      "regioni": [
-        "valenciana"
-      ],
-      "lingua": "escat",
-      "stato": "da provare: primo giro fuori dall'Italia"
-    },
-    {
-      "nome": "El Periódico Mediterráneo",
-      "url": "https://www.elperiodicomediterraneo.com/rss",
+      "url": "https://www.lasprovincias.es/rss/2.0/?section=",
       "regioni": [
         "valenciana"
       ],
@@ -853,7 +718,7 @@
     },
     {
       "nome": "Barlavento",
-      "url": "https://www.barlavento.pt/feed/",
+      "url": "https://www.barlavento.pt/?feed=rss2",
       "regioni": [
         "algarve"
       ],
@@ -865,24 +730,6 @@
       "url": "https://postal.pt/feed/",
       "regioni": [
         "algarve"
-      ],
-      "lingua": "pt",
-      "stato": "da provare: primo giro fuori dall'Italia"
-    },
-    {
-      "nome": "Diário do Alentejo",
-      "url": "https://www.diariodoalentejo.pt/feed/",
-      "regioni": [
-        "alentejo"
-      ],
-      "lingua": "pt",
-      "stato": "da provare: primo giro fuori dall'Italia"
-    },
-    {
-      "nome": "Rádio Campanário",
-      "url": "https://www.campanario.pt/feed/",
-      "regioni": [
-        "alentejo"
       ],
       "lingua": "pt",
       "stato": "da provare: primo giro fuori dall'Italia"
@@ -906,15 +753,6 @@
       "stato": "da provare: primo giro fuori dall'Italia"
     },
     {
-      "nome": "Jornal de Leiria",
-      "url": "https://www.jornaldeleiria.pt/feed",
-      "regioni": [
-        "centro"
-      ],
-      "lingua": "pt",
-      "stato": "da provare: primo giro fuori dall'Italia"
-    },
-    {
       "nome": "Diário de Aveiro",
       "url": "https://www.diarioaveiro.pt/feed",
       "regioni": [
@@ -933,17 +771,8 @@
       "stato": "da provare: primo giro fuori dall'Italia"
     },
     {
-      "nome": "Correio do Minho",
-      "url": "https://correiodominho.pt/feed",
-      "regioni": [
-        "norte"
-      ],
-      "lingua": "pt",
-      "stato": "da provare: primo giro fuori dall'Italia"
-    },
-    {
       "nome": "Alto Minho",
-      "url": "https://www.altominho.tv/feed",
+      "url": "https://www.altominho.tv/?feed=rss2",
       "regioni": [
         "norte"
       ],
@@ -952,7 +781,7 @@
     },
     {
       "nome": "Diário de Notícias da Madeira",
-      "url": "https://www.dnoticias.pt/rss",
+      "url": "https://www.dnoticias.pt/rss.xml",
       "regioni": [
         "madeira"
       ],
@@ -970,65 +799,16 @@
     },
     {
       "nome": "Açoriano Oriental",
-      "url": "https://www.acorianooriental.pt/rss",
+      "url": "https://www.acorianooriental.pt/feed/rss.xml",
       "regioni": [
         "acores"
       ],
       "lingua": "pt",
-      "stato": "da provare: primo giro fuori dall'Italia"
-    },
-    {
-      "nome": "Diário dos Açores",
-      "url": "https://www.diariodosacores.pt/feed/",
-      "regioni": [
-        "acores"
-      ],
-      "lingua": "pt",
-      "stato": "da provare: primo giro fuori dall'Italia"
-    },
-    {
-      "nome": "Times of Malta",
-      "url": "https://timesofmalta.com/rss",
-      "regioni": [
-        "malta",
-        "gozo"
-      ],
-      "lingua": "en",
-      "stato": "da provare: primo giro fuori dall'Italia"
-    },
-    {
-      "nome": "The Malta Independent",
-      "url": "https://www.independent.com.mt/rss",
-      "regioni": [
-        "malta",
-        "gozo"
-      ],
-      "lingua": "en",
-      "stato": "da provare: primo giro fuori dall'Italia"
-    },
-    {
-      "nome": "TVM News",
-      "url": "https://tvmnews.mt/en/feed/",
-      "regioni": [
-        "malta",
-        "gozo"
-      ],
-      "lingua": "en",
       "stato": "da provare: primo giro fuori dall'Italia"
     },
     {
       "nome": "Newsbook",
       "url": "https://newsbook.com.mt/en/feed/",
-      "regioni": [
-        "malta",
-        "gozo"
-      ],
-      "lingua": "en",
-      "stato": "da provare: primo giro fuori dall'Italia"
-    },
-    {
-      "nome": "MaltaToday",
-      "url": "https://www.maltatoday.com.mt/rss",
       "regioni": [
         "malta",
         "gozo"
