@@ -12,15 +12,15 @@
 <meta property="og:title" content="Le spiagge della Calabria">
 <meta property="og:description" content="Le spiagge della Calabria: 78 spiagge in 15 zone costiere, con carta navigabile, meteo, stato del mare, accessi, servizi e parcheggi.">
 <title>Vado in spiaggia · le spiagge della Calabria · carta, meteo e mare</title>
-<link rel="stylesheet" href="carte-spiagge.css?v=202609190648">
+<link rel="stylesheet" href="carte-spiagge.css?v=202609191032">
 <link rel="stylesheet" href="caratteri/caratteri.css?v=202609130413">
-<script src="configurazione.js?v=202609190648"></script>
-<script src="vado-dati.js?v=202609190648"></script>
-<script src="vado-recensioni.js?v=202609190648"></script>
-<script src="vado-foto.js?v=202609190648"></script>
-<script src="vado-extra.js?v=202609190648"></script>
-<script src="vado-segnala.js?v=202609190648"></script>
-<script src="vado-vento.js?v=202609190648"></script>
+<script src="configurazione.js?v=202609191032"></script>
+<script src="vado-dati.js?v=202609191032"></script>
+<script src="vado-recensioni.js?v=202609191032"></script>
+<script src="vado-foto.js?v=202609191032"></script>
+<script src="vado-extra.js?v=202609191032"></script>
+<script src="vado-segnala.js?v=202609191032"></script>
+<script src="vado-vento.js?v=202609191032"></script>
 <style>/* misure di questa regione — vedi carte-spiagge.css */
 :root{--colonna-carta:430px;--telaio-h:min(80vh,760px)}</style>
 </head>
@@ -1210,15 +1210,8 @@ function corpo(b){
       st=(v==null)?'<span class="st">n/c</span>':((v>0&&v<1)?'<span class="st">stag.</span>':"");
     return '<span class="sv '+cls+'"><svg viewBox="0 0 20 20">'+ICONE[k]+'</svg><span class="lab">'+et+'</span>'+st+'</span>';}).join("");
   return '<div class="corpo">'+
-   /* Le immagini stanno QUI, subito sotto i pulsanti della vista aerea e
-      sopra il nome: e' il posto dove l'occhio va per primo, e una foto vera
-      della spiaggia dice in un colpo quello che le righe di dati dicono in
-      venti secondi. In fondo alla scheda non la vedeva quasi nessuno. */
-   '<div id="slotImmagini"></div>'+
-   '<div class="riga-titolo"><div><h2>'+b.n+'</h2>'+stellaHtml(STELLE.spiagge.has(b.sid), "spiaggia", b.sid, "Salva fra i preferiti")+
-     mandaHtml(b)+
-     '<div class="sotto">'+b.com+' · '+gradi(b.lat,b.lat<0?"S":"N")+' '+gradi(b.lon,b.lon<0?"W":"E")+'</div></div>'+
-     '<div class="zona">'+ZONE[b.z]+'</div></div>'+
+   /* Il nome, il comune, le coordinate, la zona, la stella e il tasto «manda»
+      sono saliti DENTRO la finestra: qui sotto non si ripetono. */
    '<div class="rec-riassunto" data-riassunto="'+b.sid+'">'+VADORECE.riassunto(b.sid)+'</div>'+
    /* Qui c'era l'avviso sulle spiagge sovrapposte sotto lo stesso segno, con
       i nomi da premere. Tolto: parlava di come e' disegnata la carta, non
@@ -1242,16 +1235,42 @@ function corpo(b){
    '<div id="slotIntorno"></div>'+
    '<div id="slotPareri"></div>'+'</div>';
 }
+/* ---------------------------------------------------------- la finestra
+   Una zona sola di immagini, in cima. Prima erano due — la vista aerea qui e
+   la striscia delle fotografie venti centimetri piu' giu' — e quella che
+   contava di piu' arrivava per seconda: la vista aerea vinceva per posizione,
+   pur essendo un disegno.
+
+   Adesso la finestra parte dalla vista aerea, che c'e' sempre, e vado-foto.js
+   ci mette sopra la prima fotografia appena l'ha. Se fotografie non ce ne
+   sono, resta la vista aerea e sotto compare l'invito a mandarne una: la
+   scheda non cambia forma, cambia solo che cosa si vede dentro la finestra.
+
+   Il nome sta DENTRO l'immagine. Non e' un vezzo: toglie una riga alla scheda
+   e fa cominciare la pagina con una fotografia grande invece che con una
+   tabella. Il velo scuro sotto serve a tenerlo leggibile anche su un'acqua
+   bianca di sole. */
 function vetrinaSat(b,i){
   const bl=bloccato===i;
-  return '<div class="vetrina" id="vetrina">'+
-    '<div class="tela">'+(HA_FOTO?ritaglio(b):tessere(b,16))+'</div><div class="mirino"></div>'+
-    '<button type="button" class="lucchetto'+(bl?' on':'')+'" id="btnLucchetto" '+
-      'title="'+(bl?'La scheda resta fissa anche passando su altre spiagge':'Fissa questa scheda')+'">'+
-      (bl?'● Scheda fissata':'○ Fissa scheda')+'</button>'+
-    '<span class="sat-eti">Vista aerea · '+b.n+'<i>'+CREDITO_FOTO+'</i></span>'+
-    '<a class="apri-foto" href="'+gFoto(b)+'" target="_blank" rel="noopener" '+
-      'aria-label="Foto e recensioni di '+b.n+' su Google"><span>Foto e recensioni ↗</span></a></div>'+
+  return '<div class="finestra" id="vetrina">'+
+    '<div class="tela">'+(HA_FOTO?ritaglio(b):tessere(b,16))+'</div>'+
+    '<img class="fin-foto" data-fin-foto alt="" hidden>'+
+    '<div class="mirino"></div>'+
+    '<div class="fin-velo"></div>'+
+    '<div class="fin-sopra"><h2>'+b.n+'</h2>'+
+      '<p class="fin-dove">'+b.com+' · '+ZONE[b.z]+' · '+
+        gradi(b.lat,b.lat<0?"S":"N")+' '+gradi(b.lon,b.lon<0?"W":"E")+'</p></div>'+
+    '<div class="fin-mosse">'+
+      stellaHtml(STELLE.spiagge.has(b.sid), "spiaggia", b.sid, "Salva fra i preferiti")+
+      mandaHtml(b)+
+      '<button type="button" class="lucchetto'+(bl?' on':'')+'" id="btnLucchetto" '+
+        'title="'+(bl?'La scheda resta fissa anche passando su altre spiagge':'Fissa questa scheda')+'">'+
+        (bl?'● fissata':'○ fissa')+'</button>'+
+    '</div>'+
+    '<span class="fin-credito" data-fin-credito>vista aerea · '+CREDITO_FOTO+'</span>'+
+    '<a class="fin-apri" href="'+gFoto(b)+'" target="_blank" rel="noopener" '+
+      'aria-label="Foto e recensioni di '+b.n+' su Google">Foto e recensioni ↗</a></div>'+
+    '<div id="slotProvini"></div>'+
    '<div class="azioni">'+
      '<a class="primaria" href="'+gFoto(b)+'" target="_blank" rel="noopener">Foto e recensioni</a>'+
      '<a data-pano href="'+gPano(b)+'" target="_blank" rel="noopener">Street View</a>'+
@@ -1270,9 +1289,15 @@ function mostra(i){
   /* Tre livelli, dal migliore al peggiore: il ritaglio ufficiale; se manca,
      il mosaico satellitare; se non arriva neanche quello, la veduta
      schematica. Il riquadro non resta mai vuoto. */
+  /* Quando le tessere satellitari non arrivano si sostituisce SOLO il contenuto
+     della tela, non tutta la finestra: prima si buttava via l'intero riquadro,
+     e con lui il nome, la stella e il tasto per fissare la scheda. */
   const legaTessere=()=>{ let rotte=0;
-    tela.querySelectorAll("img").forEach(t=>t.onerror=()=>{ if(++rotte>=2 && scheda.querySelector("#vetrina"))
-    scheda.querySelector("#vetrina").outerHTML='<a class="vetrina-veduta" href="'+gFoto(b)+'" target="_blank" rel="noopener" aria-label="Foto e recensioni di '+b.n+' su Google">'+veduta(b)+'<span>Foto e recensioni ↗</span></a>'+'<div class="credito">Immagine satellitare non raggiungibile: qui sopra una veduta schematica.</div>'; });
+    tela.querySelectorAll("img").forEach(t=>t.onerror=()=>{ if(++rotte>=2 && tela.isConnected){
+      tela.innerHTML=veduta(b);
+      const cr=scheda.querySelector("[data-fin-credito]");
+      if(cr) cr.textContent="veduta schematica · immagine satellitare non raggiungibile";
+    }});
   };
   const primaFoto=tela.querySelector("img.ortofoto");
   if(primaFoto) primaFoto.onerror=()=>{ tela.innerHTML=tessere(b,16); legaTessere(); };
@@ -1289,7 +1314,7 @@ function mostra(i){
      scheda non aspetta la rete per comparire, e se una di queste tre cose non
      risponde le altre due si vedono lo stesso. */
   if(typeof VADOFOTO!=="undefined")
-    VADOFOTO.disegna(b.sid, b.n, scheda.querySelector("#slotImmagini"));
+    VADOFOTO.disegna(b.sid, b.n, scheda);
   if(typeof VADOEXTRA!=="undefined")
     VADOEXTRA.disegna(b, scheda.querySelector("#slotNotizie"),
                          scheda.querySelector("#slotIntorno"));
@@ -2211,8 +2236,8 @@ avvia();
 VADO.alCambio((function(){ let primo=true;
   return ()=>{ if(primo){ primo=false; return; } location.reload(); }; })());
 </script>
-<script src="vado-conto.js?v=202609190648"></script>
-<script src="vado-cookie.js?v=202609190648"></script>
-<script src="vado-piede.js?v=202609190648"></script>
+<script src="vado-conto.js?v=202609191032"></script>
+<script src="vado-cookie.js?v=202609191032"></script>
+<script src="vado-piede.js?v=202609191032"></script>
 </body>
 </html>

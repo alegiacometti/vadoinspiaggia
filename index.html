@@ -13,10 +13,10 @@
 <meta property="og:title" content="Vado in spiaggia">
 <meta property="og:description" content="5534 spiagge in 11 paesi d'Europa, dall'Atlantico all'Egeo: carte navigabili, meteo e stato del mare, accessi, servizi e pareri di chi c'è stato.">
 <title>Vado in spiaggia · carte, meteo e mare in tempo reale</title>
-<link rel="stylesheet" href="carte-spiagge.css?v=202609190648">
+<link rel="stylesheet" href="carte-spiagge.css?v=202609191032">
 <link rel="stylesheet" href="caratteri/caratteri.css?v=202609130413">
-<script src="configurazione.js?v=202609190648"></script>
-<script src="vado-dati.js?v=202609190648"></script>
+<script src="configurazione.js?v=202609191032"></script>
+<script src="vado-dati.js?v=202609191032"></script>
 <style>/* misure di questa pagina — vedi carte-spiagge.css */
 :root{--colonna-carta:820px;--telaio-h:min(41vh,380px)}
 
@@ -169,15 +169,19 @@ svg.carta{cursor:default;touch-action:auto}
    scoperta una striscia di fotografia sopra la barra. «50% - 50vw» porta il
    margine negativo esattamente a meta' della differenza, qualunque sia la
    larghezza. */
-.testa-home{margin:-26px calc(50% - 50vw) 0;padding:26px calc(50vw - 50% + 20px) 16px;
+.testa-home{margin:-26px calc(50% - 50vw) 0;padding:18px calc(50vw - 50% + 20px) 12px;
   background:linear-gradient(180deg,#fbfdfe 0%,#f4fafd 100%)}
+/* Il titolo scende da 50 a 38 pixel e il sottotitolo lo segue: l'insegna e'
+   una presentazione, e una presentazione alta un quarto di schermo ruba spazio
+   proprio alla cosa che si e' venuti a vedere. */
+.testa-home h1{margin:0;font-size:clamp(25px,3.1vw,38px)}
 .testa-home-dentro{max-width:760px}
 .testa-home h1{margin:0}
 .testa-home-sotto{font-family:var(--display);font-variation-settings:"SOFT" 40,"WONK" 1,"opsz" 96;
-  font-style:italic;font-weight:400;font-size:clamp(16px,2.7vw,23px);line-height:1.25;
-  color:var(--azzurro);margin:9px 0 0}
-.sommario{font-family:var(--dati);font-size:11.5px;line-height:1.9;color:var(--grigio);
-  margin:8px 0 0;letter-spacing:.03em}
+  font-style:italic;font-weight:400;font-size:clamp(14.5px,2vw,19px);line-height:1.25;
+  color:var(--azzurro);margin:6px 0 0}
+.sommario{font-family:var(--dati);font-size:11px;line-height:1.7;color:var(--grigio);
+  margin:6px 0 0;letter-spacing:.03em}
 .sommario b{color:var(--blu);font-weight:500}
 
 /* La barra. «sticky» e non «fixed»: fissa avrebbe richiesto di compensare a
@@ -228,10 +232,17 @@ svg.carta{cursor:default;touch-action:auto}
 /* IL CONTO. Su schermo largo sta in riga; sotto i 620 si chiude dietro un
    tasto solo e si apre come un pannellino appeso alla barra. */
 .barra-conto{position:relative;flex:none;display:flex;align-items:center}
-.conto-scrigno{display:none;width:30px;height:30px;border-radius:8px;cursor:pointer;
-  border:1px solid var(--tratto);background:var(--nebbia);color:var(--blu);
-  font-size:9px;letter-spacing:1px;line-height:1;padding:0}
-.conto-scrigno:hover{border-color:var(--basso)}
+/* Su schermo stretto il tasto del conto E' la pastiglia: tre puntini non
+   dicono niente, le iniziali dicono di chi e' il conto. Stessa forma e stesso
+   colore della pastiglia che si vede su schermo largo, cosi' e' lo stesso
+   oggetto in due posti e non due oggetti diversi. */
+.conto-scrigno{display:none;width:30px;height:30px;border-radius:50%;cursor:pointer;
+  border:0;background:var(--profondo);color:#fff;padding:0;
+  align-items:center;justify-content:center;
+  font-family:var(--dati);font-size:10.5px;font-weight:500;letter-spacing:.02em;
+  transition:background .14s}
+.conto-scrigno:hover,.conto-scrigno:focus-visible{background:var(--azzurro)}
+.conto-scrigno svg{width:15px;height:15px;display:block}
 /* mai su due righe: la barra ha un'altezza sola, e una riga in piu' qui
    dentro la raddoppierebbe */
 .barra-conto .conto{gap:8px;flex-wrap:nowrap}
@@ -263,15 +274,17 @@ a.conto-chi:hover,a.conto-chi:focus-visible{background:var(--azzurro)}
   .barra-vicino{padding:0 11px}
   .barra-vicino b{display:none}
   .barra-vicino span{font-size:14px}
-  .conto-scrigno{display:block}
+  .conto-scrigno{display:inline-flex}
+  /* dentro il pannello la pastiglia sarebbe un doppione del tasto che l'ha
+     aperto: resta solo l'indirizzo, che li' serve davvero */
+  .barra-conto .conto-chi{display:none}
   /* il pannellino: sta sotto la barra, non dentro */
   .barra-conto .conto{position:absolute;top:calc(100% + 9px);right:0;z-index:5;
     display:none;flex-direction:column;align-items:stretch;gap:7px;min-width:190px;
     background:var(--carta);border:1px solid var(--tratto);border-radius:11px;
     padding:11px;box-shadow:0 14px 34px -14px rgba(8,60,92,.4)}
   .barra-conto.aperto .conto{display:flex}
-  .barra-conto .conto-chi{align-self:center}
-  .conto-email{display:block}
+  .conto-email{display:block;padding:2px 0 4px;border-bottom:1px solid var(--nebbia)}
 }
 
 /* --- passo 1: la scelta del paese --- */
@@ -340,6 +353,11 @@ svg.carta{transition:none}
    3. il rientro basso del guscio passa a zero: quei 56 pixel erano l'ultima
       striscia scoperta, sotto tutto il resto. */
 .guscio{display:flex;flex-direction:column;min-height:100vh;padding-bottom:0}
+/* «margin-top:auto» da solo si riduce a zero quando la pagina e' lunga, e
+   l'ultimo pulsante finiva appoggiato alla fascia. Il respiro sta allora sotto
+   il contenuto, dove nessuno puo' portarlo via: sono pixel d'acqua, ed e'
+   giusto che si vedano. */
+.impaginato{margin-bottom:26px}
 .fondo-pieno{margin:auto calc(50% - 50vw) 0;padding:24px calc(50vw - 50% + 20px);
   background:linear-gradient(180deg,#f3f9fd 0%,#e9f3f9 100%);
   border-top:1px solid var(--tratto)}
@@ -350,7 +368,7 @@ svg.carta{transition:none}
   padding-bottom:34px;border-top:0}
 
 @media (max-width:960px){
-  .testa-home{margin:-18px calc(50% - 50vw) 0;padding:18px calc(50vw - 50% + 13px) 14px}
+  .testa-home{margin:-18px calc(50% - 50vw) 0;padding:14px calc(50vw - 50% + 13px) 11px}
   .fondo-pieno{margin:auto calc(50% - 50vw) 0;padding:20px calc(50vw - 50% + 13px)}
   .guscio>.piede-sito{margin:0 calc(50% - 50vw);
     padding-left:calc(50vw - 50% + 13px);padding-right:calc(50vw - 50% + 13px);padding-bottom:26px}
@@ -453,7 +471,7 @@ svg.carta{transition:none}
 
       <div class="barra-conto">
         <button type="button" class="conto-scrigno" id="contoScrigno"
-                aria-expanded="false" aria-label="Il tuo account">&#9679;&#9679;&#9679;</button>
+                aria-expanded="false" aria-label="Il tuo account"></button>
         <div class="conto" id="conto"></div>
       </div>
     </div>
@@ -852,6 +870,9 @@ svg.carta{transition:none}
     chi.setAttribute("aria-label", "Il mio profilo · " + posta);
     /* l'indirizzo non sparisce: torna visibile nel pannello del telefono,
        dove la pastiglia da sola non basterebbe a riconoscere il conto */
+    const tasto = document.getElementById("contoScrigno");
+    if (tasto) { tasto.textContent = chi.textContent; tasto.title = posta;
+                 tasto.setAttribute("aria-label", "Il tuo conto · " + posta); }
     if (!dove.querySelector(".conto-email")) {
       const e = document.createElement("span");
       e.className = "conto-email"; e.textContent = posta;
@@ -860,9 +881,19 @@ svg.carta{transition:none}
     dentro = false;
   };
 
-  new MutationObserver(() => { if (!dentro) sistema(); })
+  const OMINO = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">' +
+    '<circle cx="12" cy="8" r="3.6"/><path d="M4.6 20c0-4.1 3.3-6.4 7.4-6.4s7.4 2.3 7.4 6.4z"/></svg>';
+  const spento = () => {
+    const tasto = document.getElementById("contoScrigno");
+    if (!tasto || dove.querySelector(".conto-chi")) return;
+    tasto.innerHTML = OMINO;
+    tasto.title = "Accedi o registrati";
+    tasto.setAttribute("aria-label", "Accedi o registrati");
+  };
+
+  new MutationObserver(() => { if (!dentro) { sistema(); spento(); } })
     .observe(dove, { childList: true, subtree: true });
-  sistema();
+  sistema(); spento();
 })();
 
 /* ---------------------------------------------------- la barra che resta
@@ -1199,8 +1230,8 @@ document.querySelectorAll(".reg-carta.pronta").forEach(a=>{
   });
 });
 </script>
-<script src="vado-conto.js?v=202609190648"></script>
-<script src="vado-cookie.js?v=202609190648"></script>
-<script src="vado-piede.js?v=202609190648"></script>
+<script src="vado-conto.js?v=202609191032"></script>
+<script src="vado-cookie.js?v=202609191032"></script>
+<script src="vado-piede.js?v=202609191032"></script>
 </body>
 </html>

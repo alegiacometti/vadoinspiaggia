@@ -245,6 +245,103 @@ svg.carta.trascino{cursor:grabbing}
 .pannello{position:sticky;top:20px}
 .scheda[hidden]{display:none}
 .scheda{background:var(--carta);border:1px solid var(--tratto);border-radius:10px;overflow:hidden;box-shadow:var(--ombra)}
+/* ===================== LA FINESTRA DELLA SCHEDA =======================
+   Una zona sola di immagini, in cima. Parte dalla vista aerea — che c'e'
+   sempre — e vado-foto.js ci mette sopra la prima fotografia appena l'ha.
+   Il nome sta dentro, su un velo scuro: e' l'unica cosa che ne garantisce
+   la leggibilita' sia su un'acqua bianca di sole sia su uno scoglio in
+   ombra, e fa cominciare la scheda con una fotografia invece che con una
+   tabella. */
+.finestra{position:relative;aspect-ratio:3/2;overflow:hidden;background:#0d3b52;
+  border-bottom:1px solid var(--tratto)}
+.finestra>svg{display:block;width:100%;height:auto}
+.finestra.con-foto{cursor:zoom-in}
+/* la fotografia sta SOPRA la tela: cosi' scambiarle e' mostrare o nascondere
+   una cosa sola, e sotto la vista aerea resta pronta senza ricaricarsi */
+.fin-foto{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+.fin-foto[hidden]{display:none}
+/* il mirino indica il punto della spiaggia sulla carta: su una fotografia non
+   vuol dire niente, quindi sparisce insieme alla vista aerea */
+.finestra.con-foto .mirino{display:none}
+.fin-velo{position:absolute;inset:auto 0 0 0;height:58%;z-index:2;pointer-events:none;
+  background:linear-gradient(to top,rgba(5,28,44,.88) 0%,rgba(5,28,44,.46) 42%,rgba(5,28,44,0) 100%)}
+.fin-sopra{position:absolute;inset:auto 0 0 0;z-index:3;padding:15px 17px 14px;color:#fff;
+  pointer-events:none}
+.fin-sopra h2{font-family:var(--display);font-variation-settings:"SOFT" 40,"WONK" 1,"opsz" 96;
+  font-weight:400;font-size:clamp(23px,3.2vw,32px);line-height:1.02;margin:0;
+  letter-spacing:-.018em;color:#fff;text-shadow:0 1px 12px rgba(0,0,0,.38)}
+/* il rientro a destra tiene la riga lontana dal collegamento a Google, che sta
+   nello stesso angolo: senza, su una scheda stretta le due scritte si
+   accavallavano */
+.fin-dove{font-family:var(--dati);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;
+  margin:6px 0 0;padding-right:200px;color:rgba(255,255,255,.88);
+  text-shadow:0 1px 8px rgba(0,0,0,.45)}
+.fin-mosse{position:absolute;right:9px;top:9px;z-index:4;display:flex;align-items:center;gap:6px}
+.fin-mosse .stella{font-size:17px;line-height:1;width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;flex:none;margin:0;
+  background:rgba(8,60,92,.5);border:1px solid rgba(255,255,255,.45);color:#fff;
+  backdrop-filter:blur(3px);cursor:pointer}
+.fin-mosse .stella.on{background:#fff;border-color:#fff;color:var(--ambra)}
+.fin-mosse .manda{width:32px;height:32px;border-radius:50%;flex:none;margin:0;padding:0;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(8,60,92,.5);border:1px solid rgba(255,255,255,.45);color:#fff;
+  backdrop-filter:blur(3px);cursor:pointer}
+.fin-mosse .manda svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round}
+.fin-mosse .lucchetto{position:static;right:auto;top:auto;padding:6px 11px;backdrop-filter:blur(3px)}
+.fin-credito{position:absolute;left:11px;bottom:auto;top:11px;z-index:3;max-width:60%;
+  font-family:var(--dati);font-size:8.5px;letter-spacing:.06em;color:rgba(255,255,255,.82);
+  background:rgba(5,28,44,.42);padding:3px 8px;border-radius:99px;backdrop-filter:blur(3px)}
+.fin-apri{position:absolute;right:11px;bottom:12px;z-index:4;font-family:var(--dati);font-size:9px;
+  letter-spacing:.08em;text-transform:uppercase;color:#fff;text-decoration:none;
+  background:rgba(8,60,92,.55);border:1px solid rgba(255,255,255,.45);
+  padding:4px 10px;border-radius:999px;transition:.15s}
+.fin-apri:hover,.fin-apri:focus-visible{background:var(--azzurro);border-color:#fff}
+
+/* ---------------------------------------------------------- i provini
+   Fondo scuro, come la pellicola: stacca dalla scheda bianca e non compete
+   con le fotografie, che sono la cosa da guardare. */
+.provini{display:flex;gap:6px;padding:8px 10px;background:#082a3f;overflow-x:auto;
+  scrollbar-width:thin}
+.provini::-webkit-scrollbar{height:5px}
+.provini::-webkit-scrollbar-thumb{background:rgba(255,255,255,.25);border-radius:99px}
+.prov-t{flex:0 0 64px;height:46px;border-radius:5px;overflow:hidden;position:relative;
+  border:2px solid transparent;padding:0;cursor:pointer;background:#0d3b52;transition:border-color .14s}
+.prov-t.on{border-color:#fff}
+.prov-t:hover{border-color:rgba(255,255,255,.55)}
+.prov-t:focus-visible{outline:2px solid var(--ambra);outline-offset:1px}
+.prov-t img{width:100%;height:100%;object-fit:cover;display:block}
+.prov-t.attesa{border-color:var(--ambra);border-style:dashed}
+.prov-tela{position:absolute;inset:0;display:block;overflow:hidden}
+.prov-tela img{position:absolute;width:25%;height:37.4817%;object-fit:cover}
+.prov-tela img.ortofoto{inset:0;width:100%;height:100%}
+.prov-aerea i{position:absolute;inset:auto 0 0 0;font-style:normal;font-family:var(--dati);
+  font-size:6.5px;letter-spacing:.09em;text-transform:uppercase;color:#fff;
+  background:rgba(5,28,44,.72);padding:2px 0;text-align:center}
+.prov-piu{background:transparent;border:1px dashed rgba(255,255,255,.45);color:rgba(255,255,255,.8);
+  font-size:19px;line-height:1;display:flex;align-items:center;justify-content:center;flex:0 0 40px}
+.prov-piu:hover{border-color:#fff;color:#fff;background:rgba(255,255,255,.08)}
+
+/* nessuna fotografia: una riga che spiega che cosa si sta guardando */
+.fin-senza{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:11px 14px;
+  background:var(--nebbia);border-bottom:1px solid var(--tratto)}
+.fin-senza p{margin:0;font-size:12.5px;line-height:1.5;color:#20536e;flex:1 1 220px}
+.fin-manda{font-family:var(--dati);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;
+  background:var(--carta);border:1px dashed var(--basso);color:var(--blu);border-radius:999px;
+  padding:7px 14px;cursor:pointer;white-space:nowrap}
+.fin-manda:hover{border-style:solid;background:var(--schiuma)}
+.fin-fuori{font-family:var(--dati);font-size:9.5px;letter-spacing:.06em;color:var(--grigio);white-space:nowrap}
+
+@media (max-width:620px){
+  .fin-sopra{padding:12px 13px 11px}
+  .fin-dove{padding-right:0;font-size:9px}
+  .fin-mosse .lucchetto{display:none}   /* fissare la scheda serve col mouse */
+  /* lo stesso collegamento e' il primo pulsante subito sotto: sulla finestra
+     stretta ruberebbe la riga del comune per ripetere una cosa che c'e' gia' */
+  .fin-apri{display:none}
+  .prov-t{flex:0 0 56px;height:40px}
+}
+
 .vetrina{position:relative;aspect-ratio:3/2;overflow:hidden;background:#0d3b52;border-bottom:1px solid var(--tratto)}
 .vetrina>svg{display:block;width:100%;height:auto}
 .tela{position:absolute;inset:0}

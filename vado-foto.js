@@ -126,12 +126,22 @@ window.VADOFOTO = (function () {
   }
 
   /* --------------------------------------------------------------- disegna
-     Tre sorgenti in una griglia sola: le immagini caricate da sole, quelle
+     Tre sorgenti in un elenco solo: le immagini caricate da sole, quelle
      approvate dentro i pareri, e — solo per chi l'ha mandata — la propria in
-     attesa. Se non c'e' niente da mostrare la sezione non si disegna: resta
-     l'invito a mandarne una, che e' l'unico modo perche' la prima arrivi. */
+     attesa.
+
+     Poi non si disegna piu' una striscia in fondo alla scheda: si SALE nella
+     finestra in cima, dove fino a un attimo prima c'era la vista aerea. La
+     scheda e' gia' in piedi e non cambia forma; cambia che cosa si vede dentro
+     la finestra, e sotto compare la fila dei provini per scegliere.
+
+     «dove» adesso e' l'intera scheda, non un riquadro: qui dentro servono due
+     pezzi che stanno in punti diversi — la finestra e lo spazio dei provini. */
   async function disegna(sid, nome, dove) {
     if (!dove) return;
+    const fin  = dove.querySelector(".finestra");
+    const slot = dove.querySelector("#slotProvini");
+    if (!fin || !slot) return;
     let libere = [], mie = [], daPareri = [];
     try {
       const r = await Promise.all([
@@ -162,93 +172,125 @@ window.VADOFOTO = (function () {
        invito, nessun modo di mandare la prima. E' la quarta volta che questo
        tranello morde — si controlla con typeof, mai con window. */
     const entrato = typeof VADO !== "undefined" && !!VADO.chiSono();
+
+    /* ---------------------------------------------------- nessuna fotografia
+       La finestra resta sulla vista aerea e lo dice: e' meglio una riga che
+       spiega perche' si sta guardando un'immagine dal satellite, che lasciar
+       credere che quella SIA la spiaggia vista da chi c'e' stato. */
     if (!scatti.length) {
-      dove.className = entrato ? "imm-sez imm-sola" : "";
-      dove.innerHTML = entrato
-        ? '<p class="imm-invito">Hai una foto di questa spiaggia? ' +
-          '<button type="button" class="imm-manda" data-imm-apri>Mandala</button></p>'
-        : "";
-      legaInvito(dove, sid, nome);
+      slot.className = "fin-senza";
+      slot.innerHTML =
+        '<p>Di questa spiaggia non c’è ancora nessuna fotografia: qui sopra c’è ' +
+        'la vista dall’alto.</p>' +
+        (entrato
+          ? '<button type="button" class="fin-manda" data-imm-apri>Mandane una</button>'
+          : '<span class="fin-fuori">Le foto le mandano le persone iscritte</span>');
+      legaInvito(slot, sid, nome);
       return;
     }
 
     SCATTI = scatti;
-    /* La sezione si veste da sola: in cima alla scheda deve leggersi come un
-       blocco, non come un pezzo di testo qualunque. */
-    dove.className = "imm-sez";
-    dove.innerHTML =
-      '<p class="titoletto">Le immagini ' +
-        (scatti.every(f => f.archivio) ? '<em>della spiaggia</em>'
-                                       : '<em>di chi c’è stato</em>') +
-        (scatti.length > 1 ? '<span class="imm-quante">' + scatti.length + '</span>' : '') +
-      '</p>' +
-      '<div class="imm-riga">' +
-        '<button type="button" class="imm-frec sx" data-imm-scorri="-1" aria-label="Indietro" hidden>‹</button>' +
-        '<div class="imm-striscia" data-imm-striscia>' + scatti.map((f, i) =>
-          '<figure class="imm-scatto' + (f.stato === "attesa" ? " attesa" : "") + '">' +
-            '<img data-imm-vedi="' + esc(f.percorso) + '" data-imm-i="' + i + '" alt="' +
-              esc(f.did || ("Foto di " + nome)) + '" loading="lazy" decoding="async">' +
-            (f.stato === "attesa"
-              ? '<figcaption class="imm-attesa">La tua, in attesa che la guardi io</figcaption>'
-              : f.archivio
-                ? '<figcaption class="imm-arch">' +
-                    (f.did ? esc(f.did) + ' · ' : '') + 'archivio' +
-                    (f.autore ? ' · ' + esc(f.autore) : '') + '</figcaption>'
-                : (f.did ? '<figcaption>' + esc(f.did) + '</figcaption>' : "")) +
-          '</figure>').join("") +
-        '</div>' +
-        '<button type="button" class="imm-frec dx" data-imm-scorri="1" aria-label="Avanti" hidden>›</button>' +
-      '</div>' +
-      (entrato
-        ? '<p class="imm-invito">Ne hai una anche tu? ' +
-          '<button type="button" class="imm-manda" data-imm-apri>Mandala</button></p>'
-        : '<p class="imm-invito imm-fuori">Le foto le mandano le persone iscritte.</p>');
+    const foto    = fin.querySelector("[data-fin-foto]");
+    const credito = fin.querySelector("[data-fin-credito]");
+    const tela    = fin.querySelector(".tela");
+    /* Il collegamento porta alle fotografie su Google. Quando qui non c'e'
+       niente si chiama «Foto e recensioni», che e' l'unica cosa che offre;
+       quando invece una fotografia nostra c'e' gia', diventa «ALTRE foto e
+       recensioni» — cosi' dice che manda da un'altra parte invece di sembrare
+       il tasto per aprire quelle che si stanno guardando. */
+    const versoGoogle = fin.querySelector(".fin-apri");
+    if (versoGoogle) versoGoogle.textContent = "Altre foto e recensioni ↗";
+    /* la scritta della vista aerea la mette la pagina della regione, con la
+       fonte delle tessere: si tiene da parte per rimetterla tale e quale */
+    const creditoAereo = credito ? credito.textContent : "";
 
-    legaInvito(dove, sid, nome);
-    legaStriscia(dove);
+    /* I provini: prima le fotografie, poi la vista aerea. L'ordine dice quale
+       conta di piu', ed e' il contrario di come stava la scheda finora. */
+    slot.className = "provini";
+    slot.innerHTML =
+      scatti.map((f, i) =>
+        '<button type="button" class="prov-t' + (f.stato === "attesa" ? " attesa" : "") +
+          '" data-fin-i="' + i + '" aria-label="' +
+          esc(f.did || ("Fotografia " + (i + 1) + " di " + nome)) + '">' +
+          '<img data-imm-vedi="' + esc(f.percorso) + '" data-imm-i="' + i +
+          '" alt="" loading="lazy" decoding="async"></button>').join("") +
+      '<button type="button" class="prov-t prov-aerea" data-fin-aerea ' +
+        'aria-label="Torna alla vista aerea"><span class="prov-tela"></span>' +
+        '<i>aerea</i></button>' +
+      (entrato
+        ? '<button type="button" class="prov-t prov-piu" data-imm-apri ' +
+          'aria-label="Manda una tua fotografia" title="Manda una tua fotografia">+</button>'
+        : '');
+
+    /* La vista aerea dentro il provino e' la stessa tela della finestra,
+       copiata: le tessere sono posizionate in percentuale, quindi si
+       rimpiccioliscono da sole senza che serva una seconda immagine. */
+    const dentro = slot.querySelector(".prov-tela");
+    if (tela && dentro) dentro.innerHTML = tela.innerHTML;
+
+    legaInvito(slot, sid, nome);
+
+    const firma = f =>
+      (f.stato === "attesa" ? "in attesa che la guardi io"
+        : f.archivio ? "archivio" + (f.autore ? " · " + f.autore : "")
+        : f.firma ? "foto di " + f.firma
+        : "foto di chi c’è stato") + (f.did ? " · " + f.did : "");
+
+    const accendi = i => {
+      const f = SCATTI[i];
+      if (!f || !f.url) return;
+      foto.src = f.url;
+      foto.alt = f.did || ("Fotografia di " + nome);
+      foto.hidden = false;
+      fin.classList.add("con-foto");
+      fin.dataset.finI = i;
+      if (credito) credito.textContent = firma(f);
+      slot.querySelectorAll(".prov-t").forEach(t =>
+        t.classList.toggle("on", t.dataset.finI === String(i)));
+    };
+    const aerea = () => {
+      foto.hidden = true;
+      fin.classList.remove("con-foto");
+      delete fin.dataset.finI;
+      if (credito) credito.textContent = creditoAereo;
+      slot.querySelectorAll(".prov-t").forEach(t => t.classList.remove("on"));
+      const a = slot.querySelector("[data-fin-aerea]");
+      if (a) a.classList.add("on");
+    };
+
+    slot.querySelectorAll("[data-fin-i]").forEach(t =>
+      t.onclick = () => accendi(+t.dataset.finI));
+    slot.querySelectorAll("[data-fin-aerea]").forEach(t => t.onclick = aerea);
+
+    /* Premendo la finestra si apre la lente, ma solo se dentro c'e' una
+       fotografia: sulla vista aerea non ci sarebbe niente da ingrandire. */
+    fin.addEventListener("click", e => {
+      if (!fin.classList.contains("con-foto")) return;
+      if (e.target.closest(".fin-mosse, .fin-apri, a, button")) return;
+      lente(+(fin.dataset.finI || 0));
+    });
 
     /* Il deposito e' chiuso: ogni immagine si chiede con un indirizzo firmato
-       che scade da sola. Arrivano una per una, dopo la striscia: la sezione
-       compare subito con i riquadri vuoti e si riempie mentre si guarda. */
-    dove.querySelectorAll("img[data-imm-vedi]").forEach(async img => {
+       che scade da solo. Arrivano una per una; la prima che risponde sale
+       anche nella finestra, cosi' non si aspetta che siano scese tutte. */
+    let primaMessa = false;
+    slot.querySelectorAll("img[data-imm-vedi]").forEach(async img => {
+      const i = +img.dataset.immI;
       try {
         const u = await VADO.firmaFoto(img.dataset.immVedi, 3600);
-        if (u) { img.src = u; SCATTI[+img.dataset.immI].url = u; }
-        else togli(img);
-      } catch (_) { togli(img); }
+        if (!u) throw new Error("niente indirizzo");
+        img.src = u; SCATTI[i].url = u;
+        if (!primaMessa) { primaMessa = true; accendi(i); }
+      } catch (_) {
+        const t = img.closest(".prov-t"); if (t) t.remove();
+      }
     });
   }
 
-  /* ------------------------------------------------------------ la striscia
-     Con una foto sola non c'e' niente da sfogliare e le frecce non compaiono.
-     Con piu' di una la striscia scorre di lato, si aggancia alle immagini e le
-     frecce si accendono solo dal lato dove c'e' ancora qualcosa. */
-  function legaStriscia(dove){
-    const str = dove.querySelector("[data-imm-striscia]");
-    if (!str) return;
-    const frecce = dove.querySelectorAll("[data-imm-scorri]");
-    const aggiorna = () => {
-      const scorre = str.scrollWidth - str.clientWidth > 4;
-      frecce.forEach(b => {
-        const avanti = +b.dataset.immScorri > 0;
-        b.hidden = !scorre || (avanti
-          ? str.scrollLeft >= str.scrollWidth - str.clientWidth - 4
-          : str.scrollLeft <= 4);
-      });
-    };
-    frecce.forEach(b => b.onclick = () => {
-      str.scrollBy({ left: (+b.dataset.immScorri) * (str.clientWidth * 0.8), behavior: "smooth" });
-    });
-    str.addEventListener("scroll", aggiorna, { passive: true });
-    window.addEventListener("resize", aggiorna);
-    /* le immagini arrivano dopo: la striscia cambia larghezza mentre si
-       riempie, e le frecce vanno ricontate quando succede */
-    if (window.ResizeObserver) new ResizeObserver(aggiorna).observe(str);
-    setTimeout(aggiorna, 60);
-    str.querySelectorAll("img[data-imm-i]").forEach(img => {
-      img.onclick = () => lente(+img.dataset.immI);
-    });
-  }
+  /* Qui c'era «legaStriscia», che faceva scorrere di lato la vecchia striscia
+     delle anteprime e accendeva le due frecce. Con la finestra unica non c'e'
+     piu' una striscia da scorrere: i provini stanno tutti in riga e, se sono
+     tanti, e' la riga stessa a scorrere. Tolta invece di lasciarla morta. */
 
   /* ---------------------------------------------------------------- la lente
      A schermo intero, con le frecce, la tastiera e lo scorrimento del dito.
@@ -324,7 +366,6 @@ window.VADOFOTO = (function () {
     if (!v.open) v.showModal();
   }
 
-  const togli = img => { const f = img.closest(".imm-scatto"); if (f) f.remove(); };
 
   function legaInvito(dove, sid, nome) {
     dove.querySelectorAll("[data-imm-apri]").forEach(b =>
