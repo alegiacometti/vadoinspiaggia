@@ -6,6 +6,10 @@
     "  che nominano uno di quei comuni.",
     "stato: «verificato» = l'ho letto davvero e restituisce articoli; «da provare»",
     "  = testata vera, ma l'indirizzo esatto del feed lo conferma il primo giro.",
+    "esatto: se c'e', il robot prova SOLO quell'indirizzo e non ripiega sul feed",
+    "  principale del sito. Serve ai feed di sezione (.../category/eventi/feed).",
+    "lingua: in che lingua scrive quel giornale (it, fr, es, ca, escat, pt, en).",
+    "  Le parole di ogni lingua stanno in lingue.json, accanto a questo file.",
     "argomenti: il secondo filtro, quello editoriale. Un articolo entra solo se",
     "  parla di meteo, mare, spiaggia o eventi ('tieni'), e non entra comunque",
     "  se contiene una parola di 'mai' (cronaca nera, sport, politica). Il veto",
@@ -31,7 +35,7 @@
       "regioni": [
         "marche"
       ],
-      "stato": "reso 1 in tema al primo giro"
+      "stato": "reso 1 in tema il 19/9"
     },
     {
       "nome": "Riviera Oggi",
@@ -40,7 +44,7 @@
         "marche",
         "abruzzo"
       ],
-      "stato": "reso 2 in tema al primo giro"
+      "stato": "reso 2 in tema il 19/9"
     },
     {
       "nome": "Centropagina",
@@ -48,7 +52,7 @@
       "regioni": [
         "marche"
       ],
-      "stato": "reso 3 in tema al primo giro"
+      "stato": "reso 3 in tema il 19/9"
     },
     {
       "nome": "Riviera24",
@@ -56,7 +60,7 @@
       "regioni": [
         "liguria"
       ],
-      "stato": "reso 1 in tema al primo giro"
+      "stato": "reso 1 in tema il 19/9"
     },
     {
       "nome": "IVG Savona",
@@ -64,7 +68,7 @@
       "regioni": [
         "liguria"
       ],
-      "stato": "reso 2 in tema al primo giro"
+      "stato": "reso 2 in tema il 19/9"
     },
     {
       "nome": "Città della Spezia",
@@ -72,7 +76,7 @@
       "regioni": [
         "liguria"
       ],
-      "stato": "verificato"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Genova24",
@@ -80,7 +84,7 @@
       "regioni": [
         "liguria"
       ],
-      "stato": "verificato"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Levante News",
@@ -88,7 +92,7 @@
       "regioni": [
         "liguria"
       ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "gonews Livorno Grosseto",
@@ -96,15 +100,7 @@
       "regioni": [
         "toscana"
       ],
-      "stato": "da provare"
-    },
-    {
-      "nome": "QuiNews Versilia",
-      "url": "https://www.quinewsversilia.it/rss.xml",
-      "regioni": [
-        "toscana"
-      ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Il Giunco",
@@ -112,15 +108,7 @@
       "regioni": [
         "toscana"
       ],
-      "stato": "da provare"
-    },
-    {
-      "nome": "La Gazzetta di Viareggio",
-      "url": "https://www.lagazzettadiviareggio.it/feed/",
-      "regioni": [
-        "toscana"
-      ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Elba Press",
@@ -128,7 +116,7 @@
       "regioni": [
         "toscana"
       ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Tenews Elba",
@@ -136,7 +124,7 @@
       "regioni": [
         "toscana"
       ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Il Corriere Etrusco",
@@ -144,7 +132,7 @@
       "regioni": [
         "toscana"
       ],
-      "stato": "reso 1 in tema al primo giro"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Olbia Notizie",
@@ -152,7 +140,7 @@
       "regioni": [
         "sardegna"
       ],
-      "stato": "reso 204 in tema al primo giro"
+      "stato": "reso 6 in tema il 19/9"
     },
     {
       "nome": "Gallura Oggi",
@@ -160,47 +148,7 @@
       "regioni": [
         "sardegna"
       ],
-      "stato": "reso 1 in tema al primo giro"
-    },
-    {
-      "nome": "CagliariPad",
-      "url": "https://www.cagliaripad.it/feed/",
-      "regioni": [
-        "sardegna"
-      ],
-      "stato": "da provare"
-    },
-    {
-      "nome": "Alguer.it",
-      "url": "https://www.alguer.it/rss/",
-      "regioni": [
-        "sardegna"
-      ],
-      "stato": "da provare"
-    },
-    {
-      "nome": "Sardegna Live",
-      "url": "https://www.sardegnalive.net/feed/",
-      "regioni": [
-        "sardegna"
-      ],
-      "stato": "da provare"
-    },
-    {
-      "nome": "Oristano Noi",
-      "url": "https://www.oristanonoi.it/feed/",
-      "regioni": [
-        "sardegna"
-      ],
-      "stato": "da provare"
-    },
-    {
-      "nome": "Tp24",
-      "url": "https://www.tp24.it/feed",
-      "regioni": [
-        "sicilia"
-      ],
-      "stato": "verificato"
+      "stato": "reso 1 in tema il 19/9"
     },
     {
       "nome": "RagusaNews",
@@ -208,7 +156,7 @@
       "regioni": [
         "sicilia"
       ],
-      "stato": "verificato"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "BlogSicilia",
@@ -216,7 +164,7 @@
       "regioni": [
         "sicilia"
       ],
-      "stato": "verificato"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "StrettoWeb",
@@ -225,7 +173,7 @@
         "sicilia",
         "calabria"
       ],
-      "stato": "reso 3 in tema al primo giro"
+      "stato": "reso 2 in tema il 19/9"
     },
     {
       "nome": "Balarm",
@@ -233,7 +181,7 @@
       "regioni": [
         "sicilia"
       ],
-      "stato": "da provare"
+      "stato": "reso 2 in tema il 19/9"
     },
     {
       "nome": "LiveSicilia",
@@ -241,7 +189,7 @@
       "regioni": [
         "sicilia"
       ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Zoom24",
@@ -249,7 +197,7 @@
       "regioni": [
         "calabria"
       ],
-      "stato": "verificato"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Il Quotidiano del Sud",
@@ -258,7 +206,7 @@
         "calabria",
         "basilicata"
       ],
-      "stato": "verificato"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Strill",
@@ -266,23 +214,7 @@
       "regioni": [
         "calabria"
       ],
-      "stato": "da provare"
-    },
-    {
-      "nome": "LaC News24",
-      "url": "https://www.lacnews24.it/rss/",
-      "regioni": [
-        "calabria"
-      ],
-      "stato": "da provare"
-    },
-    {
-      "nome": "Il Vibonese",
-      "url": "https://www.ilvibonese.it/?feed=rss2",
-      "regioni": [
-        "calabria"
-      ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Il Crotonese",
@@ -290,7 +222,7 @@
       "regioni": [
         "calabria"
       ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Catanzaro Informa",
@@ -298,7 +230,7 @@
       "regioni": [
         "calabria"
       ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "SassiLive",
@@ -306,7 +238,7 @@
       "regioni": [
         "basilicata"
       ],
-      "stato": "verificato"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Stato Quotidiano",
@@ -314,7 +246,7 @@
       "regioni": [
         "puglia"
       ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Manfredonia News",
@@ -322,7 +254,7 @@
       "regioni": [
         "puglia"
       ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Il Fatto del Gargano",
@@ -330,7 +262,7 @@
       "regioni": [
         "puglia"
       ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Gazzetta h24",
@@ -338,7 +270,7 @@
       "regioni": [
         "puglia"
       ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Rete Gargano",
@@ -346,7 +278,7 @@
       "regioni": [
         "puglia"
       ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Corriere Salentino",
@@ -354,7 +286,7 @@
       "regioni": [
         "puglia"
       ],
-      "stato": "reso 1 in tema al primo giro"
+      "stato": "reso 1 in tema il 19/9"
     },
     {
       "nome": "Lecce Sette",
@@ -362,7 +294,7 @@
       "regioni": [
         "puglia"
       ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Monopoli Times",
@@ -370,7 +302,7 @@
       "regioni": [
         "puglia"
       ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Ostuni News",
@@ -378,15 +310,7 @@
       "regioni": [
         "puglia"
       ],
-      "stato": "da provare"
-    },
-    {
-      "nome": "Primo Numero",
-      "url": "https://www.primonumero.it/rss",
-      "regioni": [
-        "molise"
-      ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "isNews",
@@ -394,15 +318,7 @@
       "regioni": [
         "molise"
       ],
-      "stato": "da provare"
-    },
-    {
-      "nome": "AbruzzoWeb",
-      "url": "https://www.abruzzoweb.it/feed/",
-      "regioni": [
-        "abruzzo"
-      ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "CityRumors Abruzzo",
@@ -410,7 +326,7 @@
       "regioni": [
         "abruzzo"
       ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Rete8",
@@ -418,7 +334,7 @@
       "regioni": [
         "abruzzo"
       ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Zonalocale Vasto",
@@ -427,7 +343,7 @@
         "abruzzo",
         "molise"
       ],
-      "stato": "reso 1 in tema al primo giro"
+      "stato": "reso 1 in tema il 19/9"
     },
     {
       "nome": "Il Trafiletto",
@@ -435,7 +351,7 @@
       "regioni": [
         "abruzzo"
       ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Giulianova News",
@@ -443,7 +359,7 @@
       "regioni": [
         "abruzzo"
       ],
-      "stato": "reso 1 in tema al primo giro"
+      "stato": "reso 1 in tema il 19/9"
     },
     {
       "nome": "Chiamami Città",
@@ -451,7 +367,7 @@
       "regioni": [
         "emiliaromagna"
       ],
-      "stato": "reso 2 in tema al primo giro"
+      "stato": "reso 2 in tema il 19/9"
     },
     {
       "nome": "Ravenna Notizie",
@@ -459,15 +375,7 @@
       "regioni": [
         "emiliaromagna"
       ],
-      "stato": "reso 1 in tema al primo giro"
-    },
-    {
-      "nome": "SetteSere QUI",
-      "url": "https://www.settesere.it/it/rss.xml",
-      "regioni": [
-        "emiliaromagna"
-      ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Estense.com",
@@ -475,7 +383,7 @@
       "regioni": [
         "emiliaromagna"
       ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Cesena Notizie",
@@ -483,7 +391,7 @@
       "regioni": [
         "emiliaromagna"
       ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Venezia Orientale News",
@@ -491,7 +399,7 @@
       "regioni": [
         "veneto"
       ],
-      "stato": "reso 1 in tema al primo giro"
+      "stato": "reso 1 in tema il 19/9"
     },
     {
       "nome": "La Voce di Venezia",
@@ -499,23 +407,7 @@
       "regioni": [
         "veneto"
       ],
-      "stato": "da provare"
-    },
-    {
-      "nome": "La Piazza Web",
-      "url": "https://www.lapiazzaweb.it/feed/",
-      "regioni": [
-        "veneto"
-      ],
-      "stato": "da provare"
-    },
-    {
-      "nome": "Polesine24",
-      "url": "https://www.polesine24.it/feed/",
-      "regioni": [
-        "veneto"
-      ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Trieste Notizie",
@@ -523,7 +415,7 @@
       "regioni": [
         "friuliveneziagiulia"
       ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Nordest24",
@@ -532,7 +424,7 @@
         "friuliveneziagiulia",
         "veneto"
       ],
-      "stato": "reso 1 in tema al primo giro"
+      "stato": "reso 1 in tema il 19/9"
     },
     {
       "nome": "Il Faro online",
@@ -540,15 +432,7 @@
       "regioni": [
         "lazio"
       ],
-      "stato": "reso 3 in tema al primo giro"
-    },
-    {
-      "nome": "Latina Oggi",
-      "url": "https://www.latinaoggi.eu/feed/",
-      "regioni": [
-        "lazio"
-      ],
-      "stato": "da provare"
+      "stato": "reso 3 in tema il 19/9"
     },
     {
       "nome": "h24 notizie",
@@ -556,7 +440,7 @@
       "regioni": [
         "lazio"
       ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Il Messaggero Ostia",
@@ -564,15 +448,7 @@
       "regioni": [
         "lazio"
       ],
-      "stato": "reso 2 in tema al primo giro"
-    },
-    {
-      "nome": "Civonline",
-      "url": "https://www.civonline.it/feed/",
-      "regioni": [
-        "lazio"
-      ],
-      "stato": "da provare"
+      "stato": "reso 2 in tema il 19/9"
     },
     {
       "nome": "Positano News",
@@ -580,15 +456,7 @@
       "regioni": [
         "campania"
       ],
-      "stato": "da provare"
-    },
-    {
-      "nome": "Il Vescovado Costa d'Amalfi",
-      "url": "https://www.ilvescovado.it/feed/",
-      "regioni": [
-        "campania"
-      ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Il Golfo 24 (Ischia e Procida)",
@@ -596,15 +464,7 @@
       "regioni": [
         "campania"
       ],
-      "stato": "reso 2 in tema al primo giro"
-    },
-    {
-      "nome": "InfoCilento",
-      "url": "https://www.infocilento.it/feed/",
-      "regioni": [
-        "campania"
-      ],
-      "stato": "da provare"
+      "stato": "reso 2 in tema il 19/9"
     },
     {
       "nome": "Le Cronache di Salerno",
@@ -612,7 +472,7 @@
       "regioni": [
         "campania"
       ],
-      "stato": "da provare"
+      "stato": "vivo, ancora zero in tema"
     },
     {
       "nome": "Metropolis Web",
@@ -620,7 +480,689 @@
       "regioni": [
         "campania"
       ],
-      "stato": "reso 1 in tema al primo giro"
+      "stato": "reso 1 in tema il 19/9"
+    },
+    {
+      "nome": "Lecce Sette · eventi",
+      "url": "https://www.leccesette.it/category/eventi/feed/",
+      "regioni": [
+        "puglia"
+      ],
+      "esatto": true,
+      "stato": "tentativo: la sezione e' gia' un filtro"
+    },
+    {
+      "nome": "Corriere Salentino · eventi",
+      "url": "https://www.corrieresalentino.it/category/eventi/feed/",
+      "regioni": [
+        "puglia"
+      ],
+      "esatto": true,
+      "stato": "tentativo: la sezione e' gia' un filtro"
+    },
+    {
+      "nome": "Ostuni News · eventi",
+      "url": "https://www.ostuninews.it/category/eventi/feed/",
+      "regioni": [
+        "puglia"
+      ],
+      "esatto": true,
+      "stato": "tentativo: la sezione e' gia' un filtro"
+    },
+    {
+      "nome": "Positano News · eventi",
+      "url": "https://www.positanonews.it/category/eventi/feed/",
+      "regioni": [
+        "campania"
+      ],
+      "esatto": true,
+      "stato": "tentativo: la sezione e' gia' un filtro"
+    },
+    {
+      "nome": "BlogSicilia · eventi",
+      "url": "https://www.blogsicilia.it/category/eventi/feed/",
+      "regioni": [
+        "sicilia"
+      ],
+      "esatto": true,
+      "stato": "tentativo: la sezione e' gia' un filtro"
+    },
+    {
+      "nome": "Strill · eventi",
+      "url": "https://www.strill.it/category/eventi/feed/",
+      "regioni": [
+        "calabria"
+      ],
+      "esatto": true,
+      "stato": "tentativo: la sezione e' gia' un filtro"
+    },
+    {
+      "nome": "Il Crotonese · eventi",
+      "url": "https://www.ilcrotonese.it/category/eventi/feed/",
+      "regioni": [
+        "calabria"
+      ],
+      "esatto": true,
+      "stato": "tentativo: la sezione e' gia' un filtro"
+    },
+    {
+      "nome": "Ravenna Notizie · eventi",
+      "url": "https://www.ravennanotizie.it/category/eventi/feed/",
+      "regioni": [
+        "emiliaromagna"
+      ],
+      "esatto": true,
+      "stato": "tentativo: la sezione e' gia' un filtro"
+    },
+    {
+      "nome": "Il Giunco · eventi",
+      "url": "https://www.ilgiunco.net/category/eventi/feed/",
+      "regioni": [
+        "toscana"
+      ],
+      "esatto": true,
+      "stato": "tentativo: la sezione e' gia' un filtro"
+    },
+    {
+      "nome": "gonews · eventi",
+      "url": "https://www.gonews.it/category/eventi/feed/",
+      "regioni": [
+        "toscana"
+      ],
+      "esatto": true,
+      "stato": "tentativo: la sezione e' gia' un filtro"
+    },
+    {
+      "nome": "Città della Spezia · eventi",
+      "url": "https://www.cittadellaspezia.com/category/eventi/feed/",
+      "regioni": [
+        "liguria"
+      ],
+      "esatto": true,
+      "stato": "tentativo: la sezione e' gia' un filtro"
+    },
+    {
+      "nome": "Rete8 · meteo",
+      "url": "https://www.rete8.it/category/meteo/feed/",
+      "regioni": [
+        "abruzzo"
+      ],
+      "esatto": true,
+      "stato": "tentativo: la sezione e' gia' un filtro"
+    },
+    {
+      "nome": "Actu Provence-Alpes-Côte d'Azur",
+      "url": "https://actu.fr/provence-alpes-cote-d-azur/rss",
+      "regioni": [
+        "provenza"
+      ],
+      "lingua": "fr",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Made in Marseille",
+      "url": "https://madeinmarseille.net/feed/",
+      "regioni": [
+        "provenza"
+      ],
+      "lingua": "fr",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Destimed",
+      "url": "https://destimed.fr/feed/",
+      "regioni": [
+        "provenza"
+      ],
+      "lingua": "fr",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Var-Matin",
+      "url": "https://www.varmatin.com/rss",
+      "regioni": [
+        "provenza"
+      ],
+      "lingua": "fr",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Nice-Matin",
+      "url": "https://www.nicematin.com/rss",
+      "regioni": [
+        "provenza"
+      ],
+      "lingua": "fr",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "France 3 Provence-Alpes",
+      "url": "https://france3-regions.francetvinfo.fr/provence-alpes-cote-d-azur/rss",
+      "regioni": [
+        "provenza"
+      ],
+      "lingua": "fr",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Actu Occitanie",
+      "url": "https://actu.fr/occitanie/rss",
+      "regioni": [
+        "occitania"
+      ],
+      "lingua": "fr",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Midi Libre",
+      "url": "https://www.midilibre.fr/rss.xml",
+      "regioni": [
+        "occitania"
+      ],
+      "lingua": "fr",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "L'Indépendant",
+      "url": "https://www.lindependant.fr/rss.xml",
+      "regioni": [
+        "occitania"
+      ],
+      "lingua": "fr",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Hérault Tribune",
+      "url": "https://www.herault-tribune.com/feed/",
+      "regioni": [
+        "occitania"
+      ],
+      "lingua": "fr",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "France 3 Occitanie",
+      "url": "https://france3-regions.francetvinfo.fr/occitanie/rss",
+      "regioni": [
+        "occitania"
+      ],
+      "lingua": "fr",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Corse Net Infos",
+      "url": "https://www.corsenetinfos.corsica/feed",
+      "regioni": [
+        "corsica"
+      ],
+      "lingua": "fr",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Corse-Matin",
+      "url": "https://www.corsematin.com/rss",
+      "regioni": [
+        "corsica"
+      ],
+      "lingua": "fr",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Alta Frequenza",
+      "url": "https://www.alta-frequenza.corsica/feed",
+      "regioni": [
+        "corsica"
+      ],
+      "lingua": "fr",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "France 3 Corse",
+      "url": "https://france3-regions.francetvinfo.fr/corse/rss",
+      "regioni": [
+        "corsica"
+      ],
+      "lingua": "fr",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Diario Sur (Málaga)",
+      "url": "https://www.diariosur.es/rss",
+      "regioni": [
+        "andalusia"
+      ],
+      "lingua": "es",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Málaga Hoy",
+      "url": "https://www.malagahoy.es/rss",
+      "regioni": [
+        "andalusia"
+      ],
+      "lingua": "es",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Diario de Cádiz",
+      "url": "https://www.diariodecadiz.es/rss",
+      "regioni": [
+        "andalusia"
+      ],
+      "lingua": "es",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Europa Sur",
+      "url": "https://www.europasur.es/rss",
+      "regioni": [
+        "andalusia"
+      ],
+      "lingua": "es",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Huelva Información",
+      "url": "https://www.huelvainformacion.es/rss",
+      "regioni": [
+        "andalusia"
+      ],
+      "lingua": "es",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Ideal Almería",
+      "url": "https://www.ideal.es/rss",
+      "regioni": [
+        "andalusia"
+      ],
+      "lingua": "es",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Última Hora",
+      "url": "https://www.ultimahora.es/rss",
+      "regioni": [
+        "baleari"
+      ],
+      "lingua": "es",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Diario de Mallorca",
+      "url": "https://www.diariodemallorca.es/rss",
+      "regioni": [
+        "baleari"
+      ],
+      "lingua": "es",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Diario de Ibiza",
+      "url": "https://www.diariodeibiza.es/rss",
+      "regioni": [
+        "baleari"
+      ],
+      "lingua": "es",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Menorca.info",
+      "url": "https://www.menorca.info/rss",
+      "regioni": [
+        "baleari"
+      ],
+      "lingua": "es",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Canarias7",
+      "url": "https://www.canarias7.es/rss",
+      "regioni": [
+        "canarie"
+      ],
+      "lingua": "es",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "La Provincia (Las Palmas)",
+      "url": "https://www.laprovincia.es/rss",
+      "regioni": [
+        "canarie"
+      ],
+      "lingua": "es",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "El Día (Tenerife)",
+      "url": "https://www.eldia.es/rss",
+      "regioni": [
+        "canarie"
+      ],
+      "lingua": "es",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Diario de Avisos",
+      "url": "https://diariodeavisos.elespanol.com/feed/",
+      "regioni": [
+        "canarie"
+      ],
+      "lingua": "es",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Diari de Girona",
+      "url": "https://www.diaridegirona.cat/rss",
+      "regioni": [
+        "catalogna"
+      ],
+      "lingua": "escat",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Diari de Tarragona",
+      "url": "https://www.diaridetarragona.com/rss",
+      "regioni": [
+        "catalogna"
+      ],
+      "lingua": "escat",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "NacióDigital",
+      "url": "https://www.naciodigital.cat/rss",
+      "regioni": [
+        "catalogna"
+      ],
+      "lingua": "escat",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "El Punt Avui",
+      "url": "https://www.elpuntavui.cat/rss",
+      "regioni": [
+        "catalogna"
+      ],
+      "lingua": "escat",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "La Opinión de Murcia",
+      "url": "https://www.laopiniondemurcia.es/rss",
+      "regioni": [
+        "murcia"
+      ],
+      "lingua": "es",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "La Verdad",
+      "url": "https://www.laverdad.es/rss",
+      "regioni": [
+        "murcia"
+      ],
+      "lingua": "es",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Murcia.com",
+      "url": "https://www.murcia.com/rss",
+      "regioni": [
+        "murcia"
+      ],
+      "lingua": "es",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Levante-EMV",
+      "url": "https://www.levante-emv.com/rss",
+      "regioni": [
+        "valenciana"
+      ],
+      "lingua": "escat",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Las Provincias",
+      "url": "https://www.lasprovincias.es/rss",
+      "regioni": [
+        "valenciana"
+      ],
+      "lingua": "escat",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Información (Alicante)",
+      "url": "https://www.informacion.es/rss",
+      "regioni": [
+        "valenciana"
+      ],
+      "lingua": "escat",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "El Periódico Mediterráneo",
+      "url": "https://www.elperiodicomediterraneo.com/rss",
+      "regioni": [
+        "valenciana"
+      ],
+      "lingua": "escat",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Sul Informação",
+      "url": "https://www.sulinformacao.pt/feed/",
+      "regioni": [
+        "algarve"
+      ],
+      "lingua": "pt",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Barlavento",
+      "url": "https://www.barlavento.pt/feed/",
+      "regioni": [
+        "algarve"
+      ],
+      "lingua": "pt",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Postal do Algarve",
+      "url": "https://postal.pt/feed/",
+      "regioni": [
+        "algarve"
+      ],
+      "lingua": "pt",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Diário do Alentejo",
+      "url": "https://www.diariodoalentejo.pt/feed/",
+      "regioni": [
+        "alentejo"
+      ],
+      "lingua": "pt",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Rádio Campanário",
+      "url": "https://www.campanario.pt/feed/",
+      "regioni": [
+        "alentejo"
+      ],
+      "lingua": "pt",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "A Mensagem de Lisboa",
+      "url": "https://amensagem.pt/feed/",
+      "regioni": [
+        "lisboa"
+      ],
+      "lingua": "pt",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Lisboa Para Pessoas",
+      "url": "https://lisboaparapessoas.pt/feed/",
+      "regioni": [
+        "lisboa"
+      ],
+      "lingua": "pt",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Jornal de Leiria",
+      "url": "https://www.jornaldeleiria.pt/feed",
+      "regioni": [
+        "centro"
+      ],
+      "lingua": "pt",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Diário de Aveiro",
+      "url": "https://www.diarioaveiro.pt/feed",
+      "regioni": [
+        "centro"
+      ],
+      "lingua": "pt",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Diário de Coimbra",
+      "url": "https://www.diariocoimbra.pt/feed",
+      "regioni": [
+        "centro"
+      ],
+      "lingua": "pt",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Correio do Minho",
+      "url": "https://correiodominho.pt/feed",
+      "regioni": [
+        "norte"
+      ],
+      "lingua": "pt",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Alto Minho",
+      "url": "https://www.altominho.tv/feed",
+      "regioni": [
+        "norte"
+      ],
+      "lingua": "pt",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Diário de Notícias da Madeira",
+      "url": "https://www.dnoticias.pt/rss",
+      "regioni": [
+        "madeira"
+      ],
+      "lingua": "pt",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Funchal Notícias",
+      "url": "https://funchalnoticias.net/feed/",
+      "regioni": [
+        "madeira"
+      ],
+      "lingua": "pt",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Açoriano Oriental",
+      "url": "https://www.acorianooriental.pt/rss",
+      "regioni": [
+        "acores"
+      ],
+      "lingua": "pt",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Diário dos Açores",
+      "url": "https://www.diariodosacores.pt/feed/",
+      "regioni": [
+        "acores"
+      ],
+      "lingua": "pt",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Times of Malta",
+      "url": "https://timesofmalta.com/rss",
+      "regioni": [
+        "malta",
+        "gozo"
+      ],
+      "lingua": "en",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "The Malta Independent",
+      "url": "https://www.independent.com.mt/rss",
+      "regioni": [
+        "malta",
+        "gozo"
+      ],
+      "lingua": "en",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "TVM News",
+      "url": "https://tvmnews.mt/en/feed/",
+      "regioni": [
+        "malta",
+        "gozo"
+      ],
+      "lingua": "en",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Newsbook",
+      "url": "https://newsbook.com.mt/en/feed/",
+      "regioni": [
+        "malta",
+        "gozo"
+      ],
+      "lingua": "en",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "MaltaToday",
+      "url": "https://www.maltatoday.com.mt/rss",
+      "regioni": [
+        "malta",
+        "gozo"
+      ],
+      "lingua": "en",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Lovin Malta",
+      "url": "https://lovinmalta.com/feed/",
+      "regioni": [
+        "malta",
+        "gozo"
+      ],
+      "lingua": "en",
+      "stato": "da provare: primo giro fuori dall'Italia"
+    },
+    {
+      "nome": "Gozo News",
+      "url": "https://gozonews.com/feed/",
+      "regioni": [
+        "gozo",
+        "malta"
+      ],
+      "lingua": "en",
+      "stato": "da provare: primo giro fuori dall'Italia"
     }
   ],
   "sinonimi": {
@@ -633,6 +1175,77 @@
     ],
     "Porto Sant'Elpidio": [
       "Porto S. Elpidio"
+    ],
+    "Alicante": [
+      "Alacant"
+    ],
+    "Alacant": [
+      "Alicante"
+    ],
+    "Castellón": [
+      "Castelló"
+    ],
+    "Castelló": [
+      "Castellón"
+    ],
+    "Elche": [
+      "Elx"
+    ],
+    "Elx": [
+      "Elche"
+    ],
+    "Jávea": [
+      "Xàbia"
+    ],
+    "Xàbia": [
+      "Jávea",
+      "Javea"
+    ],
+    "Denia": [
+      "Dénia"
+    ],
+    "Dénia": [
+      "Denia"
+    ],
+    "Ibiza": [
+      "Eivissa"
+    ],
+    "Eivissa": [
+      "Ibiza"
+    ],
+    "Mahón": [
+      "Maó"
+    ],
+    "Maó": [
+      "Mahón"
+    ],
+    "Gerona": [
+      "Girona"
+    ],
+    "Girona": [
+      "Gerona"
+    ],
+    "Palma de Mallorca": [
+      "Palma"
+    ],
+    "Palma": [
+      "Palma de Mallorca"
+    ],
+    "Sant Antoni de Portmany": [
+      "Sant Antoni",
+      "San Antonio"
+    ],
+    "Vila Nova de Gaia": [
+      "Gaia"
+    ],
+    "Saint-Tropez": [
+      "St-Tropez"
+    ],
+    "Marseille": [
+      "Marsiglia"
+    ],
+    "Nice": [
+      "Nizza"
     ]
   },
   "mai_comuni": [

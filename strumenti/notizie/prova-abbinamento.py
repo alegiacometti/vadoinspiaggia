@@ -98,6 +98,43 @@ ARGOMENTI = [
     ("Francavilla al Mare, nuova ciclabile sul lungomare",    "Francavilla al Mare", True),
 ]
 
+# ---------------------------------------------------------- le altre lingue
+# Stessi tre controlli di sempre — il comune giusto, l'argomento giusto, il
+# nome accorciato — ma in francese, spagnolo, portoghese e inglese.
+LINGUE = robot.regole_lingue(conf, os.path.join(QUI, "finti", "feed-di-prova.json"))
+
+FUORI_ITALIA = [
+  # lingua, comuni finti,                          titolo,                     comune atteso, in tema?
+  ("fr", ["Cannes", "Antibes", "Saint-Cyr-sur-Mer", "Nice"],
+       "Alerte orange aux orages sur Cannes",                "Cannes",            True),
+  ("fr", ["Cannes", "Antibes", "Saint-Cyr-sur-Mer", "Nice"],
+       "Cannes: un homme arrêté pour vol à la plage",        "Cannes",            False),
+  ("fr", ["Cannes", "Antibes", "Saint-Cyr-sur-Mer", "Nice"],
+       "Saint-Cyr, la plage des Lecques rouverte au public", "Saint-Cyr-sur-Mer", True),
+  ("fr", ["Cannes", "Antibes", "Saint-Cyr-sur-Mer", "Nice"],
+       "Antibes: travaux rue de Nice cet automne",           "Antibes",           False),
+  ("es", ["Salou", "Roquetas de Mar", "Málaga", "Marbella"],
+       "Bandera roja en la playa de Salou por fuerte oleaje","Salou",             True),
+  ("es", ["Salou", "Roquetas de Mar", "Málaga", "Marbella"],
+       "Detenido un hombre en Salou por robo en un hotel",   "Salou",             False),
+  ("es", ["Salou", "Roquetas de Mar", "Málaga", "Marbella"],
+       "Roquetas estrena un chiringuito accesible",          "Roquetas de Mar",   True),
+  ("es", ["Salou", "Roquetas de Mar", "Málaga", "Marbella"],
+       "Marbella: obras en la calle Málaga",                 "Marbella",          False),
+  ("pt", ["Albufeira", "Lagos", "Portimão"],
+       "Praia de Albufeira encerrada devido a poluição",     "Albufeira",         True),
+  ("pt", ["Albufeira", "Lagos", "Portimão"],
+       "Albufeira: detido por roubo numa esplanada",         "Albufeira",         False),
+  ("pt", ["Albufeira", "Lagos", "Portimão"],
+       "Lagos recebe o festival do marisco em setembro",     "Lagos",             True),
+  ("en", ["Mellieħa", "Marsaskala", "Xlendi"],
+       "Blue flag awarded to Mellieha bay for the sixth year","Mellieħa",         True),
+  ("en", ["Mellieħa", "Marsaskala", "Xlendi"],
+       "Man arrested in Mellieha over drugs haul",           "Mellieħa",          False),
+  ("en", ["Mellieħa", "Marsaskala", "Xlendi"],
+       "Xlendi: summer festival returns next weekend",       "Xlendi",            True),
+]
+
 male = 0
 for titolo, atteso in CASI:
     avuto, _ = robot.abbina(titolo, voci)
@@ -117,11 +154,25 @@ for titolo, comune, atteso in ARGOMENTI:
     if not ok:
         print("      atteso: %s" % ("dentro" if atteso else "fuori"))
 
+for lingua, comuni_finti, titolo, comune_atteso, in_tema in FUORI_ITALIA:
+    r = LINGUE[lingua]
+    voci_l = robot.indice(comuni_finti, conf["sinonimi"], conf["mai_comuni"], r["code"])
+    avuto_c, con = robot.abbina(titolo, voci_l, r["prima"])
+    avuto_t, perche = robot.argomento(titolo, con or "", r["tieni"], r["mai"])
+    ok = (avuto_c == comune_atteso) and (avuto_t == in_tema)
+    male += not ok
+    print("%s  [%-5s] %-52s -> %s / %s"
+          % ("ok  " if ok else "NO  ", lingua, titolo[:52],
+             avuto_c or "(nessuno)", "dentro" if avuto_t else "fuori"))
+    if not ok:
+        print("        atteso: %s / %s" % (comune_atteso,
+                                           "dentro" if in_tema else "fuori"))
+
 for a, b, atteso in DOPPIONI:
     avuto = robot.stessa_storia(robot.impronta(a), robot.impronta(b))
     ok = avuto == atteso
     male += not ok
     print("%s  doppione? %-48s -> %s" % ("ok  " if ok else "NO  ", a[:48], avuto))
 
-print("\n%d casi, %d sbagliati" % (len(CASI) + len(ARGOMENTI) + len(DOPPIONI), male))
+print("\n%d casi, %d sbagliati" % (len(CASI) + len(ARGOMENTI) + len(FUORI_ITALIA) + len(DOPPIONI), male))
 sys.exit(1 if male else 0)

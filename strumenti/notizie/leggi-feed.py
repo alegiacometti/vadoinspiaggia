@@ -140,7 +140,9 @@ def posso_leggere(url):
 PERCORSI = ["/feed", "/feed/", "/rss", "/rss.xml", "/?feed=rss2", "/atom.xml"]
 
 
-def indirizzi(url):
+def indirizzi(url, esatto=False):
+    if esatto:
+        return [url]
     pezzi = urllib.parse.urlsplit(url)
     base = "%s://%s" % (pezzi.scheme, pezzi.netloc)
     fuori = [url]
@@ -204,10 +206,27 @@ def articoli(xml):
 
 # ------------------------------------------------------- l'abbinamento
 
+# Le lettere che NON si scompongono. Togliere gli accenti funziona perche' «à»
+# in fondo e' «a» piu' un segno, e il segno si butta. Ma la «ħ» maltese, la «đ»
+# croata, la «ø» e la «ł» sono lettere intere: nessun segno da buttare. Senza
+# questa tabella «Mellieħa» sul giornale e «Mellieha» nell'elenco non si
+# riconoscono, e Malta intera resterebbe senza notizie.
+LETTERE_INTERE = str.maketrans({
+    "\u0127": "h", "\u0126": "h",      # ħ Ħ  maltese
+    "\u0111": "d", "\u0110": "d",      # đ Đ  croato, montenegrino
+    "\u00f8": "o", "\u00d8": "o",      # ø Ø
+    "\u0142": "l", "\u0141": "l",      # ł Ł
+    "\u00fe": "th", "\u00f0": "d",     # þ ð
+    "\u00df": "ss", "\u00e6": "ae", "\u0153": "oe",
+    "\u0131": "i",                     # ı  senza punto
+})
+
+
 def piatto(t):
     """Senza accenti, senza maiuscole, con un apostrofo solo: cosi' «Sant’Elpidio»
-    e «Sant'Elpidio» diventano la stessa cosa."""
-    t = unicodedata.normalize("NFD", (t or "").lower())
+    e «Sant'Elpidio» diventano la stessa cosa, e «Mellieħa» diventa «Mellieha»."""
+    t = (t or "").lower().translate(LETTERE_INTERE)
+    t = unicodedata.normalize("NFD", t)
     t = "".join(c for c in t if unicodedata.category(c) != "Mn")
     return t.replace("\u2019", "'").replace("\u00a0", " ")
 
@@ -234,10 +253,10 @@ PRIMA_NON_VALE = re.compile(
     r"aeroporto di|stazione di|porto di)\s+$")
 
 
-def nomi_del_comune(comune, sinonimi):
+def nomi_del_comune(comune, sinonimi, code=None):
     """Tutti i modi in cui quel comune puo' comparire in un titolo."""
     fuori = [comune]
-    corto = CODE.sub("", piatto(comune))
+    corto = (code or CODE).sub("", piatto(comune))
     if (corto and corto != piatto(comune) and len(corto) >= 5
             and not FINISCE_MALE.search(corto)):
         fuori.append(corto)
@@ -245,7 +264,7 @@ def nomi_del_comune(comune, sinonimi):
     return fuori
 
 
-def indice(comuni, sinonimi, mai):
+def indice(comuni, sinonimi, mai, code=None):
     """Da «elenco di comuni» a «elenco di nomi da cercare».
 
     Ogni voce e' (nome appiattito, comune vero). Un nome che sta nella lista
@@ -253,14 +272,14 @@ def indice(comuni, sinonimi, mai):
     vietati = {piatto(m) for m in mai}
     fuori = []
     for c in comuni:
-        for n in nomi_del_comune(c, sinonimi):
+        for n in nomi_del_comune(c, sinonimi, code):
             n = piatto(n).strip()
             if len(n) >= 4 and n not in vietati:
                 fuori.append((n, c))
     return sorted(set(fuori), key=lambda x: -len(x[0]))
 
 
-def abbina(titolo, voci):
+def abbina(titolo, voci, prima=None):
     """Il comune di cui parla il titolo, o (None, None).
 
     Vince sempre il nome piu' lungo: cosi' «Porto Recanati» batte «Recanati»
@@ -270,7 +289,7 @@ def abbina(titolo, voci):
     trovati = []
     for nome, comune in voci:
         for m in re.finditer(r"(?<![\w'])" + re.escape(nome) + r"(?![\w'])", t):
-            if PRIMA_NON_VALE.search(t[:m.start()]):
+            if (prima or PRIMA_NON_VALE).search(t[:m.start()]):
                 continue
             trovati.append((len(nome), comune, nome))
             break
@@ -324,6 +343,47 @@ def argomento(titolo, nome_comune, tieni, mai):
             return False, "non parla di mare, meteo o eventi"
         return True, m.group(0)
     return True, ""
+
+
+# --------------------------------------------------------------- le lingue
+
+def coda_regex(voci):
+    """I pezzi di nome che cadono: «-sur-Mer», «de Mar», «Marittima»."""
+    pezzi = sorted((piatto(v) for v in voci or [] if v), key=len, reverse=True)
+    if not pezzi:
+        return re.compile(r"(?!)")          # non combacia mai
+    return re.compile(r"[\s-]+(" + "|".join(re.escape(x) for x in pezzi) + r")$")
+
+
+def prima_regex(voci):
+    """Le parole che, se stanno davanti a un nome, lo annullano: «rue Nice»
+    non e' Nizza, «calle Malaga» non e' Malaga."""
+    pezzi = sorted((piatto(v) for v in voci or [] if v), key=len, reverse=True)
+    if not pezzi:
+        return re.compile(r"(?!)")
+    return re.compile(r"(" + "|".join(re.escape(x) for x in pezzi) + r")[\s'-]+$")
+
+
+def regole_lingue(conf, dove):
+    """Un setaccio per lingua. L'italiano sta in feed.json (si tocca spesso);
+    le altre lingue in lingue.json, accanto."""
+    arg = conf.get("argomenti", {})
+    fuori = {"it": dict(tieni=regola(arg.get("tieni")), mai=regola(arg.get("mai")),
+                        code=CODE, prima=PRIMA_NON_VALE)}
+    percorso = os.path.join(os.path.dirname(os.path.abspath(dove)), "lingue.json")
+    if not os.path.exists(percorso):
+        percorso = os.path.join(QUI, "lingue.json")
+    if os.path.exists(percorso):
+        with open(percorso, encoding="utf-8") as f:
+            altre = json.load(f)
+        for lingua, v in altre.items():
+            if lingua.startswith("_") or not isinstance(v, dict):
+                continue
+            fuori[lingua] = dict(tieni=regola(v.get("tieni")),
+                                 mai=regola(v.get("mai")),
+                                 code=coda_regex(v.get("code")),
+                                 prima=prima_regex(v.get("prima")))
+    return fuori
 
 
 # ------------------------------------------------------------ i doppioni
@@ -428,12 +488,20 @@ def prendi_feed(giornale, cartella):
             return h.read(), dove, ""
 
     ultimo = "non risponde"
-    for url in indirizzi(giornale["url"]):
+    for url in indirizzi(giornale["url"], giornale.get("esatto")):
         ok, perche = posso_leggere(url)
         if not ok:
             return "", "", perche          # il robots.txt vale per tutto il sito
         try:
             xml = testo_di(apri(url))
+        except urllib.error.HTTPError as e:
+            # 404 = indirizzo sbagliato, si prova il prossimo.
+            # 403 = il sito non vuole essere letto in automatico: e' un no
+            # detto in un altro modo, e vale come il robots.txt.
+            ultimo = "il sito risponde %d" % e.code
+            if e.code in (401, 403, 429):
+                return "", "", ultimo + " (non ci vuole)"
+            continue
         except Exception as e:
             ultimo = "non risponde (%s)" % type(e).__name__
             continue
@@ -462,8 +530,7 @@ def main():
     mai_comuni = conf.get("mai_comuni", [])
     arg = conf.get("argomenti", {})
     filtra = arg.get("filtro", True) and not args.tutto
-    tieni = regola(arg.get("tieni")) if filtra else None
-    vietate = regola(arg.get("mai")) if filtra else None
+    LINGUE = regole_lingue(conf, args.config)
     regioni = sorted({r for g in conf["giornali"] for r in g["regioni"]})
 
     if not SEGRETO and not args.cartella:
@@ -483,7 +550,8 @@ def main():
     # 2. leggere i giornali
     raccolti, saltati, scartati_tema, tabella = [], [], [], []
     if filtra:
-        print("\nfiltro per argomento: ACCESO (meteo, mare, spiaggia, eventi)")
+        print("\nfiltro per argomento: ACCESO (meteo, mare, spiaggia, eventi)"
+              " — lingue: %s" % ", ".join(sorted(LINGUE)))
     else:
         print("\nfiltro per argomento: spento — entra tutto, cronaca compresa")
     vecchie_via = 0
@@ -512,11 +580,18 @@ def main():
                  if a["pubblicata"] is None or a["pubblicata"] >= limite]
         vecchie_via += prima - len(letti)
 
+        # Ogni giornale porta la sua lingua: cambiano le parole del filtro, i
+        # pezzi di nome che cadono e le parole che annullano un nome.
+        lingua = g.get("lingua", "it")
+        reg = LINGUE.get(lingua) or LINGUE["it"]
+        tieni = reg["tieni"] if filtra else None
+        vietate = reg["mai"] if filtra else None
         voci = indice(sorted({c for r in g["regioni"]
-                              for c in per_regione.get(r, [])}), sinonimi, mai_comuni)
+                              for c in per_regione.get(r, [])}),
+                      sinonimi, mai_comuni, reg["code"])
         presi = fuori_tema = 0
         for a in letti:
-            comune, con = abbina(a["titolo"], voci)
+            comune, con = abbina(a["titolo"], voci, reg["prima"])
             if not comune:
                 continue
             ok, perche_no = argomento(a["titolo"], con, tieni, vietate)
