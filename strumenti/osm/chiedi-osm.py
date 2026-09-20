@@ -44,7 +44,7 @@ import urllib.request
 QUI = os.path.dirname(os.path.abspath(__file__))
 OVERPASS = "https://overpass-api.de/api/interpreter"
 CHI_SONO = ("vadoinspiaggia-osm/1.0 "
-            "(+https://alegiacometti.github.io/vadoinspiaggia/; dati ODbL OSM)")
+            "(+https://vadoinspiaggia.eu/; dati ODbL OSM)")
 ATTESA = 180          # Overpass e' lento per costruzione: qui si aspetta
 PAUSA = 5             # secondi fra una regione e l'altra, per educazione
 VICINO = 300          # metri: oltre questa distanza non e' la nostra spiaggia

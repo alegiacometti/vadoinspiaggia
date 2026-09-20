@@ -62,7 +62,7 @@ BASE = os.environ.get("SUPABASE_URL", "https://meiurmbdotohixqawprd.supabase.co"
 CHIAVE = os.environ.get("SUPABASE_ANON", "sb_publishable_T6WweLO_kXsLO57kutuAVA_VDMubUkf")
 SEGRETO = os.environ.get("ROBOT_NOTIZIE", "")
 
-CHI_SONO = "vadoinspiaggia-notizie/1.0 (+https://alegiacometti.github.io/vadoinspiaggia/)"
+CHI_SONO = "vadoinspiaggia-notizie/1.0 (+https://vadoinspiaggia.eu/)"
 ATTESA = 12          # secondi prima di rinunciare a un feed:
                      # con ottanta giornali, uno lento non puo' fermare tutti
 MAX_PER_COMUNE = 8   # per giro: la scheda ne mostra quattro, oltre e' rumore

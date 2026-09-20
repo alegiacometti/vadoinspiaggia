@@ -33,7 +33,7 @@ import urllib.request
 
 QUI = os.path.dirname(os.path.abspath(__file__))
 CHI_SONO = ("vadoinspiaggia-portogallo/1.0 "
-            "(+https://alegiacometti.github.io/vadoinspiaggia/)")
+            "(+https://vadoinspiaggia.eu/)")
 ATTESA = 30
 PAUSA = 1.0     # un secondo fra un profilo e l'altro: sono centinaia
 
@@ -424,6 +424,30 @@ def scrivi_profili(voci, uscita, quante, mostra=False):
             w.writerow(r)
 
     print("\nprofili trovati: %d su %d" % (presi, len(righe)))
+
+    # Il modello del profilo NON e' lo stesso in tutto il Portogallo: quello
+    # dell'Algarve porta lunghezza e bagnanti, quello del Norte si ferma alla
+    # qualita' dell'acqua. Questa tabella dice, regione per regione, dove i
+    # dati ci sono davvero — ed e' la cosa piu' utile di tutto il giro.
+    per_arh = {}
+    for r in righe:
+        if not r["url"]:
+            continue
+        c = per_arh.setdefault(r["arh"], dict(letti=0, fondo=0, lunghezza_m=0,
+                                              utenti_giorno=0, accesso=0))
+        c["letti"] += 1
+        for campo in ("fondo", "lunghezza_m", "utenti_giorno", "accesso"):
+            if r[campo] != "":
+                c[campo] += 1
+    if per_arh:
+        print("\n--- dove stanno davvero i dati " + "-" * 34)
+        print("%-16s %6s %6s %6s %8s %8s"
+              % ("regione", "letti", "fondo", "lungh.", "bagnanti", "accesso"))
+        for arh in sorted(per_arh, key=lambda a: -per_arh[a]["letti"]):
+            c = per_arh[arh]
+            print("%-16s %6d %6d %6d %8d %8d"
+                  % (arh, c["letti"], c["fondo"], c["lunghezza_m"],
+                     c["utenti_giorno"], c["accesso"]))
     forme = {}
     for r in righe:
         if not r["url"]:
