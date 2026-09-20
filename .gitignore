@@ -2,7 +2,19 @@
 .DS_Store
 Thumbs.db
 *.py
-!strumenti/notizie/*.py
+!strumenti/*/*.py
+
+# I file di lavoro degli strumenti: scaricati dalla rete (pesano e si
+# riscaricano da soli) oppure esportati dal sito — e QUESTI sono dati nostri,
+# in un deposito pubblico non ci devono finire.
+strumenti/**/*.pdf
+strumenti/**/*.kml
+strumenti/**/*.zip
+strumenti/**/registro-*.csv
+strumenti/**/spiagge*.csv
+strumenti/**/proposte-*.csv
+strumenti/**/profili-*.csv
+!strumenti/*/finti/*.csv
 *.xlsx
 AVANZAMENTO.md
 METODO-*.md
