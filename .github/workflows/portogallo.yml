@@ -1,0 +1,60 @@
+# I profili delle spiagge portoghesi, letti dall'APA.
+#
+# Si lancia a mano, quando serve: non c'e' niente da aggiornare ogni giorno.
+# Scarica l'elenco nazionale, poi un PDF per spiaggia, ne estrae fondo,
+# lunghezza, bagnanti al giorno e tipo di accesso, e lascia un foglio da
+# scaricare (Artifacts, in fondo alla pagina del giro).
+#
+# Nel foglio non c'e' NIENTE di nostro: e' l'elenco pubblico delle acque
+# balneari portoghesi con quattro campi presi dai loro documenti. Per questo
+# puo' girare qui, in un deposito pubblico, senza esporre i dati del sito.
+# L'abbinamento alle nostre schede si fa dopo, altrove.
+
+name: Profili spiagge Portogallo
+
+on:
+  workflow_dispatch:
+    inputs:
+      quante:
+        description: "Quante spiagge leggere (0 = tutte, ~510). Metti 25 per una prova."
+        type: string
+        default: "25"
+
+permissions:
+  contents: read
+
+jobs:
+  profili:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installa pdftotext
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils
+
+      - name: Controlla le regole di lettura prima di uscire in rete
+        run: python3 strumenti/portogallo/prova-portogallo.py
+
+      - name: Scarica l'elenco nazionale delle acque balneari
+        run: |
+          curl -sSL --retry 3 -A "vadoinspiaggia-portogallo/1.0" \
+            -o elenco.pdf \
+            "https://apambiente.pt/sites/default/files/_SNIAMB_Agua/DRH/MonitorizacaoAvaliacao/AguasBalneares/Class_AB_2011_2023_Continente.pdf"
+          ls -l elenco.pdf
+
+      - name: Leggi i profili
+        run: |
+          python3 strumenti/portogallo/leggi-portogallo.py elenco.pdf \
+            --profili profili-portogallo.csv \
+            --quante "${{ inputs.quante }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: profili-portogallo
+          path: profili-portogallo.csv
+          retention-days: 30
