@@ -1,0 +1,172 @@
+{
+ "elements": [
+  {
+   "type": "way",
+   "id": 101,
+   "tags": {
+    "natural": "beach",
+    "name": "Spiaggia di Levante",
+    "surface": "sand",
+    "wheelchair": "yes",
+    "dog": "no"
+   },
+   "geometry": [
+    {
+     "lat": 43.719775422206254,
+     "lon": 13.223785257126897
+    },
+    {
+     "lat": 43.719775422206254,
+     "lon": 13.236214742873104
+    },
+    {
+     "lat": 43.72022457779374,
+     "lon": 13.236214742873104
+    },
+    {
+     "lat": 43.72022457779374,
+     "lon": 13.223785257126897
+    }
+   ]
+  },
+  {
+   "type": "way",
+   "id": 102,
+   "tags": {
+    "natural": "beach",
+    "name": "Ghiaiosa",
+    "surface": "pebbles;sand",
+    "supervised": "yes"
+   },
+   "geometry": [
+    {
+     "lat": 43.72116780452749,
+     "lon": 13.228135577138069
+    },
+    {
+     "lat": 43.72116780452749,
+     "lon": 13.231864422861932
+    },
+    {
+     "lat": 43.72152712899749,
+     "lon": 13.231864422861932
+    },
+    {
+     "lat": 43.72152712899749,
+     "lon": 13.228135577138069
+    }
+   ]
+  },
+  {
+   "type": "way",
+   "id": 103,
+   "tags": {
+    "natural": "beach",
+    "name": "Lontana",
+    "surface": "sand"
+   },
+   "geometry": [
+    {
+     "lat": 43.73778656126482,
+     "lon": 13.22751410285076
+    },
+    {
+     "lat": 43.73778656126482,
+     "lon": 13.23248589714924
+    },
+    {
+     "lat": 43.738145885734816,
+     "lon": 13.23248589714924
+    },
+    {
+     "lat": 43.738145885734816,
+     "lon": 13.22751410285076
+    }
+   ]
+  },
+  {
+   "type": "way",
+   "id": 104,
+   "tags": {
+    "natural": "beach",
+    "name": "Rotta"
+   },
+   "geometry": [
+    {
+     "lat": 43.72,
+     "lon": 13.23
+    },
+    {
+     "lat": 43.72,
+     "lon": 13.231
+    }
+   ]
+  },
+  {
+   "type": "node",
+   "id": 201,
+   "lat": 43.723413582464964,
+   "lon": 13.23,
+   "tags": {
+    "amenity": "parking"
+   }
+  },
+  {
+   "type": "node",
+   "id": 202,
+   "lat": 43.72071864893999,
+   "lon": 13.23,
+   "tags": {
+    "amenity": "toilets"
+   }
+  },
+  {
+   "type": "node",
+   "id": 203,
+   "lat": 43.720538986704994,
+   "lon": 13.23,
+   "tags": {
+    "amenity": "shower"
+   }
+  },
+  {
+   "type": "node",
+   "id": 204,
+   "lat": 43.721796622349984,
+   "lon": 13.23,
+   "tags": {
+    "amenity": "restaurant"
+   }
+  },
+  {
+   "type": "node",
+   "id": 205,
+   "lat": 43.72269493352497,
+   "lon": 13.23,
+   "tags": {
+    "emergency": "lifeguard"
+   }
+  },
+  {
+   "type": "node",
+   "id": 206,
+   "lat": 43.72233560905497,
+   "lon": 13.23,
+   "tags": {
+    "amenity": "drinking_water"
+   }
+  },
+  {
+   "type": "way",
+   "id": 207,
+   "tags": {
+    "leisure": "beach_resort",
+    "name": "Bagni Ondina"
+   },
+   "center": {
+    "lat": 43.72134746676249,
+    "lon": 13.23
+   }
+  }
+ ]
+}

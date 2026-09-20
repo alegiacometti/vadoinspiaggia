@@ -1,0 +1,11 @@
+Classificação das águas balneares de acordo com os requisitos da Diretiva 2006/7/CE
+
+ARH          CONCELHO            Código      Nome da Água Balnear        Categoria      2021         2022         2023
+NORTE        ARCOS DE VALDEVEZ   PTCT7E      PONTILHÃO DA VALETA         INTERIOR       Excelente    Excelente    Excelente
+NORTE        BRAGA               PTCP3J      ADAÚFE                      INTERIOR       Boa          Boa          Excelente
+ALGARVE      PORTIMÃO            PTCH9Q      ROCHA                       COSTEIRA       Excelente    Excelente    Excelente
+ALGARVE      ALBUFEIRA           PTCE8U      OURA-LESTE                  COSTEIRA       Excelente    Excelente    Excelente
+ALGARVE      LAGOS               PTCN9H      MEIA PRAIA                  COSTEIRA       Excelente    Excelente    Excelente
+TEJO E OESTE CASCAIS             PTCX2A      CARCAVELOS                  COSTEIRA       Boa          Excelente    Excelente
+ALENTEJO     ODEMIRA             PTCB4K      ZAMBUJEIRA DO MAR           COSTEIRA       Excelente    Excelente    Excelente
+questa riga contiene PTZZ99 ma non e' nel formato giusto
