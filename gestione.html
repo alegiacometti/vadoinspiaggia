@@ -361,7 +361,8 @@ function barraRegistro(){
       (REGISTRO ? "Rileggi" : "Carica") + '</button>' +
     (REGISTRO ? '<button type="button" class="gest-piu" data-reg-xls>Esporta Excel</button>' : '') +
     (REGISTRO ? '<button type="button" class="gest-piu" data-reg-csv>CSV</button>' : '') +
-    (REGISTRO ? '<span class="quanti">' + REGISTRO.length + ' righe</span>' : '') +
+    (REGISTRO ? '<span class="quanti">' + REGISTRO.length + ' righe' +
+       (REG_FILTRO ? '' : ' · tutte le regioni') + '</span>' : '') +
     '</div>';
 }
 
@@ -404,7 +405,20 @@ async function caricaRegistro(bottone){
   REG_CARICO = true;
   const era = bottone.textContent; bottone.disabled = true; bottone.textContent = "Leggo…";
   try {
-    REGISTRO = await VADO.registro(REG_FILTRO, REG_CERCA, 6000, 0);
+    /* Il database non manda piu' di mille righe per volta — e' un tetto suo,
+       non nostro, e chiedergliene seimila non lo convince. Quindi si chiede a
+       blocchi finche' non ne arrivano meno di mille, che vuol dire «finite».
+       Senza questo, con 5534 spiagge il registro si fermava a Calcidica e
+       l'esportazione portava via solo il primo quinto del sito. */
+    const PASSO = 1000;
+    REGISTRO = [];
+    for (let salta = 0; ; salta += PASSO) {
+      const pezzo = await VADO.registro(REG_FILTRO, REG_CERCA, PASSO, salta);
+      REGISTRO = REGISTRO.concat(pezzo);
+      bottone.textContent = "Leggo… " + REGISTRO.length;
+      if (!pezzo || pezzo.length < PASSO) break;
+      if (salta > 20000) break;      /* rete di sicurezza, non deve servire */
+    }
   } catch (e) {
     bottone.disabled = false; bottone.textContent = era; REG_CARICO = false;
     return alert("Non ha funzionato: " + e.message.slice(0, 200));
