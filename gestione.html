@@ -97,6 +97,17 @@ button.gest-ruolo:focus-visible{outline:2px solid var(--ambra);outline-offset:2p
 .gest-vista span{display:block;font-size:10px;color:var(--grigio)}
 .gest-vista.alta b{color:#2c7a61} .gest-vista.media b{color:#b3800f}
 .gest-vista.bassa b{color:#96a7b0}
+/* La riga dei totali in fondo e la colonna «completo» a destra: le stesse
+   celle di copertura, ma marcate perche' si distinguano dal corpo della
+   tabella — sono una somma, non un dato. */
+.gest-tab tfoot td{background:var(--nebbia);border-top:2px solid var(--tratto);
+  border-bottom:0;padding-top:13px;padding-bottom:13px}
+.gest-tab tfoot .gest-chi{font-family:var(--dati);font-size:10px;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--profondo)}
+.gest-somma{background:var(--schiuma)}
+.gest-somma b{font-size:14px}
+.gest-tab tfoot .gest-somma{background:var(--nebbia)}
+
 .gest-paese td{background:var(--nebbia);font-family:var(--dati);font-size:10px;
   letter-spacing:.12em;text-transform:uppercase;color:var(--profondo);padding:7px 13px}
 .gest-paese td b{font-family:var(--testo);font-size:12px;letter-spacing:0;
@@ -1712,6 +1723,42 @@ function cellaCop(n, tot, piu){
          '<i><u style="width:' + (p * 100).toFixed(1) + '%"></u></i></td>';
 }
 
+/* La stessa cella, ma con dentro una percentuale invece di «n su tot».
+   Serve nei due posti nuovi: in fondo a ogni riga (quanto e' completa quella
+   regione) e in fondo a ogni colonna (quanto e' completo quel campo su tutto
+   il sito). Le soglie del colore sono quelle di cellaCop, cosi' una riga
+   verde e una colonna verde vogliono dire la stessa cosa. */
+function cellaPerc(fatti, possibili, piu){
+  const extra = piu ? " " + piu : "";
+  if (!possibili) return '<td class="gest-cop zero gest-somma' + extra + '"><b>—</b></td>';
+  const p = fatti / possibili;
+  const cl = fatti === possibili ? "pieno"
+           : (p >= .75 ? "quasi" : (fatti ? "meta" : "zero"));
+  return '<td class="gest-cop gest-somma ' + cl + extra + '">' +
+         '<b>' + Math.round(p * 100) + '%</b>' +
+         '<i><u style="width:' + (p * 100).toFixed(1) + '%"></u></i></td>';
+}
+
+/* I quattro campi che si contano davvero come «riempimento» di una scheda.
+   Bandiere Blu no: e' un premio, non un campo da compilare, e una regione
+   senza bandiere non e' una regione incompleta. La veduta dall'alto nemmeno:
+   c'e' sempre, cambia solo la risoluzione. */
+const CAMPI_COP = ["descrizione", "servizi", "fondo", "accesso"];
+
+function sommaCampi(righe){
+  const s = { spiagge: 0, descrizione: 0, servizi: 0, fondo: 0, accesso: 0,
+              bandiere: 0, alta: 0 };
+  righe.forEach(r => {
+    s.spiagge += r.spiagge;
+    CAMPI_COP.forEach(c => { s[c] += r[c] || 0; });
+    s.bandiere += r.bandiere || 0;
+    if ((SORGENTI[FOTO[r.chiave]] || [,,""])[2] !== "bassa") s.alta += r.spiagge;
+  });
+  s.fatti = CAMPI_COP.reduce((t, c) => t + s[c], 0);
+  s.possibili = s.spiagge * CAMPI_COP.length;
+  return s;
+}
+
 function tabellaStato(){
   if (!STATO || !STATO.length)
     return '<div class="gest-vuoto">Il database non ha restituito niente.</div>';
@@ -1721,16 +1768,19 @@ function tabellaStato(){
     '<th>Descri&shy;zione</th><th>Servizi</th>' +
     '<th class="gest-nascondi">Fondo</th><th>Come si arriva</th>' +
     '<th>Bandiere Blu</th><th class="gest-nascondi">Costa</th>' +
+    '<th>Completo</th>' +
     '</tr></thead><tbody>';
   ordine.forEach(p => {
     const sue = STATO.filter(r => r.paese === p).sort((a,b) => b.spiagge - a.spiagge);
     if (!sue.length) return;
-    const tot = sue.reduce((s,r) => s + r.spiagge, 0);
-    const alta = sue.reduce((s,r) =>
-      s + ((SORGENTI[FOTO[r.chiave]] || [,,""])[2] !== "bassa" ? r.spiagge : 0), 0);
+    const q = sommaCampi(sue);
+    const tot = q.spiagge, alta = q.alta;
     html += '<tr class="gest-paese"><td colspan="8">' + esc(PAESI_NOME[p] || p) +
       '<b>' + sue.length + (sue.length === 1 ? " regione" : " regioni") + ' · ' + tot +
-      ' spiagge · veduta ad alta risoluzione per ' + alta + '</b></td></tr>';
+      ' spiagge · veduta ad alta risoluzione per ' + alta +
+      ' · completo al ' + Math.round(100 * q.fatti / (q.possibili || 1)) + '%' +
+      '</b></td>' +
+      cellaPerc(q.fatti, q.possibili) + '</tr>';
     sue.forEach(r => {
       const f = SORGENTI[FOTO[r.chiave]] || ["?", "non so", "bassa"];
       const m = COSTA[r.chiave];
@@ -1749,10 +1799,32 @@ function tabellaStato(){
           '</b><span style="display:block">' + esc(BB_ANNO[r.paese] || "") + '</span></td>' +
         '<td class="gest-nascondi gest-cop ' + cc + '"><b>' +
           (m == null ? "—" : m + " m") + '</b></td>' +
+        cellaPerc(CAMPI_COP.reduce((t,c) => t + (r[c] || 0), 0),
+                  r.spiagge * CAMPI_COP.length) +
         '</tr>';
     });
   });
-  return html + '</tbody></table></div>';
+  /* La riga in fondo: quanto e' completo OGNI CAMPO su tutte e 59 le regioni.
+     E' la lettura verticale — dice se conviene lavorare sulle descrizioni o
+     sui servizi, cosa che riga per riga non si vede. */
+  const g = sommaCampi(STATO);
+  html += '</tbody><tfoot><tr>' +
+    '<td class="gest-chi">Tutto il sito' +
+      '<div class="gest-quando">' + g.spiagge + ' spiagge · ' +
+      STATO.length + ' regioni</div></td>' +
+    '<td class="gest-nascondi gest-cop"><b>' +
+      Math.round(100 * g.alta / (g.spiagge || 1)) + '%</b>' +
+      '<span style="display:block">ad alta ris.</span></td>' +
+    cellaCop(g.descrizione, g.spiagge) +
+    cellaCop(g.servizi, g.spiagge) +
+    cellaCop(g.fondo, g.spiagge, "gest-nascondi") +
+    cellaCop(g.accesso, g.spiagge) +
+    '<td class="gest-cop"><b>' + g.bandiere + '</b>' +
+      '<span style="display:block">in tutto</span></td>' +
+    '<td class="gest-nascondi gest-cop"><b>—</b></td>' +
+    cellaPerc(g.fatti, g.possibili) +
+    '</tr></tfoot></table></div>';
+  return html;
 }
 
 function bloccoStato(){
