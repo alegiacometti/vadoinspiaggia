@@ -15,10 +15,18 @@ name: Profili spiagge Portogallo
 on:
   workflow_dispatch:
     inputs:
+      categoria:
+        description: "Quali acque: costeira,transicao (le spiagge di mare) oppure tutte"
+        type: string
+        default: "costeira,transicao"
       quante:
-        description: "Quante spiagge leggere (0 = tutte, ~510). Metti 25 per una prova."
+        description: "Quante spiagge leggere (0 = tutte). Metti 25 per una prova."
         type: string
         default: "25"
+      mostra:
+        description: "Stampa il testo del primo profilo, per capire com'e' scritto"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -51,7 +59,9 @@ jobs:
         run: |
           python3 strumenti/portogallo/leggi-portogallo.py elenco.pdf \
             --profili profili-portogallo.csv \
-            --quante "${{ inputs.quante }}"
+            --categoria "${{ inputs.categoria }}" \
+            --quante "${{ inputs.quante }}" \
+            ${{ inputs.mostra && '--mostra' || '' }}
 
       - uses: actions/upload-artifact@v4
         with:

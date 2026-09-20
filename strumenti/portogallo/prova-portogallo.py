@@ -75,6 +75,21 @@ controlla("  ...accesso", solo_piedi["accesso"], "a piedi")
 controlla("  ...e i bagnanti restano vuoti, non inventati",
           solo_piedi["utenti_giorno"], "")
 
+# Le etichette ESATTE lette dal PDF di Praia da Rocha il 20 settembre. Sono
+# piu' prolisse di come le avevo immaginate — «Extensão da frente de praia,
+# aproximadamente:» e una FREQUÊNCIA con mezza frase fra parentesi prima del
+# numero — e la prima versione delle espressioni le mancava per pochi caratteri.
+VERO = ("A praia da Rocha e uma praia de areia dourada. "
+        "Extensão da frente de praia, aproximadamente: 1 139m "
+        "FREQUÊNCIA MÉDIA DIÁRIA (capacidade de utilização - nº de banhistas): 9 500 "
+        "Tem acesso viário alcatroado através da cidade de Portimão.")
+vero = pt.leggi_profilo(VERO)
+print("\n--- le etichette vere di Praia da Rocha")
+controlla("fondo", vero["fondo"], "Sabbia")
+controlla("lunghezza", vero["lunghezza_m"], 1139)
+controlla("bagnanti al giorno", vero["utenti_giorno"], 9500)
+controlla("accesso", vero["accesso"], "auto")
+
 print("\n--- l'abbinamento, che senza coordinate deve essere prudente")
 per_concelho = {}
 for v in voci:

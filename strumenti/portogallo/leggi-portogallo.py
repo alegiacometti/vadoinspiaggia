@@ -186,11 +186,11 @@ FONDO_PT = [
 
 LUNGHEZZA = re.compile(
     r"extens[aã]o\s+(?:d[ao]\s+)?(?:frente\s+de\s+praia|areal|praia)"
-    r"[^0-9]{0,40}([0-9][0-9 .,]*)\s*m\b", re.I)
+    r"[^0-9]{0,70}([0-9][0-9 .,]*)\s*m\b", re.I)
 
 UTENTI = re.compile(
     r"(?:frequ[eê]ncia\s+m[eé]dia\s+di[aá]ria|capacidade\s+de\s+utiliza[cç][aã]o|"
-    r"utentes|utilizadores)[^0-9]{0,40}([0-9][0-9 .,]*)", re.I)
+    r"utentes|utilizadores|banhistas)[^0-9]{0,70}([0-9][0-9 .,]*)", re.I)
 
 # La parola che conta sta in gruppo 1: la negazione va cercata davanti a
 # QUELLA, non davanti ad «acesso». In «o acesso faz-se por trilho pedonal,
@@ -385,7 +385,7 @@ def scarica_profilo(voce):
     return "", ""
 
 
-def scrivi_profili(voci, uscita, quante):
+def scrivi_profili(voci, uscita, quante, mostra=False):
     """Tutti i profili dell'APA in un foglio solo.
 
     Qui dentro non c'e' niente di nostro: e' l'elenco pubblico delle acque
@@ -401,6 +401,12 @@ def scrivi_profili(voci, uscita, quante):
                     fondo="", fondo_parola="", lunghezza_m="",
                     utenti_giorno="", accesso="")
         if testo:
+            if mostra and presi == 0:
+                print("\n--- il primo profilo, come lo vede il programma "
+                      + "-" * 20)
+                print(re.sub(r"\n{3,}", "\n\n", testo)[:2000])
+                print("--- fine del primo profilo " + "-" * 34 + "\n",
+                      flush=True)
             riga.update(leggi_profilo(testo))
             presi += 1
         else:
@@ -445,6 +451,13 @@ def main():
     p.add_argument("--profili", default="",
                    help="scarica tutti i profili e scrivi qui il CSV pubblico "
                         "(non serve il nostro elenco: gira anche su GitHub)")
+    p.add_argument("--categoria", default="costeira,transicao",
+                   help="quali acque leggere: costeira, transicao, interior, "
+                        "tutte (a virgole). Le interne sono spiagge di fiume: "
+                        "il loro profilo non porta lunghezza ne' bagnanti.")
+    p.add_argument("--mostra", action="store_true",
+                   help="stampa il testo del primo profilo letto, per capire "
+                        "come e' scritto quando qualcosa non si estrae")
     p.add_argument("--quante", type=int, default=0,
                    help="fermati dopo N profili (per provare senza scaricarne 600)")
     args = p.parse_args()
@@ -467,8 +480,15 @@ def main():
         per_concelho.setdefault(piatto(v["concelho"]), []).append(v)
     print("   concelhos: %d" % len(per_concelho))
 
+    volute = {piatto(x) for x in args.categoria.split(",") if x.strip()}
+    if "tutte" not in volute:
+        prima = len(voci)
+        voci = [v for v in voci if piatto(v.get("categoria", "")) in volute]
+        print("   tenute %d su %d con categoria %s"
+              % (len(voci), prima, sorted(volute)))
+
     if args.profili:
-        scrivi_profili(voci, args.profili, args.quante)
+        scrivi_profili(voci, args.profili, args.quante, args.mostra)
         return
 
     if not args.spiagge:
