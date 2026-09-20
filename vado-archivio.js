@@ -77,11 +77,56 @@
     /* --- Montenegro ------------------------------------------------------ */
     ["budua-012",         "Sveti Stefan",                "13850643", "Hatice Baran",           "titolo"],
     /* --- Albania --------------------------------------------------------- */
-    ["alvalona-022",      "Ksamil",                      "34092443", "Laura Meinhardt",        "indirizzo"]
+    ["alvalona-022",      "Ksamil",                      "34092443", "Laura Meinhardt",        "indirizzo"],
+
+    /* ===================================================================
+       Secondo lotto — 20 settembre 2026. Stessa regola di sempre: il nome
+       nel titolo della foto o nel suo indirizzo, mai solo nei tag.
+
+       Dove la foto ritrae il posto giusto ma non l'arenile — il paese, la
+       tonnara, la grotta — c'e' una nota, e in gestione si legge sotto la
+       miniatura. Non sono errori: sono decisioni che tocca a te prendere
+       guardando, e per questo sono scritte invece che nascoste.
+       =================================================================== */
+    /* --- Italia ---------------------------------------------------------- */
+    ["sardegna-057",      "Cala Luna",                   "19546814", "Nataly Yeromenko",       "titolo"],
+    ["sardegna-077",      "Porto Giunco",                "8633923",  "Manzoni Studios",        "titolo"],
+    ["sicilia-079",       "Cala Capreria · Zingaro",     "38007750", "Federico Galassi",       "titolo",
+                          "veduta della riserva, non della singola cala"],
+    ["sicilia-039",       "Vendicari · la Tonnara",      "13154893", "Francesco Ungaro",       "titolo",
+                          "la tonnara, non l’arenile"],
+    ["campania-033",      "Atrani",                      "38046314", "Ahmet Yüksek",           "titolo"],
+    ["toscana-021",       "Golfo di Baratti",            "34566968", "MR Ledger",              "titolo"],
+    ["liguria-034",       "Riomaggiore",                 "34969626", "Çağla Sara",             "titolo",
+                          "il paese visto dall’alto, non l’arenile"],
+    ["liguria-024",       "San Fruttuoso",               "36749057", "Kateryna Tartachna",     "titolo"],
+    /* --- Francia --------------------------------------------------------- */
+    ["corsica-048",       "Santa Giulia",                "37306205", "SlimMars 13",            "titolo"],
+    ["corsica-006",       "Saleccia",                    "38638308", "SlimMars 13",            "titolo"],
+    ["occitania-033",     "Plage de Collioure",          "32644345", "Ekaterina Nekhai",       "titolo"],
+    /* --- Spagna ---------------------------------------------------------- */
+    ["canarie-029",       "Playa de Maspalomas",         "32464945", "Karina Badura",          "titolo"],
+    ["canarie-006",       "Playa de Las Teresitas",      "31466226", "Danyil",                 "titolo"],
+    ["canarie-040",       "Playa de Famara",             "37000081", "Mihai Vlasceanu",        "titolo"],
+    ["andalusia-028",     "San Miguel · Cabo de Gata",   "39466686", "Vasti Vanhee",           "titolo",
+                          "veduta del parco, non della singola spiaggia"],
+    ["catalogna-005",     "Platja Gran de Cadaqués",     "20843247", "Lorena Villarreal",      "titolo"],
+    ["catalogna-041",     "Platja Gran de Tossa",        "38468025", "Olivia",                 "titolo"],
+    /* --- Portogallo ------------------------------------------------------ */
+    ["algarve-009",       "Odeceixe · Mar",              "20117919", "Rodrigo Curi",           "titolo"],
+    ["algarve-078",       "Falésia · Açoteias",          "34793650", "Ivan Dražić",            "titolo",
+                          "uno dei due tratti di Falésia: l’altro è Alfamar"],
+    ["lisboa-034",        "Guincho Norte",               "14622448", "joao Guerreiro",         "titolo",
+                          "uno dei due tratti del Guincho: l’altro è Sul"],
+    /* --- Malta ----------------------------------------------------------- */
+    ["malta-056",         "Wied iż-Żurrieq · Grotta Azzurra", "19725918", "Ivan Dražić",       "titolo",
+                          "la grotta, che è poi quello che si va a vedere"],
+    /* --- Montenegro ------------------------------------------------------ */
+    ["budua-002",         "Jaz",                         "8430924",  "Mikhail Nilov",          "titolo"]
   ];
 
-  window.ARCHIVIO_FOTO = righe.map(([sid, nome, id, autore, prova]) => ({
-    sid: sid, nome: nome, id: id, autore: autore, prova: prova,
+  window.ARCHIVIO_FOTO = righe.map(([sid, nome, id, autore, prova, nota]) => ({
+    sid: sid, nome: nome, id: id, autore: autore, prova: prova, nota: nota || "",
     url: pexels(id),
     pagina: "https://www.pexels.com/photo/" + id + "/",
     fonte: "Pexels",

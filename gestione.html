@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="caratteri/caratteri.css?v=202609130413">
 <script src="configurazione.js?v=202609191032"></script>
 <script src="vado-dati.js?v=202609191032"></script>
-<script src="vado-archivio.js?v=202609191032"></script>
+<script src="vado-archivio.js?v=202609201300"></script>
 <style>
 /* Questa pagina NON e' protetta dal fatto di essere nascosta: chiunque puo'
    aprirla, e va benissimo. A proteggere sono le regole del database — senza
@@ -100,6 +100,12 @@ button.gest-ruolo:focus-visible{outline:2px solid var(--ambra);outline-offset:2p
 /* La riga dei totali in fondo e la colonna «completo» a destra: le stesse
    celle di copertura, ma marcate perche' si distinguano dal corpo della
    tabella — sono una somma, non un dato. */
+.prov-nota{display:block;font-style:normal;font-size:9.5px;line-height:1.35;
+  color:#8a6410;background:#fdf4e3;border-radius:3px;padding:3px 5px;margin-top:4px}
+.gest-stato-mosse{display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+  margin:0 0 12px}
+.gest-stato-mosse .quanti{font-family:var(--dati);font-size:10px;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--grigio)}
 .gest-tab tfoot td{background:var(--nebbia);border-top:2px solid var(--tratto);
   border-bottom:0;padding-top:13px;padding-bottom:13px}
 .gest-tab tfoot .gest-chi{font-family:var(--dati);font-size:10px;
@@ -926,6 +932,10 @@ function disegna(){
     b.onclick = () => buttaSegnalazione(+b.dataset.segnVia));
   corpo.querySelectorAll("[data-imp-salva]").forEach(b =>
     b.onclick = () => salvaImpostazioni(b));
+  corpo.querySelectorAll("[data-stato-xls]").forEach(b =>
+    b.onclick = () => esportaStato(b));
+  corpo.querySelectorAll("[data-stato-csv]").forEach(b =>
+    b.onclick = () => esportaStatoCsv());
   corpo.querySelectorAll("[data-stato]").forEach(b =>
     b.onclick = () => chiediStato(b));
   corpo.querySelectorAll("[data-imp-campo]").forEach(c =>
@@ -1167,7 +1177,12 @@ function tessera(r){
       esc(r.sid) + '">' +
     '<img src="' + esc(r.url) + '" alt="' + esc(r.nome) + '" loading="lazy" decoding="async">' +
     '<figcaption><b>' + esc(r.nome) + '</b><span>' +
-      esc(r.autore || 'autore non indicato') + '</span></figcaption>' +
+      esc(r.autore || 'autore non indicato') + '</span>' +
+      /* qualche foto ritrae il posto giusto ma non l'arenile: il paese, la
+         tonnara, la grotta. Sta scritto qui sotto, cosi' la decisione la
+         prendi guardando, non fidandoti. */
+      (r.nota ? '<em class="prov-nota">' + esc(r.nota) + '</em>' : '') +
+      '</figcaption>' +
     '<div class="prov-mosse">' +
       (fuori
         ? '<button type="button" class="prov-si" data-arch-rimetti="' + esc(r.sid) + '">rimetti</button>'
@@ -1841,8 +1856,112 @@ function tabellaStato(){
   return html;
 }
 
+/* Le colonne del foglio Excel dello stato. Le percentuali NON sono numeri
+   scritti: sono formule, come nel riepilogo del registro. Se domani filtri o
+   correggi una riga, i conti si rifanno da soli — che e' tutta la differenza
+   fra un foglio e la fotografia di un foglio. */
+const COL_STATO = ["Paese", "Regione", "Chiave", "Spiagge", "Zone",
+  "Veduta · risoluzione", "Veduta · fonte",
+  "Descrizione", "% descrizione", "Servizi", "% servizi",
+  "Fondo", "% fondo", "Come si arriva", "% come si arriva",
+  "Bandiere Blu", "Costa · metri fra i vertici", "Completo %"];
+
+function righeStato(){
+  const ordine = ["it","fr","es","pt","hr","si","gr","mt","me","al","ba"];
+  const fuori = [];
+  ordine.forEach(p => {
+    STATO.filter(r => r.paese === p)
+         .sort((a,b) => b.spiagge - a.spiagge)
+         .forEach(r => {
+      const f = SORGENTI[FOTO[r.chiave]] || ["?", "non so", "bassa"];
+      fuori.push([PAESI_NOME[p] || p, r.nome, r.chiave, r.spiagge, r.zone,
+                  f[0], f[1], r.descrizione, null, r.servizi, null,
+                  r.fondo, null, r.accesso, null, r.bandiere,
+                  COSTA[r.chiave] == null ? "" : COSTA[r.chiave], null]);
+    });
+  });
+  return fuori;
+}
+
+async function esportaStato(bottone){
+  if (!STATO || !STATO.length) return;
+  const era = bottone.textContent;
+  bottone.disabled = true; bottone.textContent = "Preparo…";
+  if (!await portaLibreria()) {
+    bottone.disabled = false; bottone.textContent = era;
+    alert("Non riesco a caricare la libreria che scrive i file Excel.\n" +
+          "Uso il CSV: si apre in Excel allo stesso modo.");
+    return esportaStatoCsv();
+  }
+  const X = window.XLSX;
+  const dati = righeStato();
+  /* D=spiagge, H/J/L/N i quattro campi, I/K/M/O le loro percentuali */
+  const coppie = [["H","I"], ["J","K"], ["L","M"], ["N","O"]];
+  dati.forEach((riga, i) => {
+    const n = i + 2;
+    coppie.forEach(([campo, perc], k) => {
+      riga[8 + k * 2] = { f: 'IF($D' + n + '=0,"",' + campo + n + '/$D' + n + ')', z: "0%" };
+    });
+    riga[17] = { f: 'IF($D' + n + '=0,"",(H' + n + '+J' + n + '+L' + n + '+N' + n +
+                    ')/($D' + n + '*4))', z: "0%" };
+  });
+  const ultima = dati.length + 1;
+  const tot = ["", "TUTTO IL SITO", "", { f: "SUM(D2:D" + ultima + ")" },
+    { f: "SUM(E2:E" + ultima + ")" }, "", ""];
+  ["H","J","L","N"].forEach((c, k) => {
+    tot.push({ f: "SUM(" + c + "2:" + c + ultima + ")" });
+    tot.push({ f: 'IF($D' + (ultima + 1) + '=0,"",' + c + (ultima + 1) +
+                  '/$D' + (ultima + 1) + ')', z: "0%" });
+  });
+  tot.push({ f: "SUM(P2:P" + ultima + ")" }, "");
+  tot.push({ f: '(H' + (ultima + 1) + '+J' + (ultima + 1) + '+L' + (ultima + 1) +
+               '+N' + (ultima + 1) + ')/($D' + (ultima + 1) + '*4)', z: "0%" });
+
+  const foglio = X.utils.aoa_to_sheet([COL_STATO].concat(dati, [tot]));
+  foglio["!autofilter"] = { ref: X.utils.encode_range(
+    { s:{r:0,c:0}, e:{r:dati.length, c:COL_STATO.length - 1} }) };
+  foglio["!cols"] = COL_STATO.map(c => ({
+    wch: /fonte|Regione|Paese/.test(c) ? 30 : (/Costa|Veduta|Come si arriva/.test(c) ? 18 : 13)
+  }));
+  foglio["!freeze"] = { xSplit: 3, ySplit: 1 };
+
+  const libro = X.utils.book_new();
+  X.utils.book_append_sheet(libro, foglio, "Stato");
+  const oggi = new Date().toISOString().slice(0, 10);
+  X.writeFile(libro, "stato-contenuti-" + oggi + ".xlsx");
+  bottone.disabled = false; bottone.textContent = era;
+}
+
+function esportaStatoCsv(){
+  if (!STATO || !STATO.length) return;
+  const cella = v => {
+    const t = v == null ? "" : String(v);
+    return /[";\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
+  };
+  const perc = (n, tot) => tot ? Math.round(100 * n / tot) + "%" : "";
+  const righe = [COL_STATO.join(";")].concat(righeStato().map(r => {
+    const s = r[3];
+    r[8] = perc(r[7], s); r[10] = perc(r[9], s);
+    r[12] = perc(r[11], s); r[14] = perc(r[13], s);
+    r[17] = perc(r[7] + r[9] + r[11] + r[13], s * 4);
+    return r.map(cella).join(";");
+  }));
+  const b = new Blob(["\uFEFF" + righe.join("\r\n")],
+                     { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(b);
+  a.download = "stato-contenuti-" + new Date().toISOString().slice(0, 10) + ".csv";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
 function bloccoStato(){
-  if (STATO) return tabellaStato();
+  if (STATO) return '<div class="gest-stato-mosse">' +
+      '<button type="button" class="gest-piu" data-stato-xls>Esporta Excel</button>' +
+      '<button type="button" class="gest-piu" data-stato-csv>CSV</button>' +
+      '<button type="button" class="gest-piu" data-stato>Ricalcola</button>' +
+      '<span class="quanti">' + STATO.length + ' regioni</span></div>' +
+    tabellaStato();
   return '<div class="gest-stato-via">' +
     '<p>Quante delle 5534 schede hanno davvero la descrizione, i servizi, il fondo e ' +
     'il modo d’accesso, regione per regione. <b>Il conto lo fa il database</b>, e ci ' +
